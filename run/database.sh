@@ -32,3 +32,4 @@ done
 
 #sh $RUNDIR/database/deletedb.sh	
 sh $RUNDIR/database/createdb.sh message_board
+

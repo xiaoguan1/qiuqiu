@@ -18,3 +18,4 @@ CREATE TABLE roles (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOF
 [ $? -eq 0 ] && echo "create database: roles" || echo "exists database: roles";
+

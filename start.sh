@@ -13,3 +13,4 @@ case ${1} in
 esac
 
 #./skynet/skynet ./etc/config.node1
+
