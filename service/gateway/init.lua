@@ -104,7 +104,9 @@ local function connect(fd, addr)
 	skynet.fork(recv_loop, fd)
 end
 
+-- 待优化，fd无论在哪个服务都可以发送，无须来到gateway服务
 s.resp.send_by_fd = function(source, fd, msg)
+	print("game game ", SERVICE_NAME)
 	if not conns[fd] then return end
 
 	local buff = msgpack.str_pack(msg[1], msg)
