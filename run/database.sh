@@ -17,7 +17,7 @@ if [ "$RUNUSER" != "game" -a "X$nogame" = "X" ]; then
 fi
 
 RUNDIR=`getDir`	# 当前路径
-
+ 
 echo "一键重置数据库..."
 
 # 找出主节点进程并杀死
