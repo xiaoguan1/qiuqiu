@@ -41,5 +41,11 @@ skynet.start(function ()
 		skynet.name("agentmgr", proxy)
 	end
 
+	-- 开启场景服务
+	for _, sceneid in pairs(runconfig.scene[mynode] or {}) do
+		local srv = skynet.newservice("scene", "scene", sceneid)
+		skynet.name("scene" .. sceneid, srv)
+	end
+
 	skynet.exit()
 end)

@@ -1,2 +1,4 @@
-service.lua ���������
-	��Ϊ��start������ʱ����������ַ�����������������Ҫ����int����Ҫ�Ż�
+﻿service.lua 这个不好用
+	因为在start启动的时候，其参数是字符串。但程序本质上需要的是int。需要优化
+
+重写协议系统，不要用通用的service.lua模块
