@@ -2,7 +2,9 @@ local skynet = require "skynet"
 local s = require "service"
 local P = require "common_log"
 require "scene"
-P.PRINT("111111111", s)
+
+PROTO_FUN = {}
+
 s.client = {}
 s.gate = nil
 
@@ -19,7 +21,6 @@ end
 s.start(...)
 
 s.resp.client = function(source, cmd, msg)
-    print("FFFFFFF ", source, cmd, msg)
     s.gate = source
     if s.client[cmd] then
         local ret_msg = s.client[cmd](msg, source)
@@ -31,15 +32,25 @@ s.resp.client = function(source, cmd, msg)
     end
 end
 
-s.resp.kick = function(source)
+PROTO_FUN.kick = function(source)
     s.leave_scene()
     -- 玩家登出，保存角色数据
     skynet.sleep(200) -- 后续完善 db 层内容。
 end
 
-s.resp.exit = function(source)
+PROTO_FUN.exit = function(source)
     skynet.exit()
 end
+
+-- s.resp.kick = function(source)
+--     s.leave_scene()
+--     -- 玩家登出，保存角色数据
+--     skynet.sleep(200) -- 后续完善 db 层内容。
+-- end
+
+-- s.resp.exit = function(source)
+--     skynet.exit()
+-- end
 
 -- 返回玩家最新的金币数量
 s.client.work = function(msg)
