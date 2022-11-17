@@ -2,6 +2,13 @@ local skynet = require "skynet"
 local s = require "service"
 local math = math
 
+PROTO_FUN = {}
+
+balls = {}    -- [playerid] = ball
+
+foods = {}    -- [id] = food
+food_maxid, food_count = 0, 0
+
 s.init = function()
 	skynet.fork(function()
 		--　保持帧率执行
@@ -23,9 +30,11 @@ s.init = function()
 	end)
 end
 
-s.start(...)
+s.after = function()
+	dofile("./service/scene/battle/battle.lua")
+end
 
-local balls = {}    -- [playerid] = ball
+s.start(...)
 
 function ball(playerid, node, agent)
 	local m = {
@@ -41,21 +50,6 @@ function ball(playerid, node, agent)
 	return m
 end
 
-local function balllist_msg()
-	local msg = {"balllist"}
-	for k, v in pairs(balls) do
-		table.insert(msg, v.playerid)
-		table.insert(msg, v.x)
-		table.insert(msg, v.y)
-		table.insert(msg, v.size)
-	end
-	return msg
-end
-
-local foods = {}    -- [id] = food
-local food_maxid = 0
-local food_count = 0
-
 function food()
 	local m = {
 		id = nil,
@@ -65,63 +59,11 @@ function food()
 	return m
 end
 
-local function foodlist_msg()
-	local msg = {"foodlist"}
-	for k, v in pairs(balls) do
-		table.insert(msg, v.id)
-		table.insert(msg, v.x)
-		table.insert(msg, v.y)
-	end
-	return msg
-end
-
 -- 广播
 function broadcast(msg)
 	for _, v in pairs(balls) do
 		s.send(v.node, v.agent, "send", msg)
 	end
-end
-
--- 进入战斗前判断
-s.resp.enter = function(source, playerid, node, agent)
-	if balls[playerid] then return false end
-
-	local b = ball(playerid, node, agent)
-
-	-- 广播(优化点:九宫格)
-	local entermsg = {"enter", playerid, b.x, b.y, b.size}
-	broadcast(entermsg)
-
-	balls[playerid] = b
-
-	-- 回应
-	local ret_msg = {"enter", 0, "进入成功"}
-	s.send(b.node, b.agent, "send", ret_msg)
-
-	--　发送战场
-	s.send(b.node, b.agent, "send", balllist_msg())
-	s.send(b.node, b.agent, "send", foodlist_msg())
-
-	return true
-end
-
--- 退出
-s.resp.leave = function(source, playerid)
-	if not balls[playerid] then return false end
-
-	balls[playerid] = nil
-
-	local leavemsg = {"leave", playerid}
-	broadcast(leavemsg)
-end
-
--- 改变速度
-s.resp.shift = function(source, playerid, x, y)
-	local b = balls[playerid]
-	if not b then return false end
-
-	b.speedx = x
-	b.speedy = y
 end
 
 -- 位置更新
@@ -173,5 +115,4 @@ function update(frame)
 	food_update()
 	move_update()
 	eat_update()
-
 end

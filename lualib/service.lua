@@ -6,15 +6,15 @@ local M = {
 	name = "",
 	id = 0,	
 	init = nil,	-- 回调初始化函数
+	after = nil, -- 服务启动之后的调用函数
 	exit = nil,	-- 回调退出函数
-	resp = {},	-- 分发方法
 }
 
 local function dispatch(session, address, cmd, ...)
-	local fun = M.resp[cmd]
+	local fun = PROTO_FUN[cmd]
 	if not fun then
 		-- 后续补上错误打印
-		print(string.format("[session:%s], [cmd:%s] not find fun.", session, cmd))
+		print(string.format("[%s] [session:%s], [cmd:%s] not find fun.", SERVICE_NAME, session, cmd))
 		return
 	end
 	if session == 0 then
@@ -35,10 +35,15 @@ function init(name, id, ...)
 	if M.init then M.init() end
 end
 
+function after()
+	if M.after then M.after() end
+end
+
 function M.start(name, id, ...)
 	M.name = name
 	M.id = id
 	skynet.start(init, name, id, ...)
+	after()
 end
 
 function traceback(err)

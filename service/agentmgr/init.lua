@@ -1,6 +1,8 @@
 local skynet = require "skynet"
 local s = require "service"
 
+PROTO_FUN = {}
+
 STATUS = {
     LOGIN = 2,
     GAME = 3,
@@ -22,7 +24,7 @@ function mgrplayer()
 end
 
 -- 登入
-s.resp.reqlogin = function(source, playerid, node, gate)
+PROTO_FUN.reqlogin = function(source, playerid, node, gate)
     local mplayer = players[playerid]
 
     -- 登陆过程禁止顶替
@@ -64,8 +66,7 @@ s.resp.reqlogin = function(source, playerid, node, gate)
 	return true, agent
 end
 
--- 登出
-s.resp.reqkick = function(source, playerid, reason)
+PROTO_FUN.reqkick = function(source, playerid, reason)
     local mplayer = players[playerid]
     if not mplayer then return false end
 
