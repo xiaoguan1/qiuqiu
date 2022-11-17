@@ -1,5 +1,5 @@
 local BATTLE_COMMON = require "battle_common"
-
+local s = require "service"
 
 
 -- 进入战斗前判断

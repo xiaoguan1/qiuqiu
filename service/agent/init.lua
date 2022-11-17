@@ -18,7 +18,7 @@ s.init = function()
 end
 
 s.after = function()
-    -- dofile("./service/agent/aa.lua")
+    dofile("./service/agent/scene.lua")
 end
 
 s.start(...)
