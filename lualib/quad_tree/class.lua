@@ -76,7 +76,7 @@ function ClsTree:GetIndex(X, Y)
 	-- quadrant 即象限也是index
 	for quadrant, child in pairs(self.children) do
 		local coordinate = child.coordinate
-		if coordinate.LX <= X and coordinate.LY <= Y and coordinate.RX >= X and coordinate.RY >= Y then
+		if coordinate.LX <= X and coordinate.LY <= Y and coordinate.RX > X and coordinate.RY > Y then
 			return quadrant
 		end
 	end
@@ -93,8 +93,12 @@ function ClsTree:Insert(NodeInfo)
 		else
 			self.Split()
 			for playerid, NodeInfo in pairs(self.players) do
-				
+				local index = self.GetIndex(NodeInfo.X, NodeInfo.Y)
+				local child = self.children[index]
+				child.players[playerid] = NodeInfo
 			end
+			self.players = {}	-- 清空
+			
 		end
 	else
 
