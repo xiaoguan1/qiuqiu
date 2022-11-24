@@ -34,6 +34,7 @@ function ClsTree:New(T)
 	self.children = {}
 end
 
+-- 划分区域
 function ClsTree:Split()
 	local size = tsize(self.players)
 	if size < MAX_COUNT then return end
@@ -48,12 +49,37 @@ function ClsTree:Split()
 	sum_Y = sum_Y / size
 
 	-- 创建孩子节点
-	{coordinate = {LX = LX, LY = LY, }}
-	local children1 = ClsTree:New({coordinate = {}})
-	local children2 = ClsTree:New()
-	local children3 = ClsTree:New()
-	local children4 = ClsTree:New()
-	tinsert(self.children, )
+	-- 第一象限
+	tinsert(self.children, ClsTree:New({
+		coordinate = {LX = LX + sum_X, LY = LY + sum_Y, RX = RX, RY = RY}
+	}))
+
+	-- 第二象限
+	tinsert(self.children, ClsTree:New({
+		coordinate = {LX = LX, LY = LY + sum_Y, RX = LX + sum_X, RY = RY}
+	}))
+
+	-- 第三象限
+	tinsert(self.children, ClsTree:New({
+		coordinate = {LX = LX, LY = LY, RX = LX + sum_X, RY = RY + sum_Y}
+	}))
+
+	-- 第四象限
+	tinsert(self.children, ClsTree:New({
+		coordinate = {LX = LX + sum_X, LY = LY, RX = RX, RY = LY + sum_Y}
+	}))
+end
+
+function ClsTree:GetIndex(X, Y)
+	if not (X and Y and #(self.children) ~= 0) then return end
+
+	-- quadrant 即象限也是index
+	for quadrant, child in pairs(self.children) do
+		local coordinate = child.coordinate
+		if coordinate.LX <= X and coordinate.LY <= Y and coordinate.RX >= X and coordinate.RY >= Y then
+			return quadrant
+		end
+	end
 end
 
 function ClsTree:Insert(NodeInfo)
@@ -65,8 +91,10 @@ function ClsTree:Insert(NodeInfo)
 		if tsize(self.players) + 1 <= MAX_COUNT then
 			self.players[NodeInfo.playerid] = NodeInfo
 		else
-			-- 划分区域
-
+			self.Split()
+			for playerid, NodeInfo in pairs(self.players) do
+				
+			end
 		end
 	else
 
