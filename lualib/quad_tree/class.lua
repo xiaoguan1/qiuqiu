@@ -11,8 +11,9 @@ local COORDINATE = { LX = LX, LY = LY, RX = RX, RY = RY }
 -- 深度
 local DEPTH = 8
 
-local ClsTree = {desc = "quad_tree"}
+ClsTree = {desc = "quad_tree"}
 
+-- 检查四象限区域
 local function _CheckCoordinate(Coordinate)
 	if not Coordinate then return COORDINATE end
 	for key, _ in pairs(Coordinate) do
@@ -23,25 +24,14 @@ local function _CheckCoordinate(Coordinate)
 	return Coordinate
 end
 
-function ClsTree:New(T)
-	self.coordinate = _CheckCoordinate(T.coordinate)
-	self.depth = T.depth or DEPTH
-
-	-- 数据域
-	self.players = {}
-
-	-- 关系域
-	self.children = {}
-end
-
 -- 划分区域
-function ClsTree:Split()
-	local size = tsize(self.players)
+function Split(Tree)
+	local size = tsize(Tree.players)
 	if size < MAX_COUNT then return end
 
 	-- 均分法
 	local sum_X, sum_Y = 0, 0
-	for playerid, NodeInfo in pairs(self.players) do
+	for playerid, NodeInfo in pairs(Tree.players) do
 		sum_X = sum_X + (NodeInfo.X - LX)
 		sum_Y = sum_Y + (NodeInfo.Y - LY)
 	end
@@ -50,31 +40,33 @@ function ClsTree:Split()
 
 	-- 创建孩子节点
 	-- 第一象限
-	tinsert(self.children, ClsTree:New({
+	tinsert(Tree.children, Tree:New({
 		coordinate = {LX = LX + sum_X, LY = LY + sum_Y, RX = RX, RY = RY}
 	}))
 
 	-- 第二象限
-	tinsert(self.children, ClsTree:New({
+	tinsert(Tree.children, Tree:New({
 		coordinate = {LX = LX, LY = LY + sum_Y, RX = LX + sum_X, RY = RY}
 	}))
 
 	-- 第三象限
-	tinsert(self.children, ClsTree:New({
+	tinsert(Tree.children, Tree:New({
 		coordinate = {LX = LX, LY = LY, RX = LX + sum_X, RY = RY + sum_Y}
 	}))
 
 	-- 第四象限
-	tinsert(self.children, ClsTree:New({
+	tinsert(Tree.children, Tree:New({
 		coordinate = {LX = LX + sum_X, LY = LY, RX = RX, RY = LY + sum_Y}
 	}))
 end
 
-function ClsTree:GetIndex(X, Y)
-	if not (X and Y and #(self.children) ~= 0) then return end
+local function GetIndex(Tree, NodeInfo)
+	local X = NodeInfo.X
+	local Y = NodeInfo.Y
+	if not (X and Y and #(Tree.children) ~= 0) then return end
 
 	-- quadrant 即象限也是index
-	for quadrant, child in pairs(self.children) do
+	for quadrant, child in pairs(Tree.children) do
 		local coordinate = child.coordinate
 		if coordinate.LX <= X and coordinate.LY <= Y and coordinate.RX > X and coordinate.RY > Y then
 			return quadrant
@@ -82,28 +74,47 @@ function ClsTree:GetIndex(X, Y)
 	end
 end
 
-function ClsTree:Insert(NodeInfo)
+-- 插入
+local function Insert(Tree, NodeInfo)
 	if not (NodeInfo and NodeInfo.playerid and NodeInfo.X and NodeInfo.Y) then
 		return
 	end
 
-	if #(self.children) == 0 then
-		if tsize(self.players) + 1 <= MAX_COUNT then
-			self.players[NodeInfo.playerid] = NodeInfo
+	if #(Tree.children) == 0 then
+		if tsize(Tree.players) + 1 <= MAX_COUNT then
+			Tree.players[NodeInfo.playerid] = NodeInfo
 		else
-			self.Split()
-			for playerid, NodeInfo in pairs(self.players) do
-				local index = self.GetIndex(NodeInfo.X, NodeInfo.Y)
-				local child = self.children[index]
+			Split(Tree)
+			for playerid, NodeInfo in pairs(Tree.players) do
+				local index = GetIndex(Tree, NodeInfo)
+				local child = Tree.children[index]
 				child.players[playerid] = NodeInfo
 			end
-			self.players = {}	-- 清空
-			
+			Tree.players = {}	-- 清空
+			Insert(Tree, NodeInfo)
 		end
 	else
-
-
+		-- 找出对应的象限【找出对应的孩子节点】
+		local index = GetIndex(Tree, NodeInfo)
+		if Tree.children[index] then
+			Insert(Tree.children[index], NodeInfo)
+		end
 	end
+
 	return true
 end
 
+-- 查询
+local function Find()
+end
+
+function ClsTree:New(Args)
+	self.coordinate = _CheckCoordinate(Args.coordinate)
+	self.depth = Args.depth or DEPTH
+
+	-- 数据域
+	self.players = {}
+
+	-- 关系域
+	self.children = {}
+end
