@@ -30,22 +30,18 @@ end;
 --设备：ios(已测)
 --时间：2017.9.27
 fileLib.createAllFolder=function(path)
-
 	local path_tb={}
 	local new_path=""
 	
 	-- 分割路径保存到table
 	for s in string.gmatch(path,"([^'/']+)") do
-
 		if s~=nil then
-
 			table.insert(path_tb,s)
 		end
 	end
 	
 	-- 遍历并拼接路径检测是否存在，不存在则新建
 	for k,v in ipairs(path_tb) do
-
 		if k==1 then
 			new_path=v
 		else
@@ -53,12 +49,9 @@ fileLib.createAllFolder=function(path)
 		end		
 
 		if os.execute("cd "..new_path) then
-			
 			print(new_path.." exist")
 		else
-
 			print(new_path.." do not exist")
-			
 			os.execute("mkdir "..new_path)
 		end
 	end
