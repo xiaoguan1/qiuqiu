@@ -6,8 +6,8 @@ local filelib = dofile "../lualib/filelib.lua"
 
 -- 计算绝对路径
 local nowPath = filelib.getNowPath()
-local protoPath = nowPath .. "/../protobuf/proto/"
-local pbPath = nowPath .. "/../protobuf/pb/"
+local protoPath = nowPath .. "/../protobuf/network/proto/"
+local pbPath = nowPath .. "/../protobuf/network/pb/"
 
 local protofiles = filelib.getFileList(protoPath)
 if not protofiles or type(protofiles) ~= "table" or table.empty(protofiles) then
