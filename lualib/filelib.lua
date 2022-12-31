@@ -127,4 +127,14 @@ fileLib.isFolderExist=function (folderPath)
 	return os.execute("cd "..folderPath)
 end
 
+--作用：返回当前路径
+--参数: 无
+--返回值：string/nil
+fileLib.getNowPath = function()
+	local a = io.popen("pwd");
+	if a ~= nil then
+		return a:read()
+	end
+end
+
 return fileLib
