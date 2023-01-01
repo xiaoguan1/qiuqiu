@@ -19,6 +19,9 @@ skynet.start(function ()
 	cluster.reload(runconfig.cluster)
 	cluster.open(mynode)
 
+	-- 加载协议文件
+	dofile "./protobuf/protoload/load.lua"
+
 	-- 开启 gateway
 	for i, v in pairs(nodecfg.gateway or {}) do
 		local srv = skynet.newservice("gateway", "gateway", i)
