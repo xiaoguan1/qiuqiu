@@ -19,3 +19,11 @@ CREATE TABLE roles (
 EOF
 [ $? -eq 0 ] && echo "create database: roles" || echo "exists database: roles";
 
+mysql -hlocalhost -uroot -proot $dbname << EOF 2>/dev/null  # 记得连上数据库 $dbname
+CREATE TABLE player (
+    playerid varchar(64) NOT NULL COMMENT '玩家id',
+    data varchar(64) NOT NULL COMMENT '玩家数据',
+    PRIMARY KEY (playerid)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOF
+[ $? -eq 0 ] && echo "create database: player" || echo "exists database: player";
