@@ -3,7 +3,7 @@ local socket = require "skynet.socket"
 local table = table
 local msgpack = require "msg_pack"
 
--- ´ıÓÅ»¯£¬fdÎŞÂÛÔÚÄÄ¸ö·şÎñ¶¼¿ÉÒÔ·¢ËÍ£¬ÎŞĞëÀ´µ½gateway·şÎñ
+-- å¾…ä¼˜åŒ–ï¼Œfdæ— è®ºåœ¨å“ªä¸ªæœåŠ¡éƒ½å¯ä»¥å‘é€ï¼Œæ— é¡»æ¥åˆ°gatewayæœåŠ¡
 PROTO_FUN.send_by_fd = function(source, fd, msg)
     if not conns[fd] then return end
 
@@ -24,7 +24,7 @@ end
 PROTO_FUN.sure_agent = function(source, fd, playerid, agent)
     local conn = conns[fd]
 
-	-- µÇÂ½¹ı³ÌÖĞÒÑ¾­ÏÂÏß
+	-- ç™»é™†è¿‡ç¨‹ä¸­å·²ç»ä¸‹çº¿
 	if not conn then
 		skynet.call("agentmgr", "lua", "reqkick", playerid, "")
 		return false
