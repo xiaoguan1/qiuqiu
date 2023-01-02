@@ -5,17 +5,17 @@ local nodecfg = runconfig[node]
 
 local M = {}
 
--- µÇ³ö
+-- ç™»å‡º
 M.disconnect = function(fd)
 	local c = conns[fd]
 	if not c then return end
 
-	-- playerid²»Îª¿ÕÊ±´ú±í´¦ÓÚµÇÂ¼ÖĞ
+	-- playeridä¸ä¸ºç©ºæ—¶ä»£è¡¨å¤„äºç™»å½•ä¸­
 	local playerid = c.playerid
     if not playerid then return end
 
     player[playerid] = nil
-	local reason = "¶ÏÏß"
+	local reason = "æ–­çº¿"
 	skynet.call("agentmgr", "lua", "reqkick", playerid, reason)
 end
 
@@ -24,7 +24,7 @@ M.process_msg = function(fd, cmd, msg)
 	local playerid = conn.playerid
 
     if not playerid then
-		-- Ëæ¼´Ñ¡Ò»¸ö·şÎñ£¨²»ÑÏ½÷£¬Ã»ÓĞºÜºÃµÄ½â¾ö¸ºÔØ¾ùºâµÄÎÊÌâ£¬ĞèÒª¼ÓÏà¹ØµÄËã·¨¸¨ÖúÑ¡È¡£©
+		-- éšå³é€‰ä¸€ä¸ªæœåŠ¡ï¼ˆä¸ä¸¥è°¨ï¼Œæ²¡æœ‰å¾ˆå¥½çš„è§£å†³è´Ÿè½½å‡è¡¡çš„é—®é¢˜ï¼Œéœ€è¦åŠ ç›¸å…³çš„ç®—æ³•è¾…åŠ©é€‰å–ï¼‰
 		local loginid = math.random(1, #nodecfg.login)
 		local login = "login" .. loginid
 
@@ -35,7 +35,7 @@ M.process_msg = function(fd, cmd, msg)
 			local agent = gplayer.agent
 			skynet.send(agent, "lua", "client", cmd, msg)
 		else
-			PROTO_FUN.send_by_fd(nil, fd, {"create", 1, "ÇëÏÈÍË³öµ±Ç°ÕÊºÅÔÙ´´½Ç£¡£¡£¡"})
+			PROTO_FUN.send_by_fd(nil, fd, {"create", 1, "è¯·å…ˆé€€å‡ºå½“å‰å¸å·å†åˆ›è§’ï¼ï¼ï¼"})
 		end
 	end
 end
