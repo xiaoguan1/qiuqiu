@@ -1,13 +1,13 @@
--- 主节点配�?
+-- 主节点配置
 
-thread = 8 --启用多少个工作线�?
+thread = 8 --启用多少个工作线
 cpath = "./skynet/cservice/?.so" --用C编写的服务模块的位置
-bootstrap = "snlua bootstrap" --启动的第一个服�?
---bootstrap配置�?
-start = "main" --主服务入�?
-harbor = 0 --不使用主从节点模�? 
+bootstrap = "snlua bootstrap" --启动的第一个服务
+--bootstrap配置
+start = "main" --主服务
+harbor = 0 --不使用主从节点模式
 
---lua配置�?
+--lua配置
 lualoader = "./skynet/lualib/loader.lua" 
 luaservice = "./service/?.lua;" .."./service/?/init.lua;".. "./skynet/service/?.lua;" 
 lua_path = "./service/common/?.lua;" .. "./etc/?.lua;" .. "./lualib/?.lua;" .. "./db/?.lua;" .. "./skynet/lualib/?.lua;" .. "./skynet/lualib/?/init.lua"
@@ -20,5 +20,5 @@ lua_cpath = "./luaclib/?.so;" .. "./skynet/luaclib/?.so"
 --节点
 node = "node1"
 
---自己添加的环�?
+--自己添加的环境
 
