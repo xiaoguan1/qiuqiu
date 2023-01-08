@@ -25,11 +25,11 @@ M.Getdb = function()
 	return db
 end
 
-M.check_account = function(account, passwd, db)
+M.check_account = function(playerId, passwd, db)
 	db = db or Getdb()
-	if not (account and passwd and db) then return end
+	if not (playerId and passwd and db) then return end
 
-	local sql = string.format("select * from roles where account = %s", account)
+	local sql = string.format("select * from roles where playerId = %s", playerId)
 	local res = db:query(sql)
 
 	if not res["badresult"] and #res == 1 then
@@ -39,11 +39,11 @@ M.check_account = function(account, passwd, db)
 	skynet.error("查找失败！！！")
 end
 
-M.isHas = function(account, passwd, db)
+M.isHas = function(playerId, passwd, db)
 	db = db or Getdb()
-	if not (account and passwd and db) then return end
+	if not (playerId and passwd and db) then return end
 
-	local sql = string.format("select * from roles where account = %s", account)
+	local sql = string.format("select * from roles where playerId = %s", playerId)
 	local res = db:query(sql)
 
 	if not res["badresult"] and #res == 1 then
@@ -51,16 +51,27 @@ M.isHas = function(account, passwd, db)
 	end
 end
 
-M.insert = function(account, passwd, db)
+M.insert = function(playerId, passwd, db)
 	db = db or Getdb()
-	if not (account and passwd and db) then return end
+	if not (playerId and passwd and db) then return end
 
-	local sql = string.format("insert into roles(account, passwd) values (%s, %s)", account, passwd)
+	local sql = string.format("insert into roles(playerId, passwd) values (%s, %s)", playerId, passwd)
 	local res = db:query(sql)
-	log.PRINT("insert insert ", res)
 	if not res["badresult"] and res.affected_rows == 1 then
+		print("DDDDDDDDDDDDDD")
 		return true
 	end
+	print("DDDDDDDDDDDDDD222")
+end
+
+M.select_roles =  function(playerId, db)
+	db = db or Getdb()
+	if not (playerId and passwd and db) then return end
+
+
+	local sql = string.format("select playerId, passwd, data from roles where playerId=%s", playerId)
+	local res = db:query(sql)
+	log.PRINT("select_roles select_roles ", res)
 end
 
 return M

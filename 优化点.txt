@@ -4,3 +4,10 @@
 重写协议系统，不要用通用的service.lua模块
 
 通过dofile文件 和 全局表(PROTO_FUN) 完成协议的改版(先不考虑热更的问题！！！)
+
+
+
+
+需要在common_db.lua 的insert 哪里做一个默认的data字段数据[序列化好的]，不然创角会失败！！！！
+
+不打算继续使用 service.lua 这个框架！！！！

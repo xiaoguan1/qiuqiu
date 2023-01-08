@@ -12,9 +12,9 @@ EOF
 # 重建表
 mysql -hlocalhost -uroot -proot $dbname << EOF 2>/dev/null  # 记得连上数据库 $dbname
 CREATE TABLE roles (
-    account varchar(64) NOT NULL COMMENT '账号',
+    playerId varchar(64) NOT NULL COMMENT '账号',
     passwd varchar(32) NOT NULL COMMENT '密码',
-    data varchar(64) NOT NULL COMMENT '玩家数据',
+    data varchar(64) COMMENT '玩家数据',
     PRIMARY KEY (account)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOF

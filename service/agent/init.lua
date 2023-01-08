@@ -1,6 +1,8 @@
 local skynet = require "skynet"
 local s = require "service"
 local P = require "common_log"
+local CommonDB = require "common_db"
+
 
 PROTO_FUN = {}
 
@@ -8,8 +10,9 @@ s.client = {}
 s.gate = nil
 
 s.init = function()
-    -- 读取数据库，获得玩家数据
-    skynet.sleep(200)
+	local db = CommonDB.Getdb() -- 获取数据库句柄（这里是登录，不是创角）
+
+    -- COMMON_DB.select_roles()
 
     s.data = {
         coin = 100,
@@ -20,8 +23,6 @@ end
 s.after = function()
     dofile("./service/agent/scene.lua")
 end
-
-s.start(...)
 
 PROTO_FUN.client = function(source, cmd, msg)
     s.gate = source
@@ -63,3 +64,5 @@ PROTO_FUN.shift = function(msg)
     -- 有待商榷，可以用异步。如果出现卡顿　那说明服务器处于过载的情况
     s.call(s.snode, s.sname, "shift", s.id, x, y)
 end
+
+s.start(...)
