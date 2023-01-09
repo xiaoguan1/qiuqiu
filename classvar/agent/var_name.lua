@@ -31,6 +31,11 @@ function GenFile(filePath, data)
     if content then
         local sub
         data, sub = string.gsub(content, "(%-%-autogen%-begin).-(%-%-autogen%-end)", "%1" .. data .. "%2")
+
+        -- data, sub = string.gsub(content, "(%-%-autogen%-begin).-(%-%-autogen%-end)", function(a, b, c, d, e)
+        --     return a .. data .. b
+        -- end)
+
         assert(sub == 1, string.format("must insert into file: %s once", filePath))
     else
         error("not file: " .. filePath)
@@ -49,6 +54,7 @@ end
 function %s:Set%s(%s)
     self.%s.%s = %s
 end
+
 ]]
 
 
@@ -83,10 +89,10 @@ function gen()
         end
     end
 
-    dofile("charvar/agent/db.lua")
+    dofile("./classvar/agent/db.lua")
 
     -- 绑定属性文件
-    BindFuncFile("clsRole", TmpVars.role, assert(GetSaveVars("role")), "service/agent/char/role/role.lua")
+    BindFuncFile("clsRole", TmpVars.role, assert(GetSaveVars("DATABASE_ROLES_DATA")), "./service/agent/class/role.lua")
 end
 
 gen()   -- 直接生成

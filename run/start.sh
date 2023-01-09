@@ -12,6 +12,8 @@ getDir(){
 RUNDIR=`getDir`	# 当前路径
 cd $RUNDIR/..
 
+lua ./classvar/agent/var_name.lua
+
 case ${1} in
 	"1")
 		./skynet/skynet ./etc/main
