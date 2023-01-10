@@ -3,6 +3,8 @@ local socket = require "skynet.socket"
 local table = table
 local msgpack = require "msg_pack"
 
+CLOSING = false -- 是否收到关服消息
+
 -- 待优化，fd无论在哪个服务都可以发送，无须来到gateway服务
 PROTO_FUN.send_by_fd = function(source, fd, msg)
     if not conns[fd] then return end
@@ -53,4 +55,9 @@ PROTO_FUN.kick = function(source, playerid)
 	conns[c.fd] = nil
 	disconnect(c.fd)
 	socket.close(c.fd)
+end
+
+-- 关闭服务
+PROTO_FUN.shutdown = function()
+	CLOSING = true
 end

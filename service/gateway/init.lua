@@ -70,6 +70,8 @@ end
 
 -- socket处理客户端连接的函数
 local function connect(fd, addr)
+	if CLOSING then return end	-- 收到关服消息 拒绝玩家连接
+
 	skynet.error("connect from " .. addr .. " " .. fd)
 	local c = conn()
 	conns[fd] = c
