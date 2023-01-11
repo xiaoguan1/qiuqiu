@@ -97,11 +97,43 @@ PROTO_FUN.reqkick = function(source, playerid, reason)
     return true
 end
 
--- 关服强制玩家下线
-PROTO_FUN.shutdown = function(source)
+-- 策略1：缓缓的让玩家下线【降低关服时数据库瞬时压力】
+function shutdown_quit_player_1(num)
+    local playerCount = get_player_online_count()
+    local n = 0
+    for playerid, player in pairs(players) do
+        skynet.fork(PROTO_FUN.reqkick, nil, playerid, "close server")
+        n = n + 1
+        if n > num then break end
+    end
+
+    while true do
+        skynet.sleep(200)
+        local new_count = get_player_online_count()
+        skynet.error("shutdown online:" .. new_count)
+        if new_count <= 0 or new_count <= (playerCount - num) then
+            return new_count
+        end
+    end
+end
+
+-- 策略2：玩家全部同时下线【玩家人数较少时或者数据库压力不大时可选择】
+function shutdown_quit_player_2()
     -- 踢下线
     for playerid, player in pairs(players) do
-        CS(PROTO_FUN.reqkick, nil, playerid, "close server")
+        PROTO_FUN.reqkick(nil, playerid, "close server")
+    end
+end
+
+
+-- 关服强制玩家下线
+PROTO_FUN.shutdown = function(source, num)
+    -- 踢下线
+    local playerCount = get_player_online_count()
+    if playerCount > 100 then
+        shutdown_quit_player_1(num)
+    else
+        shutdown_quit_player_2()
     end
     return true
 end
