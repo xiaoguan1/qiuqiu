@@ -97,21 +97,23 @@ PROTO_FUN.reqkick = function(source, playerid, reason)
     return true
 end
 
+
+local QUIT_PLAYER_COUNT = 10 -- 同时下线人数
 -- 策略1：缓缓的让玩家下线【降低关服时数据库瞬时压力】
-function shutdown_quit_player_1(num)
+function shutdown_quit_player_1()
     local playerCount = get_player_online_count()
     local n = 0
     for playerid, player in pairs(players) do
         skynet.fork(PROTO_FUN.reqkick, nil, playerid, "close server")
         n = n + 1
-        if n > num then break end
+        if n > QUIT_PLAYER_COUNT then break end
     end
 
     while true do
         skynet.sleep(200)
         local new_count = get_player_online_count()
         skynet.error("shutdown online:" .. new_count)
-        if new_count <= 0 or new_count <= (playerCount - num) then
+        if new_count <= 0 or new_count <= (playerCount - QUIT_PLAYER_COUNT) then
             return new_count
         end
     end
@@ -125,13 +127,16 @@ function shutdown_quit_player_2()
     end
 end
 
-
 -- 关服强制玩家下线
-PROTO_FUN.shutdown = function(source, num)
-    -- 踢下线
+PROTO_FUN.shutdown = function(source)
+    -- 在线人数
     local playerCount = get_player_online_count()
+
+    -- 在线人数大于100阈值采用策略1，否则采用策略2。
     if playerCount > 100 then
-        shutdown_quit_player_1(num)
+        while playerCount > 0 then
+            playerCount = shutdown_quit_player_1()
+        end
     else
         shutdown_quit_player_2()
     end
