@@ -1,6 +1,6 @@
 local skynet = require "skynet"
 local s = require "service"
-local table = require "table"
+local table = table
 local queue = require "skynet.queue"
 local CS = queue()
 

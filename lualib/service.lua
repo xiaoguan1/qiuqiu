@@ -10,6 +10,13 @@ local M = {
 	exit = nil,	-- 回调退出函数
 }
 
+-- 全部服务都要加载的文件【后续如果有其他的逻辑等可单独一个文件】
+local function loadprefile()
+	require "extend/table"
+	require "extend/string"
+end
+
+
 local function dispatch(session, address, cmd, ...)
 	local fun = PROTO_FUN[cmd]
 	if not fun then
@@ -40,6 +47,9 @@ function after()
 end
 
 function M.start(name, id, ...)
+	-- 加载每个服务都需要的拓展功能
+	loadprefile()
+
 	M.name = name
 	M.id = id
 	skynet.start(init, name, id, ...)

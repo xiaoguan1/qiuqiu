@@ -1,8 +1,8 @@
 -- 目前还有一些问题，编译协议时是无序如果后面有编译顺序的需求需要加代码!!!
 
 -------- 必须具备这些自定义脚本文件 --------
-dofile "../lualib/table.lua"
-dofile "../lualib/string.lua"
+dofile "../lualib/extend/table.lua"
+dofile "../lualib/extend/string.lua"
 local filelib = dofile "../lualib/filelib.lua"
 -------- 必须具备这些自定义脚本文件 --------
 
