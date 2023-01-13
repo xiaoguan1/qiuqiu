@@ -36,7 +36,7 @@ function connect(fd, addr)
 	socket.start(fd)
 	socket.write(fd, "Please enter cmd\r\n")
 	local cmd = socket.readline(fd, "\r\n")
-	if cmd = "stop" then
+	if cmd == "stop" then
         stop()
     else
         -- .....
@@ -48,3 +48,5 @@ service.init = function()
     local listenfd = socket.listen("127.0.0.1", 8888)
     socket.start(listenfd, connect)
 end
+
+service.start(...)

@@ -134,7 +134,7 @@ PROTO_FUN.shutdown = function(source)
 
     -- 在线人数大于100阈值采用策略1，否则采用策略2。
     if playerCount > 100 then
-        while playerCount > 0 then
+        while playerCount > 0 do
             playerCount = shutdown_quit_player_1()
         end
     else
