@@ -58,10 +58,10 @@ M.insert = function(playerId, passwd, db)
 	local sql = string.format("insert into roles(playerId, passwd) values (%s, %s)", playerId, passwd)
 	local res = db:query(sql)
 	if not res["badresult"] and res.affected_rows == 1 then
-		print("DDDDDDDDDDDDDD")
 		return true
 	end
-	print("DDDDDDDDDDDDDD222")
+	log.PRINT("databases roles table insert fail. res: ", res)
+	return
 end
 
 M.select_roles =  function(playerId, db)
