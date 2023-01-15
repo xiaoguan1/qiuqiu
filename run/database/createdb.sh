@@ -15,7 +15,7 @@ CREATE TABLE roles (
     playerId varchar(64) NOT NULL COMMENT '账号',
     passwd varchar(32) NOT NULL COMMENT '密码',
     data varchar(64) COMMENT '玩家数据',
-    PRIMARY KEY (account)
+    PRIMARY KEY (playerId)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOF
 [ $? -eq 0 ] && echo "create database: roles" || echo "exists database: roles";
