@@ -1,6 +1,6 @@
 #!/bin/bash
 
-dbname=$1
+dbname=message_board
 
 # 重建数据库
 mysql -hlocalhost -uroot -proot << EOF 2>/dev/null

@@ -17,8 +17,24 @@ lua_cpath = "./luaclib/?.so;" .. "./skynet/luaclib/?.so"
 --daemon = "./skynet.pid"
 --logger = "./userlog"
 
---节点
-node = "node1"
+--节点编号
+--node = "node1"
+server_id = 1
 
 --自己添加的环境
+set_preload = "./lualib/base/preload.lua"   -- 每个服务器都要加载的脚本
 
+------------------ 节点信息 ------------------
+is_cross = false
+server_id = 1
+nowaiting = true	-- 不挂起【其中利弊还未考量】
+
+------------------ 网关信息 ------------------
+gateway_post = 9999		-- 端口
+login_num = 10			-- 处理登录的服务数量
+
+------------------ 战斗场景 ------------------
+scene = [[{
+	[1] = 1001,
+	[2] = 1002,
+}]]

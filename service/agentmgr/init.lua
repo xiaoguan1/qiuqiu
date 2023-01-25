@@ -143,4 +143,7 @@ PROTO_FUN.shutdown = function(source)
     return true
 end
 
+function s.after()
+end
+
 s.start(...)

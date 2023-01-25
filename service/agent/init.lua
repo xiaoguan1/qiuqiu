@@ -10,7 +10,7 @@ s.client = {}
 s.gate = nil
 
 s.init = function()
-	local db = CommonDB.Getdb() -- 获取数据库句柄（这里是登录，不是创角）
+	local db = CommonDB.Getdb(DATABASE_NAME.MESSAGE_BOARD) -- 获取数据库句柄（这里是登录，不是创角）
 
     -- COMMON_DB.select_roles()
 

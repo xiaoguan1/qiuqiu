@@ -1,17 +1,19 @@
 local skynet = require "skynet"
 local mysql = require "skynet.db.mysql"
 local log = require "common_log"
+local table = table
 
 local M = {}
 
-M.Getdb = function()
-	local function on_connect(db)
-		db:query("set charset utf8")
-	end
+------------------------------------------------ 连接数据库 ------------------------------------------------
+function M.Getdb(databaseName)
+	if not (databaseName and table.is_has_value(DATABASE_NAME, databaseName)) then return end
+
+	local function on_connect(db) db:query("set charset utf8") end
 	local db = mysql.connect({
 		host = "127.0.0.1",
 		port = 3306,
-		database = "message_board",
+		database = databaseName,
 		user = "root",
 		password = "root",
 		max_pack_size = 1024 * 1024,
@@ -25,53 +27,29 @@ M.Getdb = function()
 	return db
 end
 
-M.check_account = function(playerId, passwd, db)
-	db = db or Getdb()
-	if not (playerId and passwd and db) then return end
-
-	local sql = string.format("select * from roles where playerId = %s", playerId)
+------------------------------------------------ 数据库的公共操作接口 ------------------------------------------------
+-- 查询数据
+function M.select(db, tableName, column, key, value)
+	local sql = string.format("select %s from %s where %s=%s", column or "*", tableName, key, value)
 	local res = db:query(sql)
 
 	if not res["badresult"] and #res == 1 then
-		local result = res[1]
-		return result.passwd == passwd
-	end
-	skynet.error("查找失败！！！")
-end
-
-M.isHas = function(playerId, passwd, db)
-	db = db or Getdb()
-	if not (playerId and passwd and db) then return end
-
-	local sql = string.format("select * from roles where playerId = %s", playerId)
-	local res = db:query(sql)
-
-	if not res["badresult"] and #res == 1 then
-		return true
+		--以roles表为例 正确结果的返回：res = {{ passwd = "123", playerId = "1001" }}
+		return true, res
 	end
 end
 
-M.insert = function(playerId, passwd, db)
-	db = db or Getdb()
-	if not (playerId and passwd and db) then return end
+-- 插入新数据
+function M.insert(db, tableName, column, values)
+	if not (db and tableName and column and values) then return end
 
-	local sql = string.format("insert into roles(playerId, passwd) values (%s, %s)", playerId, passwd)
+	local sql = string.format("insert into %s(%s) values (%s)", tableName, column, values)
 	local res = db:query(sql)
+
 	if not res["badresult"] and res.affected_rows == 1 then
-		return true
+		--以roles表为例 正确结果的返回：res = { warning_count = 0, insert_id = 0, server_status = 2, affected_rows = 1 }
+		return true, res
 	end
-	log.PRINT("databases roles table insert fail. res: ", res)
-	return
-end
-
-M.select_roles =  function(playerId, db)
-	db = db or Getdb()
-	if not (playerId and passwd and db) then return end
-
-
-	local sql = string.format("select playerId, passwd, data from roles where playerId=%s", playerId)
-	local res = db:query(sql)
-	log.PRINT("select_roles select_roles ", res)
 end
 
 return M

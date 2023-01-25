@@ -1,7 +1,7 @@
 local pb = require "protobuf"
 local filelib = require "filelib"
 
-function load()
+function load_proto()
 	local nowPath = filelib.getNowPath()
 	local networkPbPath = nowPath .. "/protobuf/network/pb/"
 	local databasePbPath = nowPath .. "/protobuf/database/pb/"
@@ -24,4 +24,4 @@ function load()
 	end
 end
 
-load()
+load_proto()

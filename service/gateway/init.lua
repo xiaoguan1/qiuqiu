@@ -52,7 +52,7 @@ end
 
 local recv_loop = function(fd)
 	socket.start(fd)
-	
+
 	local readbuff = ""
 	while true do
 		local revstr = socket.read(fd)
@@ -80,15 +80,8 @@ local function connect(fd, addr)
 end
 
 -- gateway服务的初始化
-function s.init()
-	local node = skynet.getenv("node")
-	local nodecfg = runconfig[node]	
-
-	-- 检查gateway的启动配置
-	local cfg = nodecfg and nodecfg.gateway and s.id and nodecfg.gateway[tonumber(s.id)]
-	if not cfg then error("gateway start not nodecfg") end
-	
-	local port = cfg.port
+function s.init()	
+	local port = assert(tonumber(skynet.getenv("gateway_post")))
 	local ip = "0.0.0.0"
 
 	local listenfd = socket.listen(ip, port)

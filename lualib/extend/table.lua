@@ -18,3 +18,11 @@ function table.empty(t)
 
 	return true
 end
+
+function table.is_has_value(tbl, value)
+	if type(tbl) ~= "table" then return end
+	for _, _value in pairs(tbl) do
+		if value == _value then return true end
+	end
+	return false
+end

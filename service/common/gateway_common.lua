@@ -1,7 +1,6 @@
 local skynet = require "skynet"
-local node = skynet.getenv("node")
-local runconfig = require "runconfig"
-local nodecfg = runconfig[node]
+local login_num = assert(tonumber(skynet.getenv("login_num")))
+
 
 local M = {}
 
@@ -25,7 +24,7 @@ M.process_msg = function(fd, cmd, msg)
 
     if not playerid then
 		-- 随即选一个服务（不严谨，没有很好的解决负载均衡的问题，需要加相关的算法辅助选取）
-		local loginid = math.random(1, #nodecfg.login)
+		local loginid = math.random(1, login_num)
 		local login = "login" .. loginid
 
 		skynet.send(login, "lua", "client", fd, cmd, msg)

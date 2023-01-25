@@ -30,6 +30,12 @@ while [ "X$game_pid" != "X" ]; do
 	game_pid=`ps -ef | grep skynet | grep main | awk '{printf("%d", $2);}'`
 done
 
+# 创建表
 #sh $RUNDIR/database/deletedb.sh	
-sh $RUNDIR/database/createdb.sh message_board
+sh $RUNDIR/database/create/server_db.sh
+sh $RUNDIR/database/create/common_db.sh
 
+if [ $? -eq 0 ]; then
+	# 插入数据
+	sh $RUNDIR/database/insert/common_db.sh
+fi
