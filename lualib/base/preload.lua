@@ -40,7 +40,7 @@ if not setfenv then
         return nil
     end
 
-    getfenv =  function (f)
+    getfenv = function (f)
         if type(f) == "number" then
             f = debug.getinfo(f + 1, 'f').func
         end
