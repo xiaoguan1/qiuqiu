@@ -7,16 +7,40 @@ local is_cross = skynet.getenv("is_cross") == "true" and true or false
 local assert = assert
 local log = require "common_log"
 
+local EVERY_NODE_SERVER = {
+	stimer = ".stimer",		-- 定时器服务
+}
+
+local function every_node_server()
+	for named, registerName in pairs(EVERY_NODE_SERVER) do
+		local sid = skynet.uniqueservice(named)
+		skynet.name(registerName, sid)
+	end
+end
+
+function traceback()
+	for level = 1, math.huge do
+		local info = debug.getinfo(level, "Sl")
+		if not info then break end
+
+		if info.what == "C" then
+			print(string.format("%d\tC function", level))
+		else
+			print(string.format("%d\t[%s]:%d", level, info.short_src, info.currentline))
+		end
+	end
+end
+
 skynet.start(function ()
 	-- 初始化
 	skynet.error("-----------------start main-------------------")
-
 	skynet.setenv("preload", set_preload)
 	dofile(set_preload)
 	local Node_Info = require "node_info"
 	local DPCLUSTER_NODE = assert(Node_Info.GetNodeInfo())
 	local clusterCfg = assert(Node_Info.GetClusterCfg())
 
+	every_node_server()
 	if is_cross then
 		-- 跨服的逻辑未定 先随便写（后续再改）
 		local proxy = cluster.proxy(DPCLUSTER_NODE.main_ip_port, "agentmgr")
@@ -27,18 +51,18 @@ skynet.start(function ()
 		skynet.name("nodemgr", nodemgr)
 
 		-- 开启 gateway(需要优化，先创建服务，在call设置网关信息 开出socket)
-		local srv = skynet.newservice("gateway", "gateway", 1)
-		skynet.name("gateway" .. 1, srv)
+		local gateway = skynet.newservice("gateway", "gateway", 1)
+		skynet.name("gateway" .. 1, gateway)
 
 		local login_num = assert(tonumber(skynet.getenv("login_num")))
 		-- 开启 login服务
 		for i = 1, login_num do
-			local srv = skynet.newservice("login", "login", i)
-			skynet.name("login" .. i, srv)
+			local login = skynet.newservice("login", "login", i)
+			skynet.name("login" .. i, login)
 		end
 
-		local srv = skynet.newservice("agentmgr", "agentmgr", 0)
-		skynet.name("agentmgr", srv)
+		local agentmgr = skynet.newservice("agentmgr", "agentmgr", 0)
+		skynet.name("agentmgr", agentmgr)
 
 		-- -- 开启场景服务
 		local scene = assert(load("return ".. skynet.getenv("scene"))())
