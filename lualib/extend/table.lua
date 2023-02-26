@@ -26,3 +26,14 @@ function table.is_has_value(tbl, value)
 	end
 	return false
 end
+
+function table.copy(tbl)
+	if not tbl then
+		return nil
+	end
+	local ret = {}
+	for k, v in pairs(tbl) do
+		ret[k] = v
+	end
+	return ret
+end
