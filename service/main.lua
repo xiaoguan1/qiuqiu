@@ -6,7 +6,7 @@ local set_preload = skynet.getenv("set_preload")
 local is_cross = skynet.getenv("is_cross") == "true" and true or false
 local assert = assert
 local log = require "common_log"
-dofile("./lualib/base/base_class.lua")
+-- dofile("./lualib/base/base_class.lua")
 
 local EVERY_NODE_SERVER = {
 	stimer = ".stimer",		-- 定时器服务
