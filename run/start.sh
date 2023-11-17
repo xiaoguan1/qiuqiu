@@ -11,7 +11,12 @@ getDir(){
 
 RUNDIR=`getDir`	# 当前路径
 
-# 默认编译一下skynet引擎
+# 默认编译lua
+LUADIR=$RUNDIR/../skynet/3rd/lua
+cd $LUADIR
+make linux
+
+# 默认编译skynet引擎
 SKYNETDIR=$RUNDIR/../skynet/
 cd $SKYNETDIR
 make linux
