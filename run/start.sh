@@ -10,8 +10,13 @@ getDir(){
 }
 
 RUNDIR=`getDir`	# 当前路径
-cd $RUNDIR/..
 
+# 默认编译一下skynet引擎
+SKYNETDIR=$RUNDIR/../skynet/
+cd $SKYNETDIR
+make linux
+
+cd $RUNDIR/..
 lua ./classvar/agent/var_name.lua
 
 case ${1} in
