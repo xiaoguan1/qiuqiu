@@ -1,0 +1,32 @@
+24/11/23 01:51:32.76 [:00000002] LAUNCH snlua bootstrap
+24/11/23 01:51:32.81 [:00000003] LAUNCH snlua launcher
+24/11/23 01:51:32.81 [:00000004] LAUNCH snlua cdummy
+24/11/23 01:51:32.84 [:00000005] LAUNCH harbor 0 4
+24/11/23 01:51:32.84 [:00000006] LAUNCH snlua datacenterd
+24/11/23 01:51:32.84 [:00000007] LAUNCH snlua service_mgr
+24/11/23 01:51:32.85 [:00000008] LAUNCH snlua main
+24/11/23 01:51:32.89 [:00000009] LAUNCH snlua clusterd
+24/11/23 01:51:32.89 [:00000008] -----------------start main-------------------
+24/11/23 01:51:33.01 [:0000000a] LAUNCH snlua stimer
+24/11/23 01:51:33.05 [:0000000b] LAUNCH snlua nodemgr nodemgr 0
+24/11/23 01:51:33.08 [:0000000c] LAUNCH snlua gateway gateway 1
+24/11/23 01:51:33.14 [:0000000c] Listen socket: 0.0.0.0:9999
+24/11/23 01:51:33.14 [:0000000d] LAUNCH snlua login login 1
+24/11/23 01:51:33.19 [:0000000e] LAUNCH snlua login login 2
+24/11/23 01:51:33.24 [:0000000f] LAUNCH snlua login login 3
+24/11/23 01:51:33.29 [:00000010] LAUNCH snlua login login 4
+24/11/23 01:51:33.34 [:00000011] LAUNCH snlua login login 5
+24/11/23 01:51:33.39 [:00000012] LAUNCH snlua login login 6
+24/11/23 01:51:33.42 [:00000013] LAUNCH snlua login login 7
+24/11/23 01:51:33.48 [:00000014] LAUNCH snlua login login 8
+24/11/23 01:51:33.52 [:00000015] LAUNCH snlua login login 9
+24/11/23 01:51:33.56 [:00000016] LAUNCH snlua login login 10
+24/11/23 01:51:33.59 [:00000017] LAUNCH snlua agentmgr agentmgr 0
+24/11/23 01:51:33.65 [:00000018] LAUNCH snlua scene scene 1001
+24/11/23 01:51:33.71 [:00000019] LAUNCH snlua scene scene 1002
+24/11/23 01:51:33.74 [:00000009] Config nowaiting = true
+24/11/23 01:51:33.75 [:0000001a] LAUNCH snlua gate
+24/11/23 01:51:33.79 [:0000001a] Listen on 127.0.0.1:8001
+24/11/23 01:51:33.79 [:0000001b] LAUNCH snlua admin admin 1
+24/11/23 01:51:33.83 [:00000008] KILL self
+24/11/23 01:51:33.83 [:00000002] KILL self

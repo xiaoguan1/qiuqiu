@@ -14,8 +14,8 @@ lua_path = "./service/common/?.lua;" .. "./etc/?.lua;" .. "./lualib/?.lua;" .. "
 lua_cpath = "./luaclib/?.so;" .. "./skynet/luaclib/?.so"
 
 --后台模式（必要时开启）
---daemon = "./skynet.pid"
---logger = "./userlog"
+daemon = "./log/skynet.pid"
+logger = "./log/userlog"
 
 --节点编号
 --node = "node1"
