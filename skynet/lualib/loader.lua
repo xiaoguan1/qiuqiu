@@ -39,6 +39,13 @@ else
 	SERVICE_PATH = p
 end
 
+-- 加载函数库的拓展
+if LUA_EXTENDLIB then
+	local f = assert(loadfile(LUA_EXTENDLIB))
+	f(table.unpack(args))
+	LUA_EXTENDLIB = nil
+end
+
 if LUA_PRELOAD then
 	local f = assert(loadfile(LUA_PRELOAD))
 	f(table.unpack(args))

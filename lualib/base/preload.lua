@@ -7,10 +7,6 @@ local LOAD_FILES = {
 
     -- 协议
     "./protobuf/protoload/loadproto.lua",
-
-    -- 拓展
-    "./lualib/extend/string.lua",
-    "./lualib/extend/table.lua",
 }
 
 for _, filepath in pairs(LOAD_FILES) do

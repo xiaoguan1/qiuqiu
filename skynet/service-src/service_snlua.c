@@ -419,6 +419,10 @@ init_cb(struct snlua *l, struct skynet_context *ctx, const char * args, size_t s
 	lua_pushstring(L, preload);
 	lua_setglobal(L, "LUA_PRELOAD");
 
+	const char *extendlib = skynet_command(ctx, "GETENV", "extendlib");
+	lua_pushstring(L, extendlib);
+	lua_setglobal(L, "LUA_EXTENDLIB");
+
 	lua_pushcfunction(L, traceback);
 	assert(lua_gettop(L) == 1);
 
