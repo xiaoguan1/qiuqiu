@@ -2,6 +2,7 @@ local skynet = require "skynet"
 local core = require "skynet.core"
 require "skynet.manager"	-- import manager apis
 local string = string
+local codecache = require "skynet.codecache"
 
 local services = {}
 local command = {}
@@ -13,6 +14,38 @@ local function handle_to_address(handle)
 end
 
 local NORET = {}
+
+-- skynet服务更新文件
+function command.UPDATE_CMD(_, service_name, updatefile)
+	codecache.clearone(updatefile)
+	for _address, _v in pairs(services) do
+		local sp_tbl = string.split(_v, " ")
+		if sp_tbl and sp_tbl[2] and sp_tbl[2] == service_name then
+			local ok, ret, err = pcall(skynet.call, "update", "update_file", service_name, updatefile)
+			skynet.error(skynet.address(_address), _v, updatefile, ok, ret, err)
+		end
+	end
+end
+
+-- 获取每个服务的相应时间
+function command.SERVICE_RT()
+	local ret = {}
+	for _address, _v in pairs(services) do
+		local sp_tbl = string.split(_v, " ")
+		local service_name = sp_tbl and sp_tbl[2]
+		if service_name then
+			local sTime = os.realtime()
+			skynet.call(_address, "debug", "PING")
+			local eTime = os.realtime()
+			ret[service_name .. string.format("[:%08x]", _address)] = eTime - sTime
+		end
+	end
+end
+
+-- 判断某个服务是否启动了
+function command.SERVICE_ISSTARTUP(_, service_name)
+end
+
 
 function command.LIST()
 	local list = {}

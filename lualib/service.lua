@@ -12,8 +12,6 @@ local M = {
 
 -- 全部服务都要加载的文件【后续如果有其他的逻辑等可单独一个文件】
 local function loadprefile()
-	-- require "extend/table"
-	-- require "extend/string"
 end
 
 
