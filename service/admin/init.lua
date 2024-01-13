@@ -1,7 +1,6 @@
 -- 供外部调用
 
 local skynet = require "skynet"
-local service = require "service"
 local socket = require "skynet.socket"
 local runconfig = require "runconfig"
 require "skynet.manager"
@@ -11,36 +10,53 @@ local urllib = require "http.url"
 
 -- 内部方法 ------------------------------------------------------
 
--- 给网关发送关服消息
-local function shutdown_gate()
+local function _SHUTDOWN()
+	-- 关闭顺序不能改变
+
+	-- 给网关发送关服消息
 	for note, _ in pairs(runconfig.cluster) do
 		for i, v in pairs(runconfig.gateway or {}) do
 			local name = "gateway" .. i
 			service.call(node, name, "shutdown")
 		end
 	end
-end
 
--- 给玩家发送关服消息
-local function shutdown_agent()
+	-- 给玩家发送关服消息
 	local anode = runconfig.agentmgr.node
 	local result = service.call(anode, "agentmgr", "shutdown")
 	if not result then
 		error("close server fail.")
 	end
+	
+	-- 退出skynet进程
+	skynet.abort()
+end
+
+local function _PING()
+	print("eeeeeqqq", skynet.localname(".launcher"))
+	return skynet.ret()
+end
+
+local function _MEM()
+	local kb = collectgarbage "count"
+	print("kb ",kb, SERVICE_NAME)
+	skynet.ret(skynet.pack(kb))
+end
+
+local function _RT()
+	local ret = skynet.call(".launcher", "lua" , "SERVICE_RT")
+	for k, v in pairs(ret) do
+		print(k, v)
+	end
 end
 
 -- 外部调用 ------------------------------------------------------
-CMD = {}
-
-function shutdown ()
-	-- -- 关闭顺序不能改变
-	-- shutdown_gate()
-	-- shutdown_agent()
-	
-	-- -- 退出skynet进程
-	-- skynet.abort()
-end
+CMD = {
+	["/shutdown"] = _SHUTDOWN,	-- 关服
+	["/ping"] = _PING,			-- ping所有服务
+	["/mem"] = _MEM,
+	["/rt"] = _RT,
+}
 
 
 local function response(fd, ...)
@@ -67,9 +83,10 @@ function connect(fd, addr)
 			if query then
 				q = urllib.parse_query(query)
 			end
-			if path == "/shutdown" then	-- 关服
-				-- shutdown()
-			elseif path == "/ping" then
+
+			local f = CMD[path]
+			if f then
+				f()
 				response(fd, 200)
 			else
 				local filename
@@ -83,7 +100,6 @@ function connect(fd, addr)
 				end
 				-- loadfile(filename)
 				print("filename ", filename)
-
 				response(fd, 404, "not find action, error!")
 			end
 		end
