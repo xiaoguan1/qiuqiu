@@ -13,4 +13,4 @@ for _, filepath in pairs(LOAD_FILES) do
 end
 
 -- 不在loslib.c文件对os库进行拓展，是为了方便后续lua版本的升级。
-os.realtime = skynet.time()
+os.realtime = skynet.time
