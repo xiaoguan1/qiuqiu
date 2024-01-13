@@ -40,6 +40,7 @@ function command.SERVICE_RT()
 			ret[service_name .. string.format("[:%08x]", _address)] = eTime - sTime
 		end
 	end
+	return ret
 end
 
 -- 判断某个服务是否启动了

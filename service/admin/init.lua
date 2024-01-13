@@ -45,8 +45,12 @@ end
 
 local function _RT()
 	local ret = skynet.call(".launcher", "lua" , "SERVICE_RT")
-	for k, v in pairs(ret) do
-		print(k, v)
+	if ret and type(ret) == "table" then
+		local s = ""
+		for k, v in pairs(ret) do
+			s = s .. tostring(k) .. "      " .. tostring(v) .. "\n"
+		end
+		return s
 	end
 end
 
@@ -55,7 +59,7 @@ CMD = {
 	["/shutdown"] = _SHUTDOWN,	-- 关服
 	["/ping"] = _PING,			-- ping所有服务
 	["/mem"] = _MEM,
-	["/rt"] = _RT,
+	["/rt"] = _RT,				-- "ping一下所有服务，并获取相应时间差"
 }
 
 
@@ -86,8 +90,8 @@ function connect(fd, addr)
 
 			local f = CMD[path]
 			if f then
-				f()
-				response(fd, 200)
+				local ret = f()
+				response(fd, 200, ret)
 			else
 				local filename
 				if string.sub(path, 1, 1) ~= "/" then
