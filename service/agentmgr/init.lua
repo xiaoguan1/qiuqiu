@@ -1,5 +1,4 @@
 local skynet = require "skynet"
-local s = require "service"
 local table = table
 local queue = require "skynet.queue"
 local CS = queue()
@@ -53,10 +52,10 @@ PROTO_FUN.reqlogin = function(source, playerid, node, gate)
         local pagent = mplayer.agent
         local pgate = mplayer.gate
         mplayer.status = STATUS.LOGOUT
-        s.call(pnode, pagent, "kick")
-        s.send(pnode,  pagent, "exit")
-        s.send(pnode,  pgate, "send", playerid, {"kick", "顶替下线"})
-        s.call(pnode, pgate, "kick", playerid)
+        skynet.call(pnode, pagent, "kick")
+        skynet.send(pnode,  pagent, "exit")
+        skynet.send(pnode,  pgate, "send", playerid, {"kick", "顶替下线"})
+        skynet.call(pnode, pgate, "kick", playerid)
     end
 
     -- 上线
@@ -69,7 +68,7 @@ PROTO_FUN.reqlogin = function(source, playerid, node, gate)
     players[playerid] = player
 
     -- 获取代理agent
-    local agent = s.call(node, "nodemgr", "newservice", "agent", "agent", playerid)
+    local agent = skynet.call(node, "nodemgr", "newservice", "agent", "agent", playerid)
 	player.agent = agent
 	player.status = STATUS.GAME
 	return true, agent
@@ -89,9 +88,9 @@ PROTO_FUN.reqkick = function(source, playerid, reason)
     local pgate = mplayer.gate
     mplayer.status = STATUS.LOGOUT
 
-    s.call(pnode, pagent, "kick")
-    s.send(pnode, pagent, "exit")
-    s.send(pnode, pgate, "kick", playerid)
+    skynet.call(pnode, pagent, "kick")
+    skynet.send(pnode, pagent, "exit")
+    skynet.send(pnode, pgate, "kick", playerid)
     players[playerid] = nil
 
     return true
@@ -143,7 +142,25 @@ PROTO_FUN.shutdown = function(source)
     return true
 end
 
-function s.after()
-end
+skynet.start(function ()
 
-s.start(...)
+	skynet.dispatch("lua", function(session, address, cmd, ...)
+        local fun = PROTO_FUN[cmd]
+        if not fun then
+            -- 后续补上错误打印
+            print(string.format("[%s] [session:%s], [cmd:%s] not find fun.", SERVICE_NAME, session, cmd))
+            return
+        end
+        if session == 0 then
+            xpcall(fun, traceback, address, ...)
+        else
+            local ret = table.pack(xpcall(fun, traceback, address, ...))
+            local isOk = ret[1]
+            if not isOk then
+                skynet.ret()
+                return
+            end
+            skynet.retpack(table.unpack(ret, 2))
+        end
+    end)
+end)

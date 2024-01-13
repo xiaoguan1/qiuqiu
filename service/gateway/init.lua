@@ -1,5 +1,4 @@
 local skynet = require "skynet"
-local s = require "service"
 local socket = require "skynet.socket"
 local runconfig = require "runconfig"
 local msgpack = require "msg_pack"
@@ -80,17 +79,35 @@ local function connect(fd, addr)
 end
 
 -- gateway服务的初始化
-function s.init()	
+skynet.init(function()	
 	local port = assert(tonumber(skynet.getenv("gateway_post")))
 	local ip = "0.0.0.0"
 
 	local listenfd = socket.listen(ip, port)
 	skynet.error("Listen socket:", ip .. ":" .. port)
 	socket.start(listenfd, connect)
-end
+end)
 
-function s.after()
+skynet.start(function()
+	skynet.dispatch("lua", function (session, address, cmd, ...)
+		local fun = PROTO_FUN[cmd]
+		if not fun then
+			-- 后续补上错误打印
+			print(string.format("[%s] [session:%s], [cmd:%s] not find fun.", SERVICE_NAME, session, cmd))
+			return
+		end
+		if session == 0 then
+			xpcall(fun, traceback, address, ...)
+		else
+			local ret = table.pack(xpcall(fun, traceback, address, ...))
+			local isOk = ret[1]
+			if not isOk then
+				skynet.ret()
+				return
+			end
+			skynet.retpack(table.unpack(ret, 2))
+		end
+	end)
+
 	dofile("./service/gateway/handle.lua")
-end
-
-s.start(...)
+end)

@@ -1,10 +1,9 @@
 local skynet = require "skynet"
-local s = require "service"
 local runconfig = require "runconfig"
 local mynode = skynet.getenv("node")
 
-s.snode = nil
-s.sname = nil
+snode = nil
+sname = nil
 
 local function random_scene()
     -- 选择node
@@ -27,24 +26,24 @@ local function random_scene()
 end
 
 PROTO_FUN.enter = function(msg)
-    if s.sname then return {"enter", 1, "已在场景"} end
+    if sname then return {"enter", 1, "已在场景"} end
 
     local snode, sid = random_scene()
     local sname = "scene" .. sid
-    local isok = s.call(snode, sname, "enter", s.id, mynode, skynet.self())
+    local isok = skynet.call(snode, sname, "enter", id, mynode, skynet.self())
 
     if not isok then return {"enter", 1, "进入失败"} end
 
-    s.snode = snode
-    s.sname = sname
+    snode = snode
+    sname = sname
     return nil
 end
 
 PROTO_FUN.leave_scene = function()
     --　不在场景中
-    if not s.sname then return end
+    if not sname then return end
 
-    s.call(s.snode, s.name, "leave", s.id)
-    s.snode = nil
-    s.sname = nil
+    skynet.call(snode, name, "leave", id)
+    snode = nil
+    sname = nil
 end

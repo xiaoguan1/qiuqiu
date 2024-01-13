@@ -1,68 +1,38 @@
 local skynet = require "skynet"
-local s = require "service"
 local P = require "common_log"
 local CommonDB = require "common_db"
 
-
-PROTO_FUN = {}
-
-s.client = {}
-s.gate = nil
-
-s.init = function()
+skynet.init = function()
 	local db = CommonDB.Getdb(DATABASE_NAME.MESSAGE_BOARD) -- 获取数据库句柄（这里是登录，不是创角）
 
     -- COMMON_DB.select_roles()
 
-    s.data = {
+    data = {
         coin = 100,
         hp = 200,
     }
 end
 
-s.after = function()
-    dofile("./service/agent/scene.lua")
-end
-
-PROTO_FUN.client = function(source, cmd, msg)
-    s.gate = source
-    if PROTO_FUN[cmd] then
-        local ret_msg = PROTO_FUN[cmd](msg, source)
-        if ret_msg then
-            skynet.send(source, "lua", "send", tonumber(s.id), ret_msg)
+skynet.start(function ()
+	skynet.dispatch("lua", function (session, address, cmd, ...)
+        local fun = PROTO_FUN[cmd]
+        if not fun then
+            -- 后续补上错误打印
+            print(string.format("[%s] [session:%s], [cmd:%s] not find fun.", SERVICE_NAME, session, cmd))
+            return
         end
-    else
-        skynet.error("PROTO_FUN fail ", cmd, msg)
-    end
-end
+        if session == 0 then
+            xpcall(fun, traceback, address, ...)
+        else
+            local ret = table.pack(xpcall(fun, traceback, address, ...))
+            local isOk = ret[1]
+            if not isOk then
+                skynet.ret()
+                return
+            end
+            skynet.retpack(table.unpack(ret, 2))
+        end
+    end)
 
-PROTO_FUN.kick = function(source)
-    s.leave_scene()
-    -- 玩家登出，保存角色数据
-    skynet.sleep(200) -- 后续完善 db 层内容。
-end
-
-PROTO_FUN.exit = function(source)
-    skynet.exit()
-end
-
--- 返回玩家最新的金币数量
-PROTO_FUN.work = function(msg)
-    s.data.coin = s.data.coin + 1
-    return {"work", s.data.coin}
-end
-
-PROTO_FUN.send = function(source, msg)
-    skynet.send(s.gate, "lua", "send", s.id, msg)
-end
-
-PROTO_FUN.shift = function(msg)
-    if not s.sname then return end
-    local x = msg[2] or 0
-    local y = msg[3] or 0
-
-    -- 有待商榷，可以用异步。如果出现卡顿　那说明服务器处于过载的情况
-    s.call(s.snode, s.sname, "shift", s.id, x, y)
-end
-
-s.start(...)
+    dofile("./service/agent/scene.lua")
+end)

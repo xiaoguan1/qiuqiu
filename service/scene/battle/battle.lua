@@ -1,5 +1,4 @@
 local BATTLE_COMMON = require "battle_common"
-local s = require "service"
 
 
 -- 进入战斗前判断
@@ -16,11 +15,11 @@ PROTO_FUN.enter = function(source, playerid, node, agent)
 
 	-- 回应
 	local ret_msg = {"enter", 0, "进入成功"}
-	s.send(b.node, b.agent, "send", ret_msg)
+	skynet.send(b.node, b.agent, "send", ret_msg)
 
 	--　发送战场
-	s.send(b.node, b.agent, "send", BATTLE_COMMON.balllist_msg())
-	s.send(b.node, b.agent, "send", BATTLE_COMMON.foodlist_msg())
+	skynet.send(b.node, b.agent, "send", BATTLE_COMMON.balllist_msg())
+	skynet.send(b.node, b.agent, "send", BATTLE_COMMON.foodlist_msg())
 
 	return true
 end
