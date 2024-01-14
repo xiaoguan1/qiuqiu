@@ -6,6 +6,7 @@ local LOAD_FILES = {
     -- 拓展
     "./lualib/extend/string.lua",
     "./lualib/extend/table.lua",
+    "./lualib/extend/sys.lua",
 }
 
 for _, filepath in pairs(LOAD_FILES) do

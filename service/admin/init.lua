@@ -7,6 +7,7 @@ require "skynet.manager"
 local sockethelper = require "http.sockethelper"
 local httpd = require "http.httpd"
 local urllib = require "http.url"
+local sys = sys
 
 -- 内部方法 ------------------------------------------------------
 
@@ -45,13 +46,12 @@ end
 
 local function _RT()
 	local ret = skynet.call(".launcher", "lua" , "SERVICE_RT")
-	if ret and type(ret) == "table" then
-		local s = ""
-		for k, v in pairs(ret) do
-			s = s .. tostring(k) .. "      " .. tostring(v) .. "\n"
-		end
-		return s
-	end
+	return sys.dump(ret)
+end
+
+local function _STAT()
+	local ret = skynet.call(".launcher", "lua" , "SERVICE_STAT")
+	return sys.dump(ret)
 end
 
 -- 外部调用 ------------------------------------------------------
@@ -60,6 +60,7 @@ CMD = {
 	["/ping"] = _PING,			-- ping所有服务
 	["/mem"] = _MEM,
 	["/rt"] = _RT,				-- "ping一下所有服务，并获取相应时间差"
+	["/stat"] = _STAT,
 }
 
 

@@ -43,8 +43,20 @@ function command.SERVICE_RT()
 	return ret
 end
 
--- 判断某个服务是否启动了
-function command.SERVICE_ISSTARTUP(_, service_name)
+-- 判断所有服务的信息
+function command.SERVICE_STAT()
+	local ret = {}
+	for _address, _v in pairs(services) do
+		local sp_tbl = string.split(_v, " ")
+		local service_name = sp_tbl and sp_tbl[2]
+		if service_name then
+			local ok, stat = pcall(skynet.call, _address, "debug", "STAT")
+			if ok then
+				ret[service_name .. string.format("[:%08x]", _address)] = stat
+			end
+		end
+	end
+	return ret
 end
 
 
