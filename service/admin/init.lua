@@ -77,7 +77,7 @@ end
 --		wget -q -O - "http://127.0.0.1:8888/pings"
 function connect(fd, addr)
 	socket.start(fd)
-	skynet.error("connection successful fd:%s add:%s", fd, addr)
+	skynet.error(string.format("connection successful fd:%s address:%s", fd, addr))
 	local code, url, method, header, body = httpd.read_request(sockethelper.readfunc(fd), 8192)
 	if code then
 		if code ~= 200 then
