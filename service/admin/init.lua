@@ -1,5 +1,4 @@
 -- 供外部调用
-
 local skynet = require "skynet"
 local socket = require "skynet.socket"
 local runconfig = require "runconfig"
@@ -40,7 +39,6 @@ end
 
 local function _MEM()
 	local kb = collectgarbage "count"
-	print("kb ",kb, SERVICE_NAME)
 	skynet.ret(skynet.pack(kb))
 end
 
@@ -118,7 +116,7 @@ function connect(fd, addr)
 	socket.close(fd)
 end
 
-skynet.start(function ()
+skynet.start(function (...)
 	-- 开启一个监听,8888端口！！！
 	local listenfd = socket.listen("127.0.0.1", 8888, 128)
 	skynet.error(string.format("admin Listen on 127.0.0.1:%d", 8888))

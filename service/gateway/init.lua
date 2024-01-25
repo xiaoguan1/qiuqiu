@@ -1,6 +1,5 @@
 local skynet = require "skynet"
 local socket = require "skynet.socket"
-local runconfig = require "runconfig"
 local msgpack = require "msg_pack"
 local log = require "common_log"
 local GATEWAY_COMMON = require "gateway_common"

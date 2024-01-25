@@ -1,7 +1,6 @@
 local skynet = require "skynet"
 local skynet_manager = require "skynet.manager"
 local cluster = require "skynet.cluster"
-local runconfig = require "runconfig"
 local set_preload = skynet.getenv("set_preload")
 local is_cross = skynet.getenv("is_cross") == "true" and true or false
 local assert = assert
