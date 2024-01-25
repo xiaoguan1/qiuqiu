@@ -1,5 +1,4 @@
 local skynet = require "skynet"
-local P = require "common_log"
 local CommonDB = require "common_db"
 
 skynet.init = function()

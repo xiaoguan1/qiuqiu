@@ -1,6 +1,5 @@
 local skynet = require "skynet"
 local mysql = require "skynet.db.mysql"
-local log = require "common_log"
 local table = table
 
 local M = {}

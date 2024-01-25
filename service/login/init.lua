@@ -1,6 +1,5 @@
 local skynet = require "skynet"
 local CommonDB = require "common_db"
-local log = require "common_log"
 local node = skynet.getenv("node")
 local DatabaseCommon = require "database_common"
 

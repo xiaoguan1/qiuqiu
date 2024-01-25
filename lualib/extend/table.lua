@@ -1,8 +1,9 @@
 local table = table
 local type = type
 
+-- 统计table的元素数量
 function table.size(t)
-	if type(t) ~= "table" then return end
+	assert(type(t) == "table")
 
 	local count = 0
 	for _, _ in pairs(t) do count = count + 1 end
