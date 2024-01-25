@@ -24,38 +24,104 @@ ALL_PROXYSVR = {
 
 local function gen_send(addr, prototype)
 	prototype = prototype or "lua"
-	
-
+	local addrtype = type(addr)
+	local addrnum = nil
+	local cache_func = {}
+	return setmetatable({},  {
+		__index = function (t, k)
+			if addrtype == "string" then
+				if not addrnum then
+					addrnum = skynet.localname(addr)
+					if not addrnum then
+						error("not service by name" .. addr)
+					end
+				end
+			else
+				addrnum = addr
+			end
+			if not cache_func[k] then
+				cache_func[k] = function(...)
+					return skynet_send(addrnum, prototype, k, ...)
+				end
+			end
+			return cache_func[k]
+		end,
+		__call = function (t, ...)
+			if addrtype == "string" then
+				if not addrnum then
+					addrnum = skynet.localname(addr)
+					if not addrnum then
+						error("not service by name" .. addr)
+					end
+				end
+			else
+				addrnum = addr
+			end
+			return skynet_send(addrnum, prototype, ...)
+		end
+	})
 end
 
-local function gen_call()
+local function gen_call(addr, prototype)
+	prototype = prototype or "lua"
+	local addrtype = type(addr)
+	local addrnum = nil
+	local cache_func = {}
+	return setmetatable({},  {
+		__index = function (t, k)
+			if addrtype == "string" then
+				if not addrnum then
+					addrnum = skynet.localname(addr)
+					if not addrnum then
+						error("not service by name" .. addr)
+					end
+				end
+			else
+				addrnum = addr
+			end
+			if not cache_func[k] then
+				cache_func[k] = function(...)
+					return skynet_call(addrnum, prototype, k, ...)
+				end
+			end
+			return cache_func[k]
+		end,
+		__call = function (t, ...)
+			if addrtype == "string" then
+				if not addrnum then
+					addrnum = skynet.localname(addr)
+					if not addrnum then
+						error("not service by name" .. addr)
+					end
+				end
+			else
+				addrnum = addr
+			end
+			return skynet_call(addrnum, prototype, ...)
+		end
+	})
 end
 
 local function create_proxysvr(addrname, prototype)
-	if not addrname then return end
-
-	local address
-	prototype = prototype or "lua"
-	if type(addrname) == "string" then
-		address = skynet.localname(string)
-	end
-	assert(type(address) == "number")
+	assert(type(addrname) == "string")
 
 	return {
 		addrname = addrname,
-		address = address,
 		prototype = prototype,
-		send = ,
-		call = ,
+		send = gen_send(addr, prototype),
+		call = gen_call(addr, prototype),
 	}
 end
 
-function GerProxy(addrName, prototype)
-	if ALL_PROXYSVR.self_node[addrName] and ALL_PROXYSVR.self_node[addrName].prototype == prototype then
-		return ALL_PROXYSVR.self_node[addrName]
-	else
 
+-- 外部接口 ------------------------------
+function GerProxy(addrname, prototype)
+	if ALL_PROXYSVR.self_node[addrname] and ALL_PROXYSVR.self_node[addrname].prototype == prototype then
+		return ALL_PROXYSVR.self_node[addrname]
+	else
+		local proxy = create_proxysvr(addrname, prototype)
+		ALL_PROXYSVR.self_node[addrname] = proxy
+		return proxy
 	end
 end
-
 

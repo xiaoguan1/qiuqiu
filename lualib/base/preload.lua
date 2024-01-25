@@ -7,6 +7,9 @@ local LOAD_FILES = {
 
     -- 协议
     "./protobuf/protoload/loadproto.lua",
+
+    -- 其他
+    "./lualib/base/proxysvr.lua",
 }
 
 for _, filepath in pairs(LOAD_FILES) do
