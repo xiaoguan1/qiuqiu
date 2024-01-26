@@ -43,12 +43,14 @@ local function _MEM()
 end
 
 local function _RT()
-	local ret = skynet.call(".launcher", "lua" , "SERVICE_RT")
+	local proxy = GetProxy(".launcher")
+	local ret = proxy.call.SERVICE_RT()
 	return sys.dump(ret)
 end
 
 local function _STAT()
-	local ret = skynet.call(".launcher", "lua" , "SERVICE_STAT")
+	local proxy = GetProxy(".launcher")
+	local ret = proxy.call.SERVICE_STAT()
 	return sys.dump(ret)
 end
 

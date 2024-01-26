@@ -108,14 +108,14 @@ local function create_proxysvr(addrname, prototype)
 	return {
 		addrname = addrname,
 		prototype = prototype,
-		send = gen_send(addr, prototype),
-		call = gen_call(addr, prototype),
+		send = gen_send(addrname, prototype),
+		call = gen_call(addrname, prototype),
 	}
 end
 
 
 -- 外部接口 ------------------------------
-function GerProxy(addrname, prototype)
+function GetProxy(addrname, prototype)
 	if ALL_PROXYSVR.self_node[addrname] and ALL_PROXYSVR.self_node[addrname].prototype == prototype then
 		return ALL_PROXYSVR.self_node[addrname]
 	else

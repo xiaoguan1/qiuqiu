@@ -38,13 +38,13 @@ skynet.start(function ()
 
 		-- 开启 gateway(需要优化，先创建服务，在call设置网关信息 开出socket)
 		local gateway = skynet.newservice("gateway", "gateway", 1)
-		skynet.name("gateway" .. 1, gateway)
+		skynet.name("gateway", gateway)
 
 		local login_num = assert(tonumber(skynet.getenv("login_num")))
 		-- 开启 login服务
 		for i = 1, login_num do
 			local login = skynet.newservice("login", "login", i)
-			skynet.name("login" .. i, login)
+			skynet.name("login_" .. i, login)
 		end
 
 		local agentmgr = skynet.newservice("agentmgr", "agentmgr", 0)
