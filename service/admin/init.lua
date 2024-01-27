@@ -38,8 +38,9 @@ local function _PING()
 end
 
 local function _MEM()
-	local kb = collectgarbage "count"
-	skynet.ret(skynet.pack(kb))
+	local proxy = GetProxy(".launcher")
+	local ret = proxy.call.MEM()
+	return sys.dump(ret)
 end
 
 local function _RT()
