@@ -11,6 +11,7 @@ local LOAD_FILES = {
 	"./protobuf/protoload/loadproto.lua",
 
 	-- 其他
+	"./lualib/base/log.lua",
 	"./lualib/base/proxysvr.lua",
 }
 
@@ -58,8 +59,6 @@ if not setfenv then
 		return f
 	end
 end
-
-local traceback = debug.traceback
 
 -- 容错执行函数
 local function _RetFunc(isOk, ...)
