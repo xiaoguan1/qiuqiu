@@ -95,3 +95,5 @@ end
 _INFO("aaaaaa")
 _WARN("qqqq")
 _ERROR("wwww")
+
+-- 优化任务 用table.concat 来拼接字符串！！！
