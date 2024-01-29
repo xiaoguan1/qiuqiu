@@ -29,7 +29,7 @@ end
 
 local process_msg = function(fd, msgstr)
 	local cmd, msg = msgpack.str_unpack(msgstr)
-	skynet.error("recv " .. fd .. " [" .. cmd .."] {" .. table.concat(msg, ",") .. "} ")
+	_INFO_F("recv %s [%s] {%s}", fd, cmd, table.concat(msg, ","))
 
 	GATEWAY_COMMON.process_msg(fd, cmd, msg)
 end
@@ -57,7 +57,7 @@ local recv_loop = function(fd)
 			readbuff = readbuff .. revstr
 			readbuff = process_buff(fd, readbuff)
 		else
-			skynet.error("socket close " .. fd)
+			_WARN_F("socket close %s", fd)
 			GATEWAY_COMMON.disconnect(fd)
 			socket.close(fd)
 			return
@@ -69,7 +69,7 @@ end
 local function connect(fd, addr)
 	if CLOSING then return end	-- 收到关服消息 拒绝玩家连接
 
-	skynet.error("connect from " .. addr .. " " .. fd)
+	_INFO_F("connect from %s %s", addr, fd)
 	local c = conn()
 	conns[fd] = c
 	c.fd = fd
@@ -82,7 +82,7 @@ skynet.init(function()
 	local ip = "0.0.0.0"
 
 	local listenfd = socket.listen(ip, port)
-	skynet.error("Listen socket:", ip .. ":" .. port)
+	_INFO_F("Listen socket: %s:%s", ip, port)
 	socket.start(listenfd, connect)
 end)
 

@@ -17,7 +17,7 @@ skynet.init(function()
 			frame = frame + 1
 			local isok, err = pcall(update, frame)
 
-			if not isok then skynet.error(err) end
+			if not isok then _ERROR(err) end
 
 			local etime = skynet.now()
 			local waittime = frame * 20 - (etime - stime)

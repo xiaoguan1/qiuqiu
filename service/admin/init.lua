@@ -69,7 +69,7 @@ local function response(fd, ...)
 	local ok, err = httpd.write_response(sockethelper.writefunc(fd), ...)
 	if not ok then
 		-- if err == sockethelper.socket_error, that means socket closed.
-		skynet.error(string.format("dealadmin response error fd = %s, %s", fd, err))
+		_ERROR_F("dealadmin response error fd = %s, %s", fd, err)
 	end
 end
 
@@ -78,7 +78,7 @@ end
 --		wget -q -O - "http://127.0.0.1:8888/pings"
 function connect(fd, addr)
 	socket.start(fd)
-	skynet.error(string.format("connection successful fd:%s address:%s", fd, addr))
+	_INFO(string.format("connection successful fd:%s address:%s", fd, addr))
 	local code, url, method, header, body = httpd.read_request(sockethelper.readfunc(fd), 8192)
 	if code then
 		if code ~= 200 then
@@ -111,9 +111,9 @@ function connect(fd, addr)
 		end
 	else
 		if url == sockethelper.socket_error then
-			skynet.error("dealmcs socket closed")
+			_ERROR("dealmcs socket closed")
 		else
-			skynet.error("dealmcs error:", url)
+			_ERROR_F("dealmcs error:%s", url)
 		end
 	end
 	socket.close(fd)
@@ -124,6 +124,6 @@ skynet.start(function (...)
 
 	-- 开启一个监听,8888端口！！！
 	local listenfd = socket.listen("127.0.0.1", 8888, 128)
-	skynet.error(string.format("admin Listen on 127.0.0.1:%d", 8888))
+	_INFO_F("admin Listen on 127.0.0.1:%d", 8888)
 	socket.start(listenfd, connect)
 end)

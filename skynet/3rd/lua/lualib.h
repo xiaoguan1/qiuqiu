@@ -44,6 +44,9 @@ LUAMOD_API int (luaopen_debug) (lua_State *L);
 #define LUA_LOADLIBNAME	"package"
 LUAMOD_API int (luaopen_package) (lua_State *L);
 
+#define LUA_STATLIBNAME "stat"
+LUAMOD_API int (luaopen_stat) (lua_State *L);
+
 #define LUA_CACHELIB
 LUAMOD_API int (luaopen_cache) (lua_State *L);
 LUALIB_API void (luaL_initcodecache) (void);

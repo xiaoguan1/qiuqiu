@@ -19,9 +19,10 @@ end
 
 skynet.start(function ()
 	-- 初始化
-	skynet.error("-----------------start main-------------------")
 	skynet.setenv("preload", set_preload)
 	dofile(set_preload)
+
+	_INFO("----- begin start main -----")
 	local Node_Info = require "node_info"
 	local DPCLUSTER_NODE = assert(Node_Info.GetNodeInfo())
 	local clusterCfg = assert(Node_Info.GetClusterCfg())
@@ -62,5 +63,6 @@ skynet.start(function ()
 	end
 
 	skynet.newservice("admin", "admin", 1)
+	_INFO("----- end start main -----")
 	skynet.exit()
 end)

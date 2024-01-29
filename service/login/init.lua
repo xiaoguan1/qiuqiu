@@ -37,7 +37,7 @@ PROTO_FUN.client = function (source, fd, cmd, msg)
 		local ret_msg = PROTO_FUN[cmd](fd, msg, source)
 		skynet.send(source, "lua", "send_by_fd", fd, ret_msg)
 	else
-		skynet.error("s.resp.client fail", cmd, msg)
+		_INFO_F("s.resp.client fail, cmd:%s msg:%s", cmd, msg)
 	end
 end
 
@@ -65,7 +65,7 @@ PROTO_FUN.login = function(fd, msg, source)
 		return {"login", 1, "gate注册失败"}
 	end
 
-	skynet.error("login succ " .. account)
+	_INFO_F("login succ %s", account)
 	return {"login", 0, "登录成功"}
 end
 

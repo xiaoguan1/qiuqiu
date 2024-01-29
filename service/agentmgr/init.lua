@@ -36,13 +36,13 @@ PROTO_FUN.reqlogin = function(source, playerid, node, gate)
 
     -- 登出过程禁止顶替
     if mplayer and mplayer.status == STATUS.LOGOUT then
-        skynet.error("reqlogin fail, at status LOGOUT " .. playerid)
+        _ERROR_F("reqlogin fail, at status LOGOUT %s ", playerid)
         return false
     end
 
     -- 登入过程禁止顶替
     if mplayer and mplayer.status == STATUS.LOGIN then
-        skynet.error("reqlogin fail, at status LOGIN " .. playerid)
+        _ERROR_F("reqlogin fail, at status LOGIN %s", playerid)
         return false
     end
 
@@ -111,7 +111,7 @@ function shutdown_quit_player_1()
     while true do
         skynet.sleep(200)
         local new_count = get_player_online_count()
-        skynet.error("shutdown online:" .. new_count)
+        _INFO_F("shutdown online:%s", new_count)
         if new_count <= 0 or new_count <= (playerCount - QUIT_PLAYER_COUNT) then
             return new_count
         end

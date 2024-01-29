@@ -10,7 +10,7 @@ PROTO_FUN.send_by_fd = function(source, fd, msg)
     if not conns[fd] then return end
 
 	local buff = msgpack.str_pack(msg[1], msg)
-	skynet.error("send "..fd.." ["..msg[1].."] {"..table.concat(msg, ",").."}")
+	_INFO_F("send %s [%s] {%s}", fd, msg[1], table.concat(msg, ","))
 	socket.write(fd, buff)
 end
 

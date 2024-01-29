@@ -50,6 +50,7 @@ static const luaL_Reg loadedlibs[] = {
   {LUA_MATHLIBNAME, luaopen_math},
   {LUA_UTF8LIBNAME, luaopen_utf8},
   {LUA_DBLIBNAME, luaopen_debug},
+  {LUA_STATLIBNAME, luaopen_stat},  // 2024.1.29 ggw create stat
   {NULL, NULL}
 };
 
