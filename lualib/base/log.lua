@@ -4,6 +4,8 @@ local debug = debug
 local table = table
 local tconcat = table.concat
 local os_date = os.date
+local print = print
+local sformat = string.format
 local logStdin = skynet.getenv("log_stdin") == "true"
 local HEADER = "\27"
 local END_FORMAT = "\27[0m"
@@ -46,7 +48,7 @@ if not ERROR_M then
 	ERROR_M = HEADER ..  FONTCOLOUR.Black .. BACKGROUNDCOLOUR.Red .. "m"
 end
 if not SERVICE_INFO then
-	SERVICE_INFO = string.format( "%s %0x ", SERVICE_NAME, skynet.self())
+	SERVICE_INFO = sformat( "%s %0x ", SERVICE_NAME, skynet.self())
 end
 
 local _FILE_INFO_T = {
@@ -58,6 +60,33 @@ local _FILE_INFO_T = {
 	">",
 }
 
+local _INFO_CONTEXT = {
+	INFO_M,
+	"nil",
+	"[INFO]",
+	"nil",
+	"nil",
+	END_FORMAT,
+}
+
+local _WARN_CONTEXT = {
+	WARN_M,
+	"nil",
+	"[WARN]",
+	"nil",
+	"nil",
+	END_FORMAT,
+}
+
+local _ERROR_CONTEXT = {
+	ERROR_M,
+	"nil",
+	"[ERROR]",
+	"nil",
+	"nil",
+	END_FORMAT,
+}
+
 local function FileInfo(deep)
 	local debugInfo = debug.getinfo(deep or 3, "Sl")
 	_FILE_INFO_T[3] = debugInfo.short_src
@@ -65,11 +94,31 @@ local function FileInfo(deep)
 	return tconcat(_FILE_INFO_T)
 end
 
+local function _info_context(fileInfo, msg)
+	_INFO_CONTEXT[2] = os_date("%Y-%m-%d %H:%M:%S")
+	_INFO_CONTEXT[4] = fileInfo
+	_INFO_CONTEXT[5] = msg
+	return tconcat( _INFO_CONTEXT, " ")
+end
+
+local function _warn_context(fileInfo, msg)
+	_WARN_CONTEXT[2] = os_date("%Y-%m-%d %H:%M:%S")
+	_WARN_CONTEXT[4] = fileInfo
+	_WARN_CONTEXT[5] = msg
+	return tconcat( _WARN_CONTEXT, " ")
+end
+
+local function _error_context(fileInfo, msg)
+	_ERROR_CONTEXT[2] = os_date("%Y-%m-%d %H:%M:%S")
+	_ERROR_CONTEXT[4] = fileInfo
+	_ERROR_CONTEXT[5] = msg
+	return tconcat(_ERROR_CONTEXT, " ")
+end
 
 ---- 外部接口 ------------------------------------------------------------------------
 
 function _INFO(...)
-	local context = string.format(INFO_M .. "[%s] [ERROR] %s %s" .. END_FORMAT, os_date("%Y-%m-%d %H:%M:%S"), FileInfo(), ... )
+	local context = _info_context(FileInfo(), ...)
 	if logStdin then
 		print(context)
 	end
@@ -77,7 +126,7 @@ function _INFO(...)
 end
 
 function _WARN(...)
-	local context = string.format(WARN_M .. "[%s] [ERROR] %s %s" .. END_FORMAT, os_date("%Y-%m-%d %H:%M:%S"), FileInfo(), ... )
+	local context = _warn_context(FileInfo(), ...)
 	if logStdin then
 		print(context)
 	end
@@ -85,7 +134,7 @@ function _WARN(...)
 end
 
 function _ERROR(...)
-	local context = string.format(ERROR_M .. "[%s] [ERROR] %s %s" .. END_FORMAT, os_date("%Y-%m-%d %H:%M:%S"), FileInfo(), ... )
+	local context = _error_context(FileInfo(), ...)
 	if logStdin then
 		print(context)
 	end
@@ -95,5 +144,3 @@ end
 _INFO("aaaaaa")
 _WARN("qqqq")
 _ERROR("wwww")
-
--- 优化任务 用table.concat 来拼接字符串！！！
