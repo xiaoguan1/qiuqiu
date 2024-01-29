@@ -6,6 +6,7 @@ local tconcat = table.concat
 local os_date = os.date
 local print = print
 local sformat = string.format
+local stat = stat
 local logStdin = skynet.getenv("log_stdin") == "true"
 local HEADER = "\27"
 local END_FORMAT = "\27[0m"
@@ -117,17 +118,20 @@ end
 -- 文件句柄信息
 local LOG_FILE_OBJ, WARN_FILE_OBJ, ERROR_FILE_OBJ
 local _INFO_LOG_PATH = {
-	"./log/info/info_",
+	"./log/info/",
+	"info_",
 	"nil",
 	".txt",
 }
 local _WARN_LOG_PATH = {
-	"./log/warn/warn_",
+	"./log/warn/",
+	"warn_",
 	"nil",
 	".txt",
 }
 local _ERROR_LOG_PATH = {
-	"./log/error/error_",
+	"./log/error/",
+	"error_",
 	"nil",
 	".txt",
 }
@@ -135,21 +139,30 @@ local _ERROR_LOG_PATH = {
 -- 日志输出
 local function _log_info(context)
 	if not LOG_FILE_OBJ or not io.type(LOG_FILE_OBJ) then
-		_INFO_LOG_PATH[2] = os_date("%Y%m%d")
+		if not stat.is_dir(_INFO_LOG_PATH[1]) then
+			os.execute("mkdir " .. _INFO_LOG_PATH[1])
+		end
+		_INFO_LOG_PATH[3] = os_date("%Y%m%d")
 		LOG_FILE_OBJ = io.open(tconcat(_INFO_LOG_PATH), "a+")
 	end
 	LOG_FILE_OBJ:write(context, "\n")
 end
 local function _log_warn(context)
 	if not WARN_FILE_OBJ or not io.type(WARN_FILE_OBJ) then
-		_WARN_LOG_PATH[2] = os_date("%Y%m%d")
+		if not stat.is_dir(_WARN_LOG_PATH[1]) then
+			os.execute("mkdir " .. _WARN_LOG_PATH[1])
+		end
+		_WARN_LOG_PATH[3] = os_date("%Y%m%d")
 		WARN_FILE_OBJ = io.open(tconcat(_WARN_LOG_PATH), "a+")
 	end
 	WARN_FILE_OBJ:write(context, "\n")
 end
 local function _log_error(context)
 	if not ERROR_FILE_OBJ or not io.type(ERROR_FILE_OBJ) then
-		_ERROR_LOG_PATH[2] = os_date("%Y%m%d")
+		if not stat.is_dir(_ERROR_LOG_PATH[1]) then
+			os.execute("mkdir " .. _ERROR_LOG_PATH[1])
+		end
+		_ERROR_LOG_PATH[3] = os_date("%Y%m%d")
 		ERROR_FILE_OBJ = io.open(tconcat(_ERROR_LOG_PATH), "a+")
 	end
 	ERROR_FILE_OBJ:write(context, "\n")
