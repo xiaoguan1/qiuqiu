@@ -172,6 +172,14 @@ function _INFO(...)
 	end
 	_log_info( context)
 end
+function _INFO_F(fmt, ...)
+	local context = _info_context(FileInfo(), string.format(fmt, ...))
+	if logStdin then
+		_log_print(1, context)
+	end
+	_log_info( context)
+end
+
 
 function _WARN(...)
 	local context = _warn_context(FileInfo(), ...)
@@ -180,6 +188,14 @@ function _WARN(...)
 	end
 	_log_warn(context)
 end
+function _WARN_F(fmt, ...)
+	local context = _warn_context(FileInfo(), string.format(fmt, ...))
+	if logStdin then
+		_log_print(2, context)
+	end
+	_log_warn(context)
+end
+
 
 function _ERROR(...)
 	local context = _error_context(FileInfo(), ...)
@@ -188,5 +204,13 @@ function _ERROR(...)
 	end
 	_log_error(context)
 end
+function _ERROR_F(fmt, ...)
+	local context = _error_context(FileInfo(), string.format(fmt, ...))
+	if logStdin then
+		_log_print(3, context)
+	end
+	_log_error(context)
+end
+
 
 -- 缺一个定时器，时间去到第二天的时候更换日志文件

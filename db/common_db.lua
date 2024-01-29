@@ -20,7 +20,7 @@ function M.Getdb(databaseName)
 	})
 
 	if not db then
-		skynet.error("数据库连接失败！！！")
+		_ERROR_F("connect db fail! databaseName:%s", databaseName)
 		return
 	end
 	return db
