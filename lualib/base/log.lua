@@ -51,6 +51,8 @@ if not SERVICE_INFO then
 	SERVICE_INFO = sformat( "%s %0x ", SERVICE_NAME, skynet.self())
 end
 
+
+-- 被调用的函数信息
 local _FILE_INFO_T = {
 	"<",
 	SERVICE_INFO,
@@ -59,34 +61,6 @@ local _FILE_INFO_T = {
 	"nil",
 	">",
 }
-
-local _INFO_CONTEXT = {
-	INFO_M,
-	"nil",
-	"[INFO]",
-	"nil",
-	"nil",
-	END_FORMAT,
-}
-
-local _WARN_CONTEXT = {
-	WARN_M,
-	"nil",
-	"[WARN]",
-	"nil",
-	"nil",
-	END_FORMAT,
-}
-
-local _ERROR_CONTEXT = {
-	ERROR_M,
-	"nil",
-	"[ERROR]",
-	"nil",
-	"nil",
-	END_FORMAT,
-}
-
 local function FileInfo(deep)
 	local debugInfo = debug.getinfo(deep or 3, "Sl")
 	_FILE_INFO_T[3] = debugInfo.short_src
@@ -94,53 +68,125 @@ local function FileInfo(deep)
 	return tconcat(_FILE_INFO_T)
 end
 
+
+-- 输出格式以及颜色
+local _LEVEL_COLOR = {
+	[1] = INFO_M,
+	[2] = WARN_M,
+	[3] = ERROR_M
+}
+
+local _INFO_CONTEXT = {
+	"nil",
+	"[INFO]",
+	"nil",
+	"nil",
+}
+local _WARN_CONTEXT = {
+	"nil",
+	"[WARN]",
+	"nil",
+	"nil",
+}
+local _ERROR_CONTEXT = {
+	"nil",
+	"[ERROR]",
+	"nil",
+	"nil",
+}
 local function _info_context(fileInfo, msg)
-	_INFO_CONTEXT[2] = os_date("%Y-%m-%d %H:%M:%S")
-	_INFO_CONTEXT[4] = fileInfo
-	_INFO_CONTEXT[5] = msg
+	_INFO_CONTEXT[1] = os_date("%Y-%m-%d %H:%M:%S")
+	_INFO_CONTEXT[3] = fileInfo
+	_INFO_CONTEXT[4] = msg
 	return tconcat( _INFO_CONTEXT, " ")
 end
-
 local function _warn_context(fileInfo, msg)
-	_WARN_CONTEXT[2] = os_date("%Y-%m-%d %H:%M:%S")
-	_WARN_CONTEXT[4] = fileInfo
-	_WARN_CONTEXT[5] = msg
+	_WARN_CONTEXT[1] = os_date("%Y-%m-%d %H:%M:%S")
+	_WARN_CONTEXT[3] = fileInfo
+	_WARN_CONTEXT[4] = msg
 	return tconcat( _WARN_CONTEXT, " ")
 end
-
 local function _error_context(fileInfo, msg)
-	_ERROR_CONTEXT[2] = os_date("%Y-%m-%d %H:%M:%S")
-	_ERROR_CONTEXT[4] = fileInfo
-	_ERROR_CONTEXT[5] = msg
+	_ERROR_CONTEXT[1] = os_date("%Y-%m-%d %H:%M:%S")
+	_ERROR_CONTEXT[3] = fileInfo
+	_ERROR_CONTEXT[4] = msg
 	return tconcat(_ERROR_CONTEXT, " ")
 end
+
+
+-- 文件句柄信息
+local LOG_FILE_OBJ, WARN_FILE_OBJ, ERROR_FILE_OBJ
+local _INFO_LOG_PATH = {
+	"./log/info/info_",
+	"nil",
+	".txt",
+}
+local _WARN_LOG_PATH = {
+	"./log/warn/warn_",
+	"nil",
+	".txt",
+}
+local _ERROR_LOG_PATH = {
+	"./log/error/error_",
+	"nil",
+	".txt",
+}
+
+-- 日志输出
+local function _log_info(context)
+	if not LOG_FILE_OBJ or not io.type(LOG_FILE_OBJ) then
+		_INFO_LOG_PATH[2] = os_date("%Y%m%d")
+		LOG_FILE_OBJ = io.open(tconcat(_INFO_LOG_PATH), "a+")
+	end
+	LOG_FILE_OBJ:write(context, "\n")
+end
+local function _log_warn(context)
+	if not WARN_FILE_OBJ or not io.type(WARN_FILE_OBJ) then
+		_WARN_LOG_PATH[2] = os_date("%Y%m%d")
+		WARN_FILE_OBJ = io.open(tconcat(_WARN_LOG_PATH), "a+")
+	end
+	WARN_FILE_OBJ:write(context, "\n")
+end
+local function _log_error(context)
+	if not ERROR_FILE_OBJ or not io.type(ERROR_FILE_OBJ) then
+		_ERROR_LOG_PATH[2] = os_date("%Y%m%d")
+		ERROR_FILE_OBJ = io.open(tconcat(_ERROR_LOG_PATH), "a+")
+	end
+	ERROR_FILE_OBJ:write(context, "\n")
+end
+
+-- 控制台打印
+local function _log_print(level, context)
+	local color = level and _LEVEL_COLOR[level]
+	assert(color, "level is error!")
+	print(tconcat({ color, context, END_FORMAT, }))
+end
+
 
 ---- 外部接口 ------------------------------------------------------------------------
 
 function _INFO(...)
 	local context = _info_context(FileInfo(), ...)
 	if logStdin then
-		print(context)
+		_log_print(1, context)
 	end
-	-- 输出到对应日期的日志文件上
+	_log_info( context)
 end
 
 function _WARN(...)
 	local context = _warn_context(FileInfo(), ...)
 	if logStdin then
-		print(context)
+		_log_print(2, context)
 	end
-	-- 输出到对应日期的日志文件上
+	_log_warn(context)
 end
 
 function _ERROR(...)
 	local context = _error_context(FileInfo(), ...)
 	if logStdin then
-		print(context)
+		_log_print(3, context)
 	end
-	-- 输出到对应日期的日志文件上
+	_log_error(context)
 end
 
-_INFO("aaaaaa")
-_WARN("qqqq")
-_ERROR("wwww")
+-- 缺一个定时器，时间去到第二天的时候更换日志文件
