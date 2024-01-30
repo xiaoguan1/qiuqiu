@@ -454,17 +454,17 @@ static int stat_filetype (lua_State *L) {
 
   if (S_ISSOCK(buf.st_mode) == 1) {         // socket
     fileType = "sock";
-  }else if (S_ISLNK(buf.st_mode) == 1) {    // 符号链接
+  }else if (S_ISLNK(buf.st_mode) == 1) {    // 符号链接(符号链接文件)
     fileType = "lnk";
   }else if (S_ISREG(buf.st_mode) == 1) {    // 一般文件
     fileType = "file";
-  }else if (S_ISBLK(buf.st_mode) == 1) {    // 区块装置
+  }else if (S_ISBLK(buf.st_mode) == 1) {    // 区块装置(块设备)
     fileType = "blk";
   }else if (S_ISDIR(buf.st_mode) == 1) {    // 文件夹
     fileType = "dir";
-  }else if (S_ISCHR(buf.st_mode) == 1) {    // 字符装置
+  }else if (S_ISCHR(buf.st_mode) == 1) {    // 字符装置(字符设备)
     fileType = "chr";
-  }else if (S_ISFIFO(buf.st_mode) == 1) {   // 先进先出
+  }else if (S_ISFIFO(buf.st_mode) == 1) {   // 先进先出(管道)
     fileType = "fifo";
   } else {
     return luaL_error(L, "not find file type!");  // 未发现文件类型,报错!
