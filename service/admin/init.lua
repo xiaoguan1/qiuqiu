@@ -55,6 +55,39 @@ local function _STAT()
 	return sys.dump(ret)
 end
 
+local function _SERVICE_MEM()
+	local proxy = GetProxy(".launcher")
+	local ret = proxy.call.SERVICE_MEM()
+
+	-- 将ret格式化 是返回的ret更好看
+	local maxNamelen = 0
+	local nameSort = {}
+	local tmpRet = {}
+	for _, _data in pairs(ret) do
+		local serviceName = _data.serviceName
+		tmpRet[serviceName] = _data
+		table.insert(nameSort, serviceName)
+		local len = string.len(serviceName)
+		if len > maxNamelen then
+			maxNamelen = len
+		end
+	end
+	table.sort(nameSort)
+
+	local dumpT = {}
+	local format = string.format("%%%ds : luamem:%%-20s\tcmem:%%-20s", maxNamelen)
+	print("format ", format)
+	for _, _serviceName in pairs(nameSort) do
+		local _data = tmpRet[_serviceName]
+		table.insert(dumpT, string.format(
+			format, _serviceName, _data.luamem .. " (Kb)", _data.cmem .. " (Kb)"
+		))
+	end
+
+	local msg = table.concat(dumpT, "\n") .. "\n"
+	return msg
+end
+
 -- 外部调用 ------------------------------------------------------
 CMD = {
 	["/shutdown"] = _SHUTDOWN,	-- 关服
@@ -62,6 +95,7 @@ CMD = {
 	["/mem"] = _MEM,
 	["/rt"] = _RT,				-- "ping一下所有服务，并获取相应时间差"
 	["/stat"] = _STAT,
+	["/service_mem"] = _SERVICE_MEM,
 }
 
 

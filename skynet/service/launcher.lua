@@ -3,6 +3,7 @@ local core = require "skynet.core"
 require "skynet.manager"	-- import manager apis
 local string = string
 local codecache = require "skynet.codecache"
+local memory = require "skynet.memory"
 
 local services = {}
 local command = {}
@@ -57,6 +58,47 @@ function command.SERVICE_STAT()
 		end
 	end
 	return ret
+end
+
+-- 所以服务的内存信息
+function command.SERVICE_MEM()
+	local ret = {}
+	for _address, _v in pairs(services) do
+		local service_name = string.split(_v, " ")[2]
+		if service_name then
+			local ok, kb = pcall(skynet.call, _address, "debug", "MEM")
+			if ok then
+				ret[_address] = {
+					serviceName = service_name .. string.format("[:%08x]", _address),
+					luamem = kb,
+					cmem = 0,
+				}
+			end
+		end
+	end
+
+	local info = memory.info()
+	for k, b in pairs(info) do
+		if ret[k] then
+			ret[k].cmem = b / 1024
+		else
+			ret[k] = {
+				serviceName = string.format("[:%08x]", k),
+				luamem = 0,
+				cmem = b / 1024,
+			}
+		end
+	end
+
+	return ret
+end
+
+-- 开启所有服务cpu打印(后面开的服务不会开启，要再次调用SERVICE_CPU)
+function command.SERVICE_CPU_ON()
+	for _address, _v in pairs(services) do
+		local service_name = string.split(_v, " ")[2]
+		-- core
+	end
 end
 
 
