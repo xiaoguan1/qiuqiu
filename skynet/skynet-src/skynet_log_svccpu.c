@@ -19,7 +19,7 @@ create_dir(const char *path_name) {
 		if (dir_name[i] == '/') {
 			dir_name[i] = 0;
 			if (access(dir_name, W_OK) != 0) {
-				if (mkdir(dir_name, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == =1) {
+				if (mkdir(dir_name, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1) {
 					return -1;
 				}
 			}
@@ -43,7 +43,7 @@ skynet_log_svccpu_open(struct skynet_context *ctx, uint32_t handle, const char *
 		return NULL;
 	size_t sz = strlen(logpath);
 	char tmp[sz + 100];
-	sprintf(tmp, "%s %s_%08x.log", logpath, param, handle);
+	sprintf(tmp, "%s/%s_%08x.log", logpath, param, handle);
 	FILE *f = try_openfile(tmp);	// fopen(tmp, "ab")
 	if (f) {
 		skynet_error(ctx, "Open log file %s", tmp);
@@ -61,10 +61,10 @@ skynet_log_svccpu_close(struct skynet_context *ctx, FILE *f, uint32_t handle){
 }
 
 void
-skynet_log_svccpu_output(FILE *f, uint32_t source, int type, int session, uint64_t const_time){
+skynet_log_svccpu_output(FILE *f, uint32_t source, int type, int session, uint64_t cost_time){
 	uint32_t starttime = skynet_starttime();
 	uint64_t currenttime = skynet_now();
 	uint32_t ti = (starttime + currenttime / 100);
-	fprintf(f, "%u %ld :%08x %d %d\n", ti, const_time, source, type, session)；
+	fprintf(f, "%u %ld :%08x %d %d\n", ti, cost_time, source, type, session);
 	fflush(f);
 }

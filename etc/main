@@ -30,6 +30,9 @@ extendlib = "./lualib/extend/extendlib.lua"
 -- 开启日志控制台打印
 log_stdin = true
 
+-- cpu使用率日志
+log_svccpu_path = "../log/main_node/svccpu"
+
 ------------------ 节点信息 ------------------
 is_cross = false
 server_id = 1

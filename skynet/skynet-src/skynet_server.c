@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include "skynet_log_svccpu.h"
 
 #ifdef CALLING_CHECK
 
@@ -46,6 +47,7 @@ struct skynet_context {
 	skynet_cb cb;
 	struct message_queue *queue;
 	ATOM_POINTER logfile;
+	FILE *logsvccpufile;
 	uint64_t cpu_cost;	// in microsec
 	uint64_t cpu_start;	// in microsec
 	char result[32];
@@ -141,6 +143,7 @@ skynet_context_new(const char * name, const char *param) {
 	ctx->cb_ud = NULL;
 	ctx->session_id = 0;
 	ATOM_INIT(&ctx->logfile, (uintptr_t)NULL);
+	ctx->logsvccpufile = NULL;
 
 	ctx->init = false;
 	ctx->endless = false;
@@ -210,6 +213,9 @@ delete_context(struct skynet_context *ctx) {
 	if (f) {
 		fclose(f);
 	}
+	if (ctx->logsvccpufile) {
+		fclose(ctx->logsvccpufile);
+	}
 	skynet_module_instance_release(ctx->mod, ctx->instance);
 	skynet_mq_mark_release(ctx->queue);
 	CHECKCALLING_DESTROY(ctx)
@@ -275,6 +281,9 @@ dispatch_message(struct skynet_context *ctx, struct skynet_message *msg) {
 		reserve_msg = ctx->cb(ctx, ctx->cb_ud, type, msg->session, msg->source, msg->data, sz);
 		uint64_t cost_time = skynet_thread_time() - ctx->cpu_start;
 		ctx->cpu_cost += cost_time;
+		if (ctx->logsvccpufile) {
+			skynet_log_svccpu_output(ctx->logsvccpufile, msg->source, type, msg->session, cost_time);
+		}
 	} else {
 		reserve_msg = ctx->cb(ctx, ctx->cb_ud, type, msg->session, msg->source, msg->data, sz);
 	}
@@ -624,6 +633,53 @@ cmd_logoff(struct skynet_context * context, const char * param) {
 }
 
 static const char *
+cmd_log_svccpu_on(struct skynet_context *context, const char *param) {
+	int size = strlen(param);
+	char name[size + 1];
+	char handle_s[size + 1];
+	sscanf(param, "%s %s", handle_s, name);
+
+	uint32_t handle = tohandle(context, handle_s);
+	if (handle == 0)
+		return NULL;
+	struct skynet_context *ctx = skynet_handle_grab(handle);
+	if (ctx == NULL)
+		return NULL;
+	FILE *f = NULL;
+	FILE *lastf = ctx->logsvccpufile;
+	if (lastf == NULL) {
+		f = skynet_log_svccpu_open(context, handle, name);
+		if (f) {
+			if (!ATOM_CAS_POINTER(&ctx->logsvccpufile, (uintptr_t)NULL, (uintptr_t)f)) {
+				// logsvccpufile opens in other thread, close this one.
+				fclose(f);
+			}
+		}
+	}
+	skynet_context_release(ctx);
+	return NULL;
+}
+
+static const char *
+cmd_log_svccpu_off(struct skynet_context *context, const char *param) {
+	uint32_t handle = tohandle(context, param);
+	if (handle == 0)
+		return NULL;
+	struct skynet_context *ctx = skynet_handle_grab(handle);
+	if (ctx == NULL)
+		return NULL;
+	FILE *f = ctx->logsvccpufile;
+	if (f) {
+		// logsvccpufile may close in other thread.
+		if (!ATOM_CAS_POINTER(&ctx->logsvccpufile, (uintptr_t)f, (uintptr_t)NULL)) {
+			skynet_log_svccpu_close(context, f, handle);
+		}
+	}
+	skynet_context_release(ctx);
+	return NULL;
+}
+
+static const char *
 cmd_signal(struct skynet_context * context, const char * param) {
 	uint32_t handle = tohandle(context, param);
 	if (handle == 0)
@@ -660,6 +716,8 @@ static struct command_func cmd_funcs[] = {
 	{ "LOGON", cmd_logon },
 	{ "LOGOFF", cmd_logoff },
 	{ "SIGNAL", cmd_signal },
+	{"LOG_SVCCPU_ON", cmd_log_svccpu_on},
+	{"LOG_SVCCPU_OFF", cmd_log_svccpu_off},
 	{ NULL, NULL },
 };
 

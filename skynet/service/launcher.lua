@@ -4,6 +4,7 @@ require "skynet.manager"	-- import manager apis
 local string = string
 local codecache = require "skynet.codecache"
 local memory = require "skynet.memory"
+local c = require "skynet.core"
 
 local services = {}
 local command = {}
@@ -96,11 +97,17 @@ end
 -- 开启所有服务cpu打印(后面开的服务不会开启，要再次调用SERVICE_CPU)
 function command.SERVICE_CPU_ON()
 	for _address, _v in pairs(services) do
-		local service_name = string.split(_v, " ")[2]
-		-- core
+		local sp_tbl = string.split(_v, " ")
+		c.intcommand("LOG_SVCCPU_ON", skynet.address(_address) .. " " .. ((sp_tbl[2] or "")))
 	end
 end
 
+-- 关闭所有服务cpu打印
+function command.SERVICE_CPU_OFF()
+	for _address, _v in pairs(services) do
+		c.intcommand("LOG_SVCCPU_OFF", skynet.address(_address))
+	end
+end
 
 function command.LIST()
 	local list = {}
