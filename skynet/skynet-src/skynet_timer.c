@@ -37,13 +37,13 @@ struct link_list {
 };
 
 struct timer {
-	struct link_list near[TIME_NEAR];
-	struct link_list t[4][TIME_LEVEL];
+	struct link_list near[TIME_NEAR];	// TIMER_NEAR = 256, 8位(临近的定时器数组)
+	struct link_list t[4][TIME_LEVEL];	// TIMER_LEVEL = 64, 6位(四个级别的定时器数组)
 	struct spinlock lock;
-	uint32_t time;
-	uint32_t starttime;
-	uint64_t current;
-	uint64_t current_point;
+	uint32_t time;						// 服务器经过的tick数, 每10毫秒 tick一次
+	uint32_t starttime;					// 服务器启动的时间戳，秒数
+	uint64_t current;					// 服务器启动到现在的时长，精度10毫秒级别
+	uint64_t current_point;				// 当前时间，精度10毫秒级别
 };
 
 static struct timer * TI = NULL;
