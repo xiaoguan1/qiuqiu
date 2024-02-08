@@ -160,4 +160,7 @@ skynet.start(function (...)
 	local listenfd = socket.listen("127.0.0.1", 8888, 128)
 	_INFO_F("admin Listen on 127.0.0.1:%d", 8888)
 	socket.start(listenfd, connect)
+
+	local launcher = GetProxy(".launcher")
+	launcher.call.SERVICE_CPU_ON()
 end)

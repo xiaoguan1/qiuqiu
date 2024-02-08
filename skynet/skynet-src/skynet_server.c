@@ -47,7 +47,7 @@ struct skynet_context {
 	skynet_cb cb;
 	struct message_queue *queue;
 	ATOM_POINTER logfile;
-	FILE *logsvccpufile;
+	ATOM_POINTER logsvccpufile;
 	uint64_t cpu_cost;	// in microsec
 	uint64_t cpu_start;	// in microsec
 	char result[32];
@@ -143,7 +143,7 @@ skynet_context_new(const char * name, const char *param) {
 	ctx->cb_ud = NULL;
 	ctx->session_id = 0;
 	ATOM_INIT(&ctx->logfile, (uintptr_t)NULL);
-	ctx->logsvccpufile = NULL;
+	ATOM_INIT(&ctx->logsvccpufile, (uintptr_t)NULL);
 
 	ctx->init = false;
 	ctx->endless = false;
@@ -213,8 +213,9 @@ delete_context(struct skynet_context *ctx) {
 	if (f) {
 		fclose(f);
 	}
-	if (ctx->logsvccpufile) {
-		fclose(ctx->logsvccpufile);
+	FILE *logsvccpufile = (FILE *)ATOM_LOAD(&ctx->logsvccpufile);
+	if (logsvccpufile) {
+		fclose(logsvccpufile);
 	}
 	skynet_module_instance_release(ctx->mod, ctx->instance);
 	skynet_mq_mark_release(ctx->queue);
@@ -281,8 +282,9 @@ dispatch_message(struct skynet_context *ctx, struct skynet_message *msg) {
 		reserve_msg = ctx->cb(ctx, ctx->cb_ud, type, msg->session, msg->source, msg->data, sz);
 		uint64_t cost_time = skynet_thread_time() - ctx->cpu_start;
 		ctx->cpu_cost += cost_time;
-		if (ctx->logsvccpufile) {
-			skynet_log_svccpu_output(ctx->logsvccpufile, msg->source, type, msg->session, cost_time);
+		FILE *logsvccpufile = (FILE *)ATOM_LOAD(&ctx->logsvccpufile);
+		if (logsvccpufile) {
+			skynet_log_svccpu_output(logsvccpufile, msg->source, type, msg->session, cost_time);
 		}
 	} else {
 		reserve_msg = ctx->cb(ctx, ctx->cb_ud, type, msg->session, msg->source, msg->data, sz);
@@ -646,7 +648,7 @@ cmd_log_svccpu_on(struct skynet_context *context, const char *param) {
 	if (ctx == NULL)
 		return NULL;
 	FILE *f = NULL;
-	FILE *lastf = ctx->logsvccpufile;
+	FILE *lastf = (FILE *)ATOM_LOAD(&ctx->logsvccpufile);
 	if (lastf == NULL) {
 		f = skynet_log_svccpu_open(context, handle, name);
 		if (f) {
@@ -668,7 +670,7 @@ cmd_log_svccpu_off(struct skynet_context *context, const char *param) {
 	struct skynet_context *ctx = skynet_handle_grab(handle);
 	if (ctx == NULL)
 		return NULL;
-	FILE *f = ctx->logsvccpufile;
+	FILE *f = (FILE *)ATOM_LOAD(&ctx->logsvccpufile);
 	if (f) {
 		// logsvccpufile may close in other thread.
 		if (!ATOM_CAS_POINTER(&ctx->logsvccpufile, (uintptr_t)f, (uintptr_t)NULL)) {
