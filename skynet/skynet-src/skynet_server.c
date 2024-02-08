@@ -284,7 +284,11 @@ dispatch_message(struct skynet_context *ctx, struct skynet_message *msg) {
 		ctx->cpu_cost += cost_time;
 		FILE *logsvccpufile = (FILE *)ATOM_LOAD(&ctx->logsvccpufile);
 		if (logsvccpufile) {
-			skynet_log_svccpu_output(logsvccpufile, msg->source, type, msg->session, cost_time);
+			if (!reserve_msg && cost_time >= 1000) { // 有数据，并且服务cpu大于1%
+				skynet_log_svccpu_output_data(logsvccpufile, msg->source, type, msg->session, cost_time, msg->data, sz);
+			} else {
+				skynet_log_svccpu_output(logsvccpufile, msg->source, type, msg->session, cost_time);
+			}
 		}
 	} else {
 		reserve_msg = ctx->cb(ctx, ctx->cb_ud, type, msg->session, msg->source, msg->data, sz);
@@ -652,7 +656,7 @@ cmd_log_svccpu_on(struct skynet_context *context, const char *param) {
 	if (lastf == NULL) {
 		f = skynet_log_svccpu_open(context, handle, name);
 		if (f) {
-			if (!ATOM_CAS_POINTER(&ctx->logsvccpufile, (uintptr_t)NULL, (uintptr_t)f)) {
+			if (!ATOM_CAS_POINTER(&ctx->logsvccpufile, 0, (uintptr_t)f)) {
 				// logsvccpufile opens in other thread, close this one.
 				fclose(f);
 			}

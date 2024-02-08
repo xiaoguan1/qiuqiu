@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/time.h>
 
 static int
 create_dir(const char *path_name) {
@@ -65,6 +66,50 @@ skynet_log_svccpu_output(FILE *f, uint32_t source, int type, int session, uint64
 	uint32_t starttime = skynet_starttime();
 	uint64_t currenttime = skynet_now();
 	uint32_t ti = (starttime + currenttime / 100);
-	fprintf(f, "%u %ld :%08x %d %d\n", ti, cost_time, source, type, session);
+
+	fprintf(f, "%d %ld :%08x %d %d\n", ti, cost_time, source, type, session);
+	fflush(f);
+}
+
+static void
+log_blob(FILE *f, void *buffer, size_t sz) {
+	size_t i;
+	uint8_t *buf = buffer;
+	for (i = 0; i != sz; i++) {
+		fprintf(f, "%02x", buf[i]);
+	}
+}
+
+static void
+log_socket(FILE *f, struct skynet_socket_message *message, size_t sz) {
+	fprintf(f, "[socket] %d %d %d", message->type, message->id, message->ud);
+
+	if (message->buffer == NULL) {
+		const char *buffer = (const char *)(message + 1);
+		sz -= sizeof(*message);
+		const char *eol = memchr(buffer, '\0', sz);
+		if (eol) {
+			sz = eol - buffer;
+		}
+		fprintf(f, "[%*s]", (int)sz, (const char *)buffer);
+	} else {
+		sz = message->ud;
+		log_blob(f, message->buffer, sz);
+	}
+}
+
+void
+skynet_log_svccpu_output_data(FILE *f, uint32_t source, int type, int session, uint64_t cost_time, void *buffer, size_t sz) {
+	uint32_t starttime = skynet_starttime();
+	uint64_t currenttime = skynet_now();
+	uint32_t ti = (starttime + currenttime / 100);
+
+	fprintf(f, "%d %ld :%08x %d %d\n", ti, cost_time, source, type, session);
+	if (type == PTYPE_SOCKET) {
+		log_socket(f, buffer, sz);
+	} else {
+		log_blob(f, buffer, sz);
+	}
+	fprintf(f, "\n");
 	fflush(f);
 }
