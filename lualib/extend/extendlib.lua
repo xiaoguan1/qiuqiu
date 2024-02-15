@@ -9,6 +9,7 @@ local LOAD_FILES = {
 	"./lualib/extend/sys.lua",
 	"./lualib/extend/stat.lua",
 	"./lualib/extend/common.lua",
+	"./lualib/extend/os.lua",
 }
 
 for _, filepath in pairs(LOAD_FILES) do

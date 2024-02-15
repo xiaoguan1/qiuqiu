@@ -508,6 +508,7 @@ function skynet.tracetag()
 end
 
 local starttime
+local oldstarttime
 
 function skynet.starttime()
 	if not starttime then
@@ -518,6 +519,21 @@ end
 
 function skynet.time()
 	return skynet.now()/100 + (starttime or skynet.starttime())
+end
+
+function skynet.offset_starttime(offset)
+	if not starttime then
+		skynet.starttime()
+	end
+	offset = offset or 0
+	if offset ~= 0 then
+		if not oldstarttime then
+			oldstarttime = starttime
+		end
+		starttime = starttime + offset
+	elseif oldstarttime then
+		starttime = oldstarttime
+	end
 end
 
 function skynet.exit()

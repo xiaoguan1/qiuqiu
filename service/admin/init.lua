@@ -88,6 +88,23 @@ local function _SERVICE_MEM()
 	return msg
 end
 
+local function _SERVERTIME(args)
+	local ymd, hms = args[1], args[2]
+	local proxy = GetProxy(".launcher")
+	if ymd == "reset" then
+		_WARN("reset servertime!!!")
+		proxy.send.SERVICE_STARTTIME(0)
+		return true
+	end
+	if not ymd or not hms then
+		return false
+	end
+	-- 2024-02-16 04:12:59
+	os.Sec2DateStr()
+	-- local newSec = 
+end
+
+
 -- 外部调用 ------------------------------------------------------
 CMD = {
 	["/shutdown"] = _SHUTDOWN,	-- 关服
@@ -96,6 +113,7 @@ CMD = {
 	["/rt"] = _RT,				-- "ping一下所有服务，并获取相应时间差"
 	["/stat"] = _STAT,
 	["/service_mem"] = _SERVICE_MEM,
+	["/servertime"] = _SERVERTIME,
 }
 
 
@@ -160,7 +178,6 @@ skynet.start(function (...)
 	local listenfd = socket.listen("127.0.0.1", 8888, 128)
 	_INFO_F("admin Listen on 127.0.0.1:%d", 8888)
 	socket.start(listenfd, connect)
-
 	local launcher = GetProxy(".launcher")
 	launcher.call.SERVICE_CPU_ON()
 end)

@@ -120,6 +120,11 @@ local function init(skynet, export)
 			skynet.ret()
 		end
 
+		function dbgcmdl.STARTTIME(offset)
+			skynet.offset_starttime(offset)
+			skynet.ret()
+		end
+
 		return dbgcmd
 	end -- function init_dbgcmd
 
