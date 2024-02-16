@@ -7,6 +7,7 @@ local sockethelper = require "http.sockethelper"
 local httpd = require "http.httpd"
 local urllib = require "http.url"
 local sys = sys
+local os = os
 
 -- 内部方法 ------------------------------------------------------
 
@@ -89,21 +90,25 @@ local function _SERVICE_MEM()
 end
 
 local function _SERVERTIME(args)
-	local ymd, hms = args[1], args[2]
+	local ymdhms = args and args.args
+	if not ymdhms then
+		_ERROR("servertime args error!!!")
+		return
+	end
+
 	local proxy = GetProxy(".launcher")
-	if ymd == "reset" then
+	if ymdhms == "reset" then
 		_WARN("reset servertime!!!")
 		proxy.send.SERVICE_STARTTIME(0)
-		return true
+	else
+		local newSec = os.Sec2DateStr(ymdhms)
+		local now = os.time()
+		local diff = newSec - now
+		_WARN_F("changing servertime[%s] to [%s] offset[%s]", now, newSec, diff)
+		proxy.send.SERVICE_STARTTIME(diff)
 	end
-	if not ymd or not hms then
-		return false
-	end
-	-- 2024-02-16 04:12:59
-	os.Sec2DateStr()
-	-- local newSec = 
+	_INFO_F("change server time successful!!! ")
 end
-
 
 -- 外部调用 ------------------------------------------------------
 CMD = {
@@ -144,7 +149,7 @@ function connect(fd, addr)
 
 			local f = CMD[path]
 			if f then
-				local ret = f()
+				local ret = f(q)
 				response(fd, 200, ret)
 			else
 				local filename

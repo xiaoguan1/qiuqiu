@@ -120,7 +120,7 @@ local function init(skynet, export)
 			skynet.ret()
 		end
 
-		function dbgcmdl.STARTTIME(offset)
+		function dbgcmd.STARTTIME(offset)
 			skynet.offset_starttime(offset)
 			skynet.ret()
 		end

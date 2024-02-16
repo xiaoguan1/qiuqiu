@@ -110,7 +110,7 @@ function command.SERVICE_CPU_OFF()
 end
 
 function command.SERVICE_STARTTIME(_, offset)
-	for _address, _v in pairs(service) do
+	for _address, _v in pairs(services) do
 		local ok, ret, err = pcall(skynet.call, _address, "debug", "STARTTIME", offset)
 		if not ok then
 			skynet.error(ret, error)
