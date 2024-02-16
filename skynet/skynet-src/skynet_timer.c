@@ -21,29 +21,29 @@ typedef void (*timer_execute_func)(void *ud,void *arg);
 #define TIME_NEAR_MASK (TIME_NEAR-1)
 #define TIME_LEVEL_MASK (TIME_LEVEL-1)
 
-struct timer_event {
-	uint32_t handle;
-	int session;
+struct timer_event {				// 记录每个节点回复消息的信息，存储在节点的后面
+	uint32_t handle;				// 记录定位服务的编号
+	int session;					// 记录用于接收消息响应时，定位到是响应哪一条消息，由发送消息的服务生成
 };
 
-struct timer_node {
-	struct timer_node *next;
-	uint32_t expire;
+struct timer_node {					// 节点（链表）
+	struct timer_node *next;		// 指向下一个节点
+	uint32_t expire;				// 保存该节点的timer_event消息回复事件的触发时间片为：添加时的时间片加上延时触发的时间
 };
 
 struct link_list {
-	struct timer_node head;
-	struct timer_node *tail;
+	struct timer_node head;			// 头节点，head.next指向第一个节点
+	struct timer_node *tail;		// 尾节点
 };
 
-struct timer {
+struct timer {							// 定时器的信息存储结构
 	struct link_list near[TIME_NEAR];	// TIMER_NEAR = 256, 8位(临近的定时器数组)
 	struct link_list t[4][TIME_LEVEL];	// TIMER_LEVEL = 64, 6位(四个级别的定时器数组)
 	struct spinlock lock;
-	uint32_t time;						// 服务器经过的tick数, 每10毫秒 tick一次
+	uint32_t time;						// 服务器经过的tick数, 每10毫秒tick一次(计数器)
 	uint32_t starttime;					// 服务器启动的时间戳，秒数
 	uint64_t current;					// 服务器启动到现在的时长，精度10毫秒级别
-	uint64_t current_point;				// 当前时间，精度10毫秒级别
+	uint64_t current_point;				// 当前时间，精度10毫秒级别(0.01)
 };
 
 static struct timer * TI = NULL;

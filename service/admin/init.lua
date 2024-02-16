@@ -28,14 +28,15 @@ local function _SHUTDOWN()
 	if not result then
 		error("close server fail.")
 	end
-	
+
 	-- 退出skynet进程
 	skynet.abort()
 end
 
 local function _PING()
-	print("eeeeeqqq", skynet.localname(".launcher"))
-	return skynet.ret()
+	print(os.time())
+	print(skynet.time())
+	return sys.dump(skynet.ret())
 end
 
 local function _MEM()
@@ -102,6 +103,7 @@ local function _SERVERTIME(args)
 		proxy.send.SERVICE_STARTTIME(0)
 	else
 		local newSec = os.Sec2DateStr(ymdhms)
+		if not newSec then return end
 		local now = os.time()
 		local diff = newSec - now
 		_WARN_F("changing servertime[%s] to [%s] offset[%s]", now, newSec, diff)
