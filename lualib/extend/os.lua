@@ -14,6 +14,7 @@ local function fsntime(...)
 		return mfloor(skytime())
 	end
 end
+os.time = fsntime
 
 -- sDateTime的格式示例：2024-02-16 04:41:59
 function os.Sec2DateStr(sDateTime)
