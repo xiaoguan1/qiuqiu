@@ -1,9 +1,21 @@
 local skynet = require "skynet"
+local skytime = skynet.time
+local mfloor = math.floor
 local os = os
 local table = table
 local _ERROR = _ERROR
 
--- 2024-02-16 04:41:59
+local original_ostime = os.time
+local function fsntime(...)
+	local agrcount = select("#", ...)
+	if agrcount > 0 then
+		return original_ostime(...)
+	else
+		return mfloor(skytime())
+	end
+end
+
+-- sDateTime的格式示例：2024-02-16 04:41:59
 function os.Sec2DateStr(sDateTime)
 	if type(sDateTime) ~= "string" or
 		string.match(sDateTime, "%d+%-%d+%-%d+ %d+%:%d+%:%d+") == nil
