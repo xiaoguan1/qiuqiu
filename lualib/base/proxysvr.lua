@@ -124,4 +124,3 @@ function GetProxy(addrname, prototype)
 		return proxy
 	end
 end
-

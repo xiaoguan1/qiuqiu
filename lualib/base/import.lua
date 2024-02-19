@@ -3,8 +3,11 @@ if not _G then
 end
 
 function _G.Import(filepath)
-	local _fileG = {}
+	if not filepath then
+		error("Improt not filepath!!!")
+	end
 
+	local _fileG = {}
 	local _fileMT = {
 		__index = _G,
 		__newindex = function(_fileG, key, value)
@@ -19,6 +22,7 @@ function _G.Import(filepath)
 	end
 
 	filebody()
+
 	return _fileG
 end
 

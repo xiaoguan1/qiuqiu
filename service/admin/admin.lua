@@ -9,120 +9,7 @@ local urllib = require "http.url"
 local sys = sys
 local os = os
 
--- 内部方法 ------------------------------------------------------
-
-local function _SHUTDOWN()
-	-- 关闭顺序不能改变
-
-	-- 给网关发送关服消息
-	for note, _ in pairs(runconfig.cluster) do
-		for i, v in pairs(runconfig.gateway or {}) do
-			local name = "gateway" .. i
-			service.call(node, name, "shutdown")
-		end
-	end
-
-	-- 给玩家发送关服消息
-	local anode = runconfig.agentmgr.node
-	local result = service.call(anode, "agentmgr", "shutdown")
-	if not result then
-		error("close server fail.")
-	end
-
-	-- 退出skynet进程
-	skynet.abort()
-end
-
-local function _PING()
-	print(os.time())
-	print(skynet.time())
-	return sys.dump(skynet.ret())
-end
-
-local function _MEM()
-	local proxy = GetProxy(".launcher")
-	local ret = proxy.call.MEM()
-	return sys.dump(ret)
-end
-
-local function _RT()
-	local proxy = GetProxy(".launcher")
-	local ret = proxy.call.SERVICE_RT()
-	return sys.dump(ret)
-end
-
-local function _STAT()
-	local proxy = GetProxy(".launcher")
-	local ret = proxy.call.SERVICE_STAT()
-	return sys.dump(ret)
-end
-
-local function _SERVICE_MEM()
-	local proxy = GetProxy(".launcher")
-	local ret = proxy.call.SERVICE_MEM()
-
-	-- 将ret格式化 是返回的ret更好看
-	local maxNamelen = 0
-	local nameSort = {}
-	local tmpRet = {}
-	for _, _data in pairs(ret) do
-		local serviceName = _data.serviceName
-		tmpRet[serviceName] = _data
-		table.insert(nameSort, serviceName)
-		local len = string.len(serviceName)
-		if len > maxNamelen then
-			maxNamelen = len
-		end
-	end
-	table.sort(nameSort)
-
-	local dumpT = {}
-	local format = string.format("%%%ds : luamem:%%-20s\tcmem:%%-20s", maxNamelen)
-	print("format ", format)
-	for _, _serviceName in pairs(nameSort) do
-		local _data = tmpRet[_serviceName]
-		table.insert(dumpT, string.format(
-			format, _serviceName, _data.luamem .. " (Kb)", _data.cmem .. " (Kb)"
-		))
-	end
-
-	local msg = table.concat(dumpT, "\n") .. "\n"
-	return msg
-end
-
-local function _SERVERTIME(args)
-	local ymdhms = args and args.args
-	if not ymdhms then
-		_ERROR("servertime args error!!!")
-		return
-	end
-
-	local proxy = GetProxy(".launcher")
-	if ymdhms == "reset" then
-		_WARN("reset servertime!!!")
-		proxy.send.SERVICE_STARTTIME(0)
-	else
-		local newSec = os.Sec2DateStr(ymdhms)
-		if not newSec then return end
-		local now = os.time()
-		local diff = newSec - now
-		_WARN_F("changing servertime[%s] to [%s] offset[%s]", now, newSec, diff)
-		proxy.send.SERVICE_STARTTIME(diff)
-	end
-	_INFO_F("change server time successful!!! ")
-end
-
--- 外部调用 ------------------------------------------------------
-CMD = {
-	["/shutdown"] = _SHUTDOWN,	-- 关服
-	["/ping"] = _PING,			-- ping所有服务
-	["/mem"] = _MEM,
-	["/rt"] = _RT,				-- "ping一下所有服务，并获取相应时间差"
-	["/stat"] = _STAT,
-	["/service_mem"] = _SERVICE_MEM,
-	["/servertime"] = _SERVERTIME,
-}
-
+-- 内部调用 ------------------------------------------------------
 
 local function response(fd, ...)
 	local ok, err = httpd.write_response(sockethelper.writefunc(fd), ...)
@@ -131,6 +18,9 @@ local function response(fd, ...)
 		_ERROR_F("dealadmin response error fd = %s, %s", fd, err)
 	end
 end
+
+
+-- 外部调用 ------------------------------------------------------
 
 -- example:
 --		wget -q -O - "http://127.0.0.1:8888/gmcode.lua?code=a"
@@ -149,7 +39,7 @@ function connect(fd, addr)
 				q = urllib.parse_query(query)
 			end
 
-			local f = CMD[path]
+			local f = MANAGE_MGR[path:gsub("/", "")]
 			if f then
 				local ret = f(q)
 				response(fd, 200, ret)
@@ -187,4 +77,6 @@ skynet.start(function (...)
 	socket.start(listenfd, connect)
 	local launcher = GetProxy(".launcher")
 	launcher.call.SERVICE_CPU_ON()
+
+	dofile("./service/admin/init/loading.lua")
 end)
