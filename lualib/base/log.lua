@@ -38,6 +38,7 @@ local BACKGROUNDCOLOUR = {
 local INFO_M
 local WARN_M
 local ERROR_M
+local MEM_M
 local SERVICE_INFO
 if not INFO_M then
 	INFO_M = HEADER ..  FONTCOLOUR.Black .. BACKGROUNDCOLOUR.Green .. "m"
@@ -47,6 +48,9 @@ if not WARN_M then
 end
 if not ERROR_M then
 	ERROR_M = HEADER ..  FONTCOLOUR.Black .. BACKGROUNDCOLOUR.Red .. "m"
+end
+if not MEM_M then
+	MEM_M = HEADER .. FONTCOLOUR.Black .. BACKGROUNDCOLOUR.Purple .. "m"
 end
 if not SERVICE_INFO then
 	SERVICE_INFO = sformat( "%s %0x ", SERVICE_NAME, skynet.self())
@@ -74,7 +78,8 @@ end
 local _LEVEL_COLOR = {
 	[1] = INFO_M,
 	[2] = WARN_M,
-	[3] = ERROR_M
+	[3] = ERROR_M,
+	[4] = MEM_M,
 }
 
 local _INFO_CONTEXT = {
@@ -92,6 +97,12 @@ local _WARN_CONTEXT = {
 local _ERROR_CONTEXT = {
 	"nil",
 	"[ERROR]",
+	"nil",
+	"nil",
+}
+local _MEM_CONTEXT = {
+	"nil",
+	"[MEM_ALARM]",
 	"nil",
 	"nil",
 }
@@ -113,10 +124,16 @@ local function _error_context(fileInfo, msg)
 	_ERROR_CONTEXT[4] = msg
 	return tconcat(_ERROR_CONTEXT, " ")
 end
+local function _mem_context(fileInfo, msg)
+	_MEM_CONTEXT[1] = os_date("%Y-%m-%d %H:%M:%S")
+	_MEM_CONTEXT[3] = fileInfo
+	_MEM_CONTEXT[4] = msg
+	return tconcat(_ERROR_CONTEXT, " ")
+end
 
 
 -- 文件句柄信息
-local LOG_FILE_OBJ, WARN_FILE_OBJ, ERROR_FILE_OBJ
+local LOG_FILE_OBJ, WARN_FILE_OBJ, ERROR_FILE_OBJ, MEM_FILE_OBJ
 local _INFO_LOG_PATH = {
 	"./log/info/",
 	"info_",
@@ -132,6 +149,12 @@ local _WARN_LOG_PATH = {
 local _ERROR_LOG_PATH = {
 	"./log/error/",
 	"error_",
+	"nil",
+	".txt",
+}
+local _MEM_LOG_PATH = {
+	"./log/mem/",
+	"mem_",
 	"nil",
 	".txt",
 }
@@ -166,6 +189,16 @@ local function _log_error(context)
 		ERROR_FILE_OBJ = io.open(tconcat(_ERROR_LOG_PATH), "a+")
 	end
 	ERROR_FILE_OBJ:write(context, "\n")
+end
+local function _log_mem(context)
+	if not MEM_FILE_OBJ or not io.type(MEM_FILE_OBJ) then
+		if not stat.is_dir(_MEM_LOG_PATH[1]) then
+			os.execute("mkdir " .. _MEM_LOG_PATH[1])
+		end
+		_MEM_LOG_PATH[3] = os_date("%Y%m%d")
+		MEM_FILE_OBJ = io.open(tconcat(_MEM_LOG_PATH), "a+")
+	end
+	MEM_FILE_OBJ:write(context, "\n")
 end
 
 -- 控制台打印
@@ -225,5 +258,20 @@ function _ERROR_F(fmt, ...)
 	_log_error(context)
 end
 
+
+function _MEM_ALARM(...)
+	local context = _mem_context(FileInfo(), ...)
+	if logStdin then
+		_log_print(4, context)
+	end
+	_log_mem(context)
+end
+function _MEM_ALARM_F(fmt, ...)
+	local context = _mem_context(FileInfo(), string.format(fmt, ...))
+	if logStdin then
+		_log_print(4, context)
+	end
+	_log_mem(context)
+end
 
 -- 缺一个定时器，时间去到第二天的时候更换日志文件
