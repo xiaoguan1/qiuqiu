@@ -30,25 +30,25 @@ function ping()		-- ping所有服务
 end
 
 function mem()
-	local proxy = GetProxy(".launcher")
+	local proxy = PROXYSVR.GetProxy(".launcher")
 	local ret = proxy.call.MEM()
 	return sys.dump(ret)
 end
 
 function rt()		-- "ping一下所有服务，并获取相应时间差"
-	local proxy = GetProxy(".launcher")
+	local proxy = PROXYSVR.GetProxy(".launcher")
 	local ret = proxy.call.SERVICE_RT()
 	return sys.dump(ret)
 end
 
 function stat()
-	local proxy = GetProxy(".launcher")
+	local proxy = PROXYSVR.GetProxy(".launcher")
 	local ret = proxy.call.SERVICE_STAT()
 	return sys.dump(ret)
 end
 
 function service_mem()
-	local proxy = GetProxy(".launcher")
+	local proxy = PROXYSVR.GetProxy(".launcher")
 	local ret = proxy.call.SERVICE_MEM()
 
 	-- 将ret格式化 是返回的ret更好看
@@ -87,7 +87,7 @@ function servertime(args)
 		return
 	end
 
-	local proxy = GetProxy(".launcher")
+	local proxy = PROXYSVR.GetProxy(".launcher")
 	if ymdhms == "reset" then
 		_WARN("reset servertime!!!")
 		proxy.send.SERVICE_STARTTIME(0)

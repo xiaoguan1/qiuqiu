@@ -14,7 +14,6 @@ local LOAD_FILES = {
 
 	-- 其他
 	"./lualib/base/log.lua",
-	"./lualib/base/proxysvr.lua",
 }
 
 for _, filepath in pairs(LOAD_FILES) do
