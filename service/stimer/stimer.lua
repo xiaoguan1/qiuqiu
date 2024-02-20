@@ -87,14 +87,14 @@ function ACCEPT.call_daily(source, nodeName, index, hour, min, sec)
 	})
 
 	-- 时间点已经过了，设置成隔天。
-	if nowTime > nextTime then nextTime = nextTime + ONE_DAY end
+	if nowTime > nextTime then nextTime = nextTime + ONE_DAY_SEC end
 
 	if not CallOutTbl[nextTime] then CallOutTbl[nextTime] = {} end
 
 	CallOutTbl[nextTime][index] = {
 		source = source,
 		nodeName = nodeName,
-		refresh_time = ONE_DAY,		-- 循环时间间隔
+		refresh_time = ONE_DAY_SEC,		-- 循环时间间隔
 		nextType = ACCURATE_TYPE,
 	}
 
