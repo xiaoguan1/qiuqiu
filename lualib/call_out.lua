@@ -23,7 +23,7 @@ MEM_IGNORE_ALARM = {
 	["GroupRiskTimerFunc"] = true,		-- 创建机器人
 	["UpdateAreaRankData"] = true,		-- 竞技场欺负需要刷新排行榜
 }
-local SCALLOUT_SVR = PROXYSVR.GetProxy(EVERY_NODE_SERVER.stimer, "timer_event")
+local SCALLOUT_SVR = PROXYSVR.GetProxy(EVERY_NODE_SERVER.stimer, "callout")
 
 local CALLOUT_RT = 0.1					-- 定时器响应时间x秒以上则打印(精确度0.01)
 local ALARM_CALLOUT_RT = 1.5			-- 定时器响应时间x秒以上则警报
