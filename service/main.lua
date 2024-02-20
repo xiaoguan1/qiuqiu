@@ -6,9 +6,8 @@ local is_cross = skynet.getenv("is_cross") == "true" and true or false
 local assert = assert
 -- dofile("./lualib/base/base_class.lua")
 
-local EVERY_NODE_SERVER = {
-	stimer = ".stimer",		-- 定时器服务
-}
+DPCLUSTER_NODE = nil
+CLUSTERCFG = nil
 
 local function every_node_server()
 	for named, registerName in pairs(EVERY_NODE_SERVER) do
@@ -18,16 +17,22 @@ local function every_node_server()
 end
 
 skynet.start(function ()
-	-- 初始化
 	skynet.setenv("preload", set_preload)
 	dofile(set_preload)
 
+	-- 初始化
 	_INFO("----- begin start main -----")
-	local Node_Info = require "node_info"
-	local DPCLUSTER_NODE = assert(Node_Info.GetNodeInfo())
-	local clusterCfg = assert(Node_Info.GetClusterCfg())
 
 	every_node_server()
+
+	DPCLUSTER_NODE = skynet.getenv("DPCLUSTER_NODE")
+	CLUSTERCFG = skynet.getenv("CLUSTERCFG")
+	if not DPCLUSTER_NODE then
+		error("service env config error!")
+	end
+	DPCLUSTER_NODE = load("return" .. DPCLUSTER_NODE)()
+	CLUSTERCFG = load("return" .. CLUSTERCFG)()
+
 	if is_cross then
 		-- 跨服的逻辑未定 先随便写（后续再改）
 		local proxy = cluster.proxy(DPCLUSTER_NODE.main_ip_port, "agentmgr")
@@ -58,7 +63,7 @@ skynet.start(function ()
 			skynet.name("scene" .. sceneid, srv)
 		end
 
-		cluster.reload(clusterCfg)
+		cluster.reload(CLUSTERCFG)
 		cluster.open(DPCLUSTER_NODE.main_ip_port)
 	end
 

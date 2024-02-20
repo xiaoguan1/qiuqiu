@@ -124,12 +124,11 @@ local function _DealWithTimer()
 end
 
 skynet.start(function()
-	skynet.dispatch("timer_event", function(session, source, cmd, ...)
+	skynet.dispatch("callout", function(session, source, cmd, ...)
 		assert(session == 0, source)
 		local f = assert(ACCEPT[cmd])
 		f(source, ...)
 	end)
-
 
 	skynet.timeout(0, _DealWithTimer)
 end)

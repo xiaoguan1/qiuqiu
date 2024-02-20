@@ -24,8 +24,8 @@ server_id = 1
 --自己添加的环境
 set_preload = "./lualib/base/preload.lua"   -- 每个服务器都要加载的脚本
 
--- lua库的拓展(所有服务最先运行的文件，设计目的：只跟skynet引擎或lua有关)
-extendlib = "./lualib/extend/extendlib.lua"
+-- lua库的拓展(所有服务最先运行的文件,设计目的:只跟skynet引擎或lua有关)
+extendlib = "./lualib/extend/extlibload.lua"
 
 -- 开启日志控制台打印
 log_stdin = true

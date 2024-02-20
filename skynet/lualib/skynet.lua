@@ -41,7 +41,8 @@ local skynet = {
 	PTYPE_LUA = 10,
 	PTYPE_SNAX = 11,
 	PTYPE_TRACE = 12,	-- use for debug trace
-	PTYPE_TIMER_EVENT = 13,	-- timer_event guanguowei
+	PTYPE_CALLOUT = 13,	-- callout guanguowei
+	PTYPE_DATABASE_OPERATE = 14, -- database guannguowei
 }
 
 -- code cache

@@ -23,6 +23,7 @@ MEM_IGNORE_ALARM = {
 	["GroupRiskTimerFunc"] = true,		-- 创建机器人
 	["UpdateAreaRankData"] = true,		-- 竞技场欺负需要刷新排行榜
 }
+local SCALLOUT_SVR = PROXYSVR.GetProxy(EVERY_NODE_SERVER.stimer, "timer_event")
 
 local CALLOUT_RT = 0.1					-- 定时器响应时间x秒以上则打印(精确度0.01)
 local ALARM_CALLOUT_RT = 1.5			-- 定时器响应时间x秒以上则警报
@@ -37,6 +38,7 @@ local ALARM_HOURMIN_IGNORE = {	-- 警报忽略时间节点区间
 	[11] = {min = {0, 1}, rt = 4},				-- 11点，4秒。cadvarena
 }
 
+CallIndex = 0	-- 定时器的idx
 
 -- 注册消息 ------------------------------------
 skynet.dispatch("callout", function (session, _, callIdx)
@@ -79,20 +81,21 @@ end)
 -- 内部方法 ------------------------------------
 
 local function _GetIndex()
-	-- return  返回新的id（在C层写一个函数）
+	CallIndex = CallIndex + 1
+	return CallIndex
 end
 
 local function _call_multi(t, func)
 	assert(t >= 1)
 	local idx = _GetIndex()
-	-- SCALLOUT_SVR.send.call_multi(SNODE_NAME, idx, t)
+	SCALLOUT_SVR.send.call_multi(SNODE_NAME, idx, t)
 	callout_func[idx] = func
 	return idx
 end
 
 local function _call_once(t, func)
 	local idx = _GetIndex()
-	-- SCALLOUT_SVR.send.call_once(SNODE_NAME, idx, t)
+	SCALLOUT_SVR.send.call_once(SNODE_NAME, idx, t)
 	callout_func[idx] = func
 	return idx
 end
@@ -100,13 +103,13 @@ end
 local function _call_daily(hour, min, sec, func)
 	assert(0 <= hour and hour <= 23)
 	local idx = _GetIndex()
-	-- SCALLOUT_SVR.send.call_daily(SNODE_NAME, idx, hour, min, sec)
+	SCALLOUT_SVR.send.call_daily(SNODE_NAME, idx, hour, min, sec)
 	callout_func[idx] = func
 	return idx
 end
 
 local function _call_remove(idx)
-	-- SCALLOUT_SVR.send.rm_call(idx)
+	SCALLOUT_SVR.send.rm_call(idx)
 	return true
 end
 

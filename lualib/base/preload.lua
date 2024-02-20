@@ -5,9 +5,8 @@ local traceback = debug.traceback
 -- 加载文件路径(先加载不依赖外部数据的模块)
 local LOAD_FILES = {
 	-- 常量（不依赖其他模块的变量）
-	"./lualib/base/database_macro.lua",
-
-	"./lualib/base/import.lua",
+	"./lualib/macros/macros_database.lua",
+	"./lualib/macros/macros_common.lua",
 
 	-- 协议
 	"./protobuf/protoload/loadproto.lua",
@@ -22,8 +21,15 @@ end
 
 -- 注册的协议
 skynet.register_protocol({
-	name = "timer_event",
-	id = skynet.PTYPE_TIMER_EVENT,
+	name = "callout",
+	id = skynet.PTYPE_CALLOUT,
+	unpack = skynet.unpack,
+	pack = skynet.pack,
+})
+
+skynet.register_protocol({
+	name = "dboperate",
+	id = skynet.PTYPE_DATABASE_OPERATE,
 	unpack = skynet.unpack,
 	pack = skynet.pack,
 })
@@ -71,4 +77,18 @@ end
 
 function TryCall(func, ...)
 	return _RetFunc(xpcall(func, traceback, ...))
+end
+
+if SERVICE_NAME ~= "main" and not EVERY_NODE_SERVER[SERVICE_NAME] then
+	DPCLUSTER_NODE = skynet.getenv("DPCLUSTER_NODE")
+	CLUSTERCFG = skynet.getenv("CLUSTERCFG")
+
+	if not DPCLUSTER_NODE then
+		error("service env config error!")
+	end
+
+	DPCLUSTER_NODE = load("return" .. DPCLUSTER_NODE)()
+	CLUSTERCFG = load("return" .. CLUSTERCFG)()
+
+	DPCLUSTER_NODE.self = DPCLUSTER_NODE.main_ip_port
 end

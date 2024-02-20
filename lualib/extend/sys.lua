@@ -119,7 +119,7 @@ local function _ToTreeString(t, deep)
 		return tostring(t)
 	else
 		local indent = _WordsIndentBy(deep)
-		local result = index .. "{\n"
+		local result = indent .. "{\n"
 
 		_Foreach(t, function(k, v)
 			result = result .. _WordsIndentBy(deep + 1)

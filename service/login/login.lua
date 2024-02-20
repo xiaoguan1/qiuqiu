@@ -1,13 +1,13 @@
 local skynet = require "skynet"
-local CommonDB = require "common_db"
 local node = skynet.getenv("node")
-local DatabaseCommon = require "database_common"
 
 client = {}
 
 PROTO_FUN = {}
 
 skynet.start(function(...)
+	dofile("./service/login/init/loading.lua")
+
 	skynet.dispatch("lua", function(session, address, cmd, ...)
 		local fun = PROTO_FUN[cmd]
 		if not fun then
@@ -43,15 +43,16 @@ end
 
 -- 协议处理
 PROTO_FUN.login = function(fd, msg, source)
+	local databasesvr = PROXYSVR.GetProxy(".database", "dboperate")
+	if not databasesvr then
+		return {"login", 1, "数据库错误"}
+	end
+
 	-- 账号和密码默认为字符串类型
 	local account, passwd = tostring(msg[2]), tostring(msg[3])
 	local gate = source
 
-	-- 获取数据库句柄（这里是登录，不是创角）
-	local db = CommonDB.Getdb(DATABASE_NAME.MESSAGE_BOARD)
-	if not db then return {"login", 1, "登录失败！！！"} end
-
-	local result = DatabaseCommon.CheckAccount(account, passwd, db)
+	local result = databasesvr.call.CheckAccount(account, passwd)
 	if not result then return {"login", 1, "帐号或密码错误！！！"} end
 
 	-- 发消息给agentmgr
@@ -71,17 +72,17 @@ end
 
 -- 创角
 PROTO_FUN.create = function(fd, msg, source)
+	local databasesvr = PROXYSVR.GetProxy(".database", "dboperate")
+	if not databasesvr then
+		return {"login", 1, "数据库错误"}
+	end
+
 	-- 账号和密码默认为字符串类型
 	local playerId, passwd = tostring(msg[2]), tostring(msg[3])
-	-- local gate = source
 
-	-- 获取数据库句柄（创角）
-	local db = CommonDB.Getdb(DATABASE_NAME.MESSAGE_BOARD)
-	if not db then return {"create", 1, "创角失败！！！"} end
-
-	local result = DatabaseCommon.IsHasPlayer(playerId, db)
+	local result = databasesvr.call.IsHasPlayer(playerId)
 	if result then return {"create", 1, "帐号已存在！！！"} end
 
-	result = DatabaseCommon.AddRoles(playerId, passwd, db)
+	local result = databasesvr.call.AddRoles(playerId, passwd)
 	if result then return {"create", 1, "创角成功！！！"} end
 end

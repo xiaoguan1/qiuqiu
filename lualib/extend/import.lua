@@ -1,3 +1,12 @@
+local skynet = require "skynet"
+local pcall = pcall
+local error = error
+local setmetatable = setmetatable
+local rawset = rawset
+local sformat = string.format
+local skyerror = skynet.error
+local loadfile = loadfile
+
 if not _G then
 	error("not find _G")
 end
@@ -18,10 +27,14 @@ function _G.Import(filepath)
 
 	local filebody = loadfile(filepath, "bt", _fileG)
 	if not filebody then
-		error(string.format("import filepath:%s error", filepath))
+		error(sformat("import filepath:%s error", filepath))
 	end
 
-	filebody()
+	local isOk, err = pcall(filebody)
+	if not isOk then
+		skyerror(err)
+		return
+	end
 
 	return _fileG
 end
