@@ -42,37 +42,37 @@ CallIndex = 0	-- 定时器的idx
 
 -- 注册消息 ------------------------------------
 skynet.dispatch("callout", function (session, _, callIdx)
-	if callout_func[callIdx] then
-		local sTime = skytime()
-		callout_func[callIdx]()
-		if CALLOUT_RT then
-			local sub = skytime() - sTime
-			if sub >= CALLOUT_RT then
-				_WARN(sformat("callIdx:%d use time:%s(s)", callIdx, sub))
-			end
-			if sub >= ALARM_CALLOUT_RT then
-				-- 判断是否在时间中
-				local nd = os.date("*t")
-				local isAlarm = true
-				local cHourData = ALARM_HOURMIN_IGNORE[nd.hour]
-				if cHourData then
-					if cHourData.min[1] <= nd.min and nd.min <= cHourData.min[2] then
-						if cHourData.wday then
-							if cHourData.wday == nd.wday then
-								isAlarm = false
-							end
-						else
+	if not callout_func[callIdx] then return end
+
+	local sTime = skytime()
+	callout_func[callIdx]()
+	if CALLOUT_RT then
+		local sub = skytime() - sTime
+		if sub >= CALLOUT_RT then
+			_WARN(sformat("callIdx:%d use time:%s(s)", callIdx, sub))
+		end
+		if sub >= ALARM_CALLOUT_RT then
+			-- 判断是否在时间中
+			local nd = os.date("*t")
+			local isAlarm = true
+			local cHourData = ALARM_HOURMIN_IGNORE[nd.hour]
+			if cHourData then
+				if cHourData.min[1] <= nd.min and nd.min <= cHourData.min[2] then
+					if cHourData.wday then
+						if cHourData.wday == nd.wday then
 							isAlarm = false
 						end
-					end
-					if not isAlarm and sub >= cHourData.rt then		-- 超出一定时间还是要的
-						isAlarm = true
+					else
+						isAlarm = false
 					end
 				end
-				if isAlarm then
-					local msg = sformat("callIdx:%d use time:%s(s)", callIdx, sub)
-					print(msg)
+				if not isAlarm and sub >= cHourData.rt then		-- 超出一定时间还是要的
+					isAlarm = true
 				end
+			end
+			if isAlarm then
+				local msg = sformat("callIdx:%d use time:%s(s)", callIdx, sub)
+				print(msg)
 			end
 		end
 	end
