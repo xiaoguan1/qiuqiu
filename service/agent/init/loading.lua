@@ -1,1 +1,1 @@
-DATABASECOMMON = Import("./lualib/db/database_common.lua")
+DATABASECOMMON = Import("lualib/db/database_common.lua")

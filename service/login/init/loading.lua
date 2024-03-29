@@ -1,1 +1,1 @@
-PROXYSVR = Import("./lualib/base/proxysvr.lua")
+PROXYSVR = Import("lualib/base/proxysvr.lua")

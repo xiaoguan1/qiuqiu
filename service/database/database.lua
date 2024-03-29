@@ -3,7 +3,7 @@ local table = table
 local sys = sys
 
 -- 因为代码比较少量，故直接在这里Import
-local DATABASE_OPERATE = Import("./service/database/database_operate.lua")
+local DATABASE_OPERATE = Import("service/database/database_operate.lua")
 
 -- 内部方法 -------------------------------------------------
 -- 获取当前节点的信息
@@ -39,7 +39,6 @@ end
 skynet.start(function()
     skynet.dispatch("dboperate", function (session, address, cmd, ...)
 		local f = DATABASE_OPERATE[cmd]
-		print("ssssqqqqqq ", session, address, cmd, ...)
 		if not f then
 			_ERROR_F("database not find func, session:%s address:%s cmd:%s",  session, address, cmd)
 			return

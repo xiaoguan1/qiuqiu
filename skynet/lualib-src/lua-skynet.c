@@ -403,6 +403,13 @@ lhpc(lua_State *L) {
 	return 1;
 }
 
+// 获取当前服务的全局环境表_G
+static int
+lservice_g(lua_State *L) {
+	lua_rawgeti(L, LUA_REGISTRYINDEX, LUA_RIDX_GLOBALS);
+	return 1;
+}
+
 #define MAX_LEVEL 3
 
 struct source_info {
@@ -497,6 +504,7 @@ luaopen_skynet_core(lua_State *L) {
 		{ "trash" , ltrash },
 		{ "now", lnow },
 		{ "hpc", lhpc },	// getHPCounter
+		{"service_g", lservice_g},	// create by guanguowei
 		{ NULL, NULL },
 	};
 
