@@ -1,5 +1,4 @@
 local skynet = require "skynet"
-local login_num = assert(tonumber(skynet.getenv("login_num")))
 
 
 local M = {}

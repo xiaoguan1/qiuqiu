@@ -17,6 +17,7 @@ CREATE TABLE server_config (
     main_node_port varchar(64) NOT NULL COMMENT '服务器port',
     cluster_node_ip varchar(64) NOT NULL COMMENT '集群ip',
     cluster_node_port varchar(64) NOT NULL COMMENT '集群port',
+    gateway_posts varchar(128) NOT NULL COMMENT '网关端口',
     PRIMARY KEY (server_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOF

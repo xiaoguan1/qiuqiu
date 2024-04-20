@@ -4,6 +4,7 @@ local DATABASE_NAME = DATABASE_NAME
 local DATABASE_MESSAGE_BOARD_TABLES = DATABASE_MESSAGE_BOARD_TABLES
 local defaultServerId = tonumber(skynet.getenv("server_id"))
 local queue = require "skynet.queue"
+local cjson = require "cjson"
 CS = queue()
 DB_CONNECT = {}
 
@@ -132,6 +133,9 @@ function GetServerConfig(server_id)
 	server_id = server_id or defaultServerId
 	local isOk, res = select(db, DATABASE_COMMON_DB_TABLES.SERVER_CONFIG, nil, "server_id", server_id)
 	if isOk and res and res[1] then
+		if res[1].gateway_posts then
+			res[1].gateway_posts = cjson.decode(res[1].gateway_posts)
+		end
 		return res[1]
 	end
 end

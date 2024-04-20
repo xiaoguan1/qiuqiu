@@ -1,0 +1,1 @@
+{"name":"bigskill2", "headType":0, "back":{"time":0, "width":0}, "fly":{"time":0, "width":0, "height":0}, "hurt":[], "attack":[], "fxHurt":[{"url":"4016211_atk1","effect_type":2,"effect_obj":1,"time":0.8,"isBullect":false,"isCircle":false,"isReverse":false,"traje":0,"zOrder":2,"offersetX":0,"offersetY":0,"delay":0,"scale":1,"speed":100,"multi":0}]}

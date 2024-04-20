@@ -26,7 +26,7 @@ lua ./classvar/agent/var_name.lua
 
 case ${1} in
 	"1")
-		./skynet/skynet ./etc/main
+		./skynet/skynet ./etc/main_node
 		;;
 	"2")
 		./skynet/skynet ./etc/config.node2

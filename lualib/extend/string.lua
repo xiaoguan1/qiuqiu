@@ -13,3 +13,9 @@ function string.split(str, reps, retIndex)
 	if retIndex then return retList[retIndex] end
 	return retList
 end
+
+-- 判断一个字符串是否以 begins参数 开始
+function string.beginswith(str, begins)
+	local i, j = string.find(str, begins, 1, true)
+	return i and (i == 1)
+end

@@ -9,14 +9,16 @@ local DATABASE_OPERATE = Import("service/database/database_operate.lua")
 -- 获取当前节点的信息
 local function GetNodeInfo()
 	local config = DATABASE_OPERATE.GetServerConfig()
-
 	return {
 		no = config.server_id,	-- 当前节点的服务器编号
+		main_node_ip = config.main_node_ip,
 		main_ip_port = config.main_node_ip .. ":" .. config.main_node_port,	-- 服务器地址
 		cluster_ip_port = config.cluster_node_ip .. ":" .. config.cluster_node_port, -- 集群地址
+		gateway_posts = config.gateway_posts,
 	}
 end
 
+-- 这里仅仅只是抄项目的，具体到时涉及到跨服再仔细考量!!!!!
 local function GetClusterCfg()
 	local DPCLUSTER_NODE = GetNodeInfo()
 	if not DPCLUSTER_NODE then
@@ -25,7 +27,7 @@ local function GetClusterCfg()
 
 	local ret = {}
 	for key, value in pairs(DPCLUSTER_NODE) do
-		if key ~= "no" then
+		if key ~= "no" and key ~= "gateway_posts" and key ~= "main_node_ip" then
 			ret[value] = value
 		end
 	end

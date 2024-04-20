@@ -2,6 +2,8 @@ local skynet = require "skynet"
 local socket = require "skynet.socket"
 local msgpack = require "msg_pack"
 local GATEWAY_COMMON = require "gateway_common"
+local SERVICE_NAME = SERVICE_NAME
+local port_index = tonumber(...)
 
 conns = {}	-- { [fd] = conn, ... }
 players = {}	-- { [playerId] = gateplayer, ...}
@@ -77,12 +79,10 @@ local function connect(fd, addr)
 end
 
 -- gateway服务的初始化
-skynet.init(function()	
-	local port = assert(tonumber(skynet.getenv("gateway_post")))
-	local ip = "0.0.0.0"
-
-	local listenfd = socket.listen(ip, port)
-	_INFO_F("Listen socket: %s:%s", ip, port)
+skynet.init(function()
+	local port = DPCLUSTER_NODE.gateway_posts[port_index]
+	local listenfd = socket.listen(DPCLUSTER_NODE.main_node_ip, port)
+	_INFO_F("Listen socket: %s:%s", DPCLUSTER_NODE.main_node_ip, port)
 	socket.start(listenfd, connect)
 end)
 
