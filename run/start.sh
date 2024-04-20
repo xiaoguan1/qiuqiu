@@ -35,6 +35,3 @@ case ${1} in
 		echo "error start"
 		;;
 esac
-
-#./skynet/skynet ./etc/config.node1
-
