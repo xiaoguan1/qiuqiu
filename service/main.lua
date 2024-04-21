@@ -20,29 +20,22 @@ end
 -- 游戏服启动
 local function _GameStart()
 	local nodeName = skynet.getenv("node_name")
-	for svrName, info in pairs(NODE_SERVER_INFO) do
+	for svrName, svrInfo in pairs(NODE_SERVER_INFO) do
 		local isSelfNode = false
-		if type(info.node) == "string" and info.node == nodeName then
+		if type(svrInfo.node) == "string" and svrInfo.node == nodeName then
 			isSelfNode = true
-		elseif type(info.node) == "table" and table.is_has_value(info.node) then
+		elseif type(svrInfo.node) == "table" and table.is_has_value(svrInfo.node) then
 			isSelfNode = true
-		end
-
-		local namedList = SERVER_NUM_TO_NAMED[svrName]
-		if not namedList or table.size(namedList) ~= info.num then
-			error(string.format("start svrName:%s fail", svrName))
 		end
 
 		if isSelfNode then
-			if info.num > 1 then
-				for i = 1, info.num do
-					local svraddr = skynet.newservice(svrName, i)
-					skynet.name(namedList[i], svraddr)
-				end
+			local svraddr
+			if svrInfo.son_num then
+				svraddr = skynet.uniqueservice(svrName)
 			else
-				local svraddr = skynet.newservice(svrName)
-				skynet.name(namedList[info.num], svraddr)
+				svraddr = skynet.newservice(svrName)
 			end
+			skynet.name(svrInfo.named, svraddr)
 		end
 	end
 

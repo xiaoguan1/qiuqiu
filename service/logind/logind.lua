@@ -28,7 +28,7 @@ skynet.start(function(...)
 		end
 	end)
 
-end, ...)
+end)
 
 
 -- 创角
