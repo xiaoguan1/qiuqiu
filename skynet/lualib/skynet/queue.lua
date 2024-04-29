@@ -4,6 +4,18 @@ local xpcall = xpcall
 local traceback = debug.traceback
 local table = table
 
+if SERVICE_NAME == "agent" then	-- agent服务要特殊处理
+	
+local co2urs = {
+	-- [co] = urs,	-- 协程对应的urs
+}
+
+-- 获取协程对应的urs
+
+
+
+else
+
 function skynet.queue()
 	local current_thread
 	local ref = 0
@@ -45,6 +57,8 @@ function skynet.queue()
 		ref = ref + 1
 		return xpcall_ret(xpcall(f, traceback, ...))
 	end
+end
+
 end
 
 return skynet.queue
