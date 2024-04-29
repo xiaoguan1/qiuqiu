@@ -1,0 +1,25 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "launch-alone-lua51",
+            "type": "lua",
+            "port": 47111,
+            "runtimeType": "standalone",
+            "request": "launch",
+            "stopOnEntry": false,
+            "localRoot": "${workspaceRoot}"
+        },
+        {
+            "name": "attach(Unity)",
+            "request": "attach",
+            "runtimeType": "attachUnity",
+            "localRoot": "${workspaceRoot}",
+            "stopOnEntry": false,
+            "port": 47111
+        }
+    ]
+}

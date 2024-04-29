@@ -18,7 +18,7 @@ NODE_SERVER_INFO = {
 	nodemgr	= {named = ".NODEMGR", node = {"game_node", "cross_node"}},
 
 	-- 网关
-	gateway	= {named = ".GAMEWAY", node = "game_node", son_num = 5},
+	logind	= {named = ".LOGIND", node = "game_node", son_num = 5},
 
 	-- 场景服务
 	scene 	= {named = ".SCENE", node = "game_node"},
