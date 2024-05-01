@@ -1,3 +1,5 @@
+// 资料来源：https://github.com/cloudwu/lua-serialize
+
 #include "lua.h"
 #include "lauxlib.h"
 #include <stdlib.h>
