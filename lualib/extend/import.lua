@@ -2,7 +2,7 @@ local skynet = require "skynet"
 local skyerror = skynet.error
 local core = require "skynet.core"
 
-local _SOURCE_G = core.service_g() -- 当前服务的全局环境表 _G
+local _SOURCE_G = core.serviceG() -- 当前服务的全局环境表 _G
 local pcall = _SOURCE_G.pcall
 local error = _SOURCE_G.error
 local setmetatable = _SOURCE_G.setmetatable
@@ -26,7 +26,7 @@ function _SOURCE_G.Import(filepath)
 	local _fileG = {}
 
 	setmetatable(_fileG, {
-		__index = core.service_g(),
+		__index = core.serviceG(),
 		__newindex = function(_fileG, key, value)
 			rawset(_fileG, key, value)
 		end,

@@ -405,7 +405,7 @@ lhpc(lua_State *L) {
 
 // 获取当前服务的全局环境表_G
 static int
-lservice_g(lua_State *L) {
+lserviceG(lua_State *L) {
 	lua_rawgeti(L, LUA_REGISTRYINDEX, LUA_RIDX_GLOBALS);
 	return 1;
 }
@@ -504,7 +504,7 @@ luaopen_skynet_core(lua_State *L) {
 		{ "trash" , ltrash },
 		{ "now", lnow },
 		{ "hpc", lhpc },	// getHPCounter
-		{"service_g", lservice_g},	// create by guanguowei
+		{"serviceG", lserviceG},	// create by guanguowei
 		{ NULL, NULL },
 	};
 
