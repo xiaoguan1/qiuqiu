@@ -4,9 +4,9 @@ local sys = sys
 
 -- 任何节点都必须启动的服务
 EVERY_NODE_SERVER = {
-	database = ".DATABASE",	-- 数据库服务(优先！因为要提前设置服务器环境配置)
-	stimer = ".STIMER",		-- 定时器服务
-    loadxls = ".LOADXLS",   -- 公共配置表服务
+	{service = "database", local_name = ".DATABASE"},	-- 数据库服务(优先！因为要提前设置服务器环境配置)
+	{service = "stimer", local_name = ".STIMER"},		-- 定时器服务
+	{service = "loadxls", local_name = ".LOADXLS"},		-- 公共配置表服务
 }
 
 -- 节点启动详情
@@ -27,6 +27,17 @@ NODE_SERVER_INFO = {
 	admin	= {named = ".ADMIN", node = "game_node",}
 }
 
+
+-- 检查 EVERY_NODE_SERVER 配置
+for index, serverInfo in ipairs(EVERY_NODE_SERVER) do
+	if not serverInfo.service or not serverInfo.local_name then
+		error(string.format("EVERY_NODE_SERVER _index:%s service:%s local_name:%s config error",
+			index, serverInfo.service, serverInfo.local_name))
+	end
+	EVERY_NODE_SERVER[serverInfo.service] = {index = index, local_name = serverInfo.local_name}
+end
+
+-- 检查 NODE_SERVER_INFO 配置
 for svrName, svrInfo in pairs(NODE_SERVER_INFO) do
 	local condition1 = type(svrInfo.named) == "string" and #svrInfo.named > 0
 	local condition2 = type(svrInfo.node) == "table" or type(svrInfo.node) == "string"

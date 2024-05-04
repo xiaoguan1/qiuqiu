@@ -89,7 +89,7 @@ function gen()
         end
     end
 
-    dofile("./classvar/agent/db.lua")
+    dofile("./charvar/agent/db.lua")
 
     -- 绑定属性文件
     BindFuncFile("clsRole", TmpVars.role, assert(GetSaveVars("DATABASE_ROLES_DATA")), "./service/agent/class/role.lua")

@@ -42,7 +42,7 @@ local skynet = {
 	PTYPE_SNAX = 11,
 	PTYPE_TRACE = 12,	-- use for debug trace
 	PTYPE_CALLOUT = 13,	-- callout guanguowei
-	PTYPE_DATABASE_OPERATE = 14, -- database guannguowei
+	PTYPE_TRANS = 14, -- database ghost
 }
 
 -- code cache

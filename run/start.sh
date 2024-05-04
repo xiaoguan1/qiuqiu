@@ -22,7 +22,9 @@ cd $SKYNETDIR
 make linux
 
 cd $RUNDIR/..
-lua ./classvar/agent/var_name.lua
+lua ./charvar/agent/var_name.lua
+lua ./charvar/gameserver/var_name.lua
+lua ./charvar/activity/var_name.lua
 
 case ${1} in
 	"1")

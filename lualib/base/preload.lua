@@ -43,13 +43,6 @@ skynet.register_protocol({
 	pack = skynet.pack,
 })
 
-skynet.register_protocol({
-	name = "dboperate",
-	id = skynet.PTYPE_DATABASE_OPERATE,
-	unpack = skynet.unpack,
-	pack = skynet.pack,
-})
-
 if not setfenv then
 	-- base on http://lua-users.org/lists/lua-l/2010-06/msg00314.html
 	-- this assumes f is a function
@@ -95,12 +88,12 @@ function TryCall(func, ...)
 	return _RetFunc(xpcall(func, traceback, ...))
 end
 
-if NODE_SERVER_INFO[SERVICE_NAME] then
+if NODE_SERVER_INFO[SERVICE_NAME] or (EVERY_NODE_SERVER[SERVICE_NAME] and SERVICE_NAME ~= "database") then
 	DPCLUSTER_NODE = skynet.getenv("DPCLUSTER_NODE")
 	CLUSTERCFG = skynet.getenv("CLUSTERCFG")
 
 	if not DPCLUSTER_NODE then
-		error("service env config error!")
+		error(SERVICE_NAME .. " service env config error!")
 	end
 
 	DPCLUSTER_NODE = load("return" .. DPCLUSTER_NODE)()
