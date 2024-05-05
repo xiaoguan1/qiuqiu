@@ -4,9 +4,9 @@ local sys = sys
 
 -- 任何节点都必须启动的服务
 EVERY_NODE_SERVER = {
-	{service = "database", local_name = ".DATABASE"},	-- 数据库服务(优先！因为要提前设置服务器环境配置)
-	{service = "stimer", local_name = ".STIMER"},		-- 定时器服务
-	{service = "loadxls", local_name = ".LOADXLS"},		-- 公共配置表服务
+	{service = "loadxls", named = ".LOADXLS"},		-- 公共配置表服务
+	{service = "database", named = ".DATABASE"},	-- 数据库服务(优先！因为要提前设置服务器环境配置)
+	{service = "stimer", named = ".STIMER"},		-- 定时器服务
 }
 
 -- 节点启动详情
@@ -30,11 +30,11 @@ NODE_SERVER_INFO = {
 
 -- 检查 EVERY_NODE_SERVER 配置
 for index, serverInfo in ipairs(EVERY_NODE_SERVER) do
-	if not serverInfo.service or not serverInfo.local_name then
-		error(string.format("EVERY_NODE_SERVER _index:%s service:%s local_name:%s config error",
-			index, serverInfo.service, serverInfo.local_name))
+	if not serverInfo.service or not serverInfo.named then
+		error(string.format("EVERY_NODE_SERVER _index:%s service:%s named:%s config error",
+			index, serverInfo.service, serverInfo.named))
 	end
-	EVERY_NODE_SERVER[serverInfo.service] = {index = index, local_name = serverInfo.local_name}
+	EVERY_NODE_SERVER[serverInfo.service] = {index = index, named = serverInfo.named}
 end
 
 -- 检查 NODE_SERVER_INFO 配置

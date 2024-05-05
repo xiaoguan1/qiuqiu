@@ -99,7 +99,9 @@ local function _LoadXlsData(filePath)
 	local EXCHANGE_SETTING = EXCHANGE_MOD.GetExchangeSetting()
 	for _name, _data in pairs(fileEnv) do
 		if type(_data) == "table" then
-			_data = EXCHANGE_SETTING[_name](_data)
+			if EXCHANGE_SETTING[_name] then
+				_data = EXCHANGE_SETTING[_name](_data)
+			end
 		end
 		assert(_data, "not data:" .. _name)
 		EFUNC2FILE[_name] = filePath

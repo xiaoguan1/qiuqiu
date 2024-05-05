@@ -88,7 +88,7 @@ function TryCall(func, ...)
 	return _RetFunc(xpcall(func, traceback, ...))
 end
 
-if NODE_SERVER_INFO[SERVICE_NAME] or (EVERY_NODE_SERVER[SERVICE_NAME] and SERVICE_NAME ~= "database") then
+if NODE_SERVER_INFO[SERVICE_NAME] or (EVERY_NODE_SERVER[SERVICE_NAME]) then
 	DPCLUSTER_NODE = skynet.getenv("DPCLUSTER_NODE")
 	CLUSTERCFG = skynet.getenv("CLUSTERCFG")
 

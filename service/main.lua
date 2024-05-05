@@ -9,11 +9,60 @@ local table = table
 
 DPCLUSTER_NODE = nil
 CLUSTERCFG = nil
+DATABASE_OPERATE = false
+-- 获取当前节点的信息
+local function GetNodeInfo()
+	local config = DATABASE_OPERATE.GetServerConfig()
+	return {
+		no = config.server_id,	-- 当前节点的服务器编号
+		main_node_ip = config.main_node_ip,
+		main_ip_port = config.main_node_ip .. ":" .. config.main_node_port,	-- 服务器地址
+		cluster_ip_port = config.cluster_node_ip .. ":" .. config.cluster_node_port, -- 集群地址
+		gateway_posts = config.gateway_posts,
+	}
+end
+
+-- 这里仅仅只是抄项目的，具体到时涉及到跨服再仔细考量!!!!!
+local function GetClusterCfg()
+	local DPCLUSTER_NODE = GetNodeInfo()
+	if not DPCLUSTER_NODE then
+		error("GetClusterCfg error.")
+	end
+
+	local ret = {}
+	for key, value in pairs(DPCLUSTER_NODE) do
+		if key ~= "no" and key ~= "gateway_posts" and key ~= "main_node_ip" then
+			ret[value] = value
+		end
+	end
+
+	ret.__nowaiting = skynet.getenv("nowaiting") == "true" and true or false
+	return ret
+end
+
+
+local function GetNodeInfoByDatabase()
+	if is_cross then
+		-- 普通跨服
+
+	else
+		-- 游戏服
+		-- 设置服务器环境
+		local DPCLUSTER_NODE = GetNodeInfo()
+		local CLUSTERCFG = GetClusterCfg()
+		if not DPCLUSTER_NODE or not CLUSTERCFG then
+			error("service env config error!")
+		end
+		skynet.setenv("DPCLUSTER_NODE", sys.dumptree(DPCLUSTER_NODE))
+		skynet.setenv("CLUSTERCFG", sys.dumptree(CLUSTERCFG))
+	end
+end
+
 
 local function every_node_server()
-	for named, registerName in pairs(EVERY_NODE_SERVER) do
-		local sid = skynet.uniqueservice(named)
-		skynet.name(registerName, sid)
+	for _, uniservice in ipairs(EVERY_NODE_SERVER) do
+		local sid = skynet.uniqueservice(uniservice.service)
+		skynet.name(uniservice.named, sid)
 	end
 end
 
@@ -61,6 +110,10 @@ local NODE_START_FUNC = {
 skynet.start(function ()
 	skynet.setenv("preload", set_preload)
 	dofile(set_preload)
+
+	-- 加载 dbcluster 配置(暂时这样处理 没有更好的办法)
+	DATABASE_OPERATE = Import("service/database/database_operate.lua")
+	GetNodeInfoByDatabase()
 
 	-- 初始化
 	_INFO("----- begin start main -----")

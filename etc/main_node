@@ -48,3 +48,14 @@ scene = [[{
 	[1] = 1001,
 	[2] = 1002,
 }]]
+
+------------------ 数据库 ------------------
+database_cachecnt = 100		-- 每个数据库链接缓存数据数量
+database_num = 10			-- 每个链接数据库的个数
+database_info = [[{
+	dbhost = "127.0.0.1",
+	dbport = 3306,
+	dbname = "server1",
+	dbuser = "root",
+	dbpasswd = "root",
+}]]

@@ -19,3 +19,7 @@ function string.beginswith(str, begins)
 	local i, j = string.find(str, begins, 1, true)
 	return i and (i == 1)
 end
+
+-- 计算一个字符串的哈希值
+function string.hash(str, hashCnt)
+end

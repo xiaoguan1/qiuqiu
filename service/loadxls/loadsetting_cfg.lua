@@ -4,6 +4,8 @@ local LOADFILE_CFG = {
 
 -- 需要加载的文件(setting目录下的)
 "robot/robot.lua",
+"log/log_data.lua",
+"sync/sync_data.lua",
 }
 
 local LOADFILE_CFG_MAP = {}
