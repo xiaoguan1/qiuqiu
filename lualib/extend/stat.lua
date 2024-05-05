@@ -13,3 +13,5 @@ function stat.is_file (filepath)
 	if not filepath then return end
 	return stat.filetype(filepath) == "file"
 end
+
+-- 创建一个文件夹
