@@ -1,3 +1,5 @@
+local skynet = require "skynet"
+
 ONE_DAY_SEC = 86400		-- 一天的时间秒数
 ONE_WEEK_SEC = 604800 	-- 一周的时间秒数
 
@@ -28,3 +30,26 @@ LOG_MODIFY_COLUMN = {					-- 日志修改列
 		["timestamp"] = "timestamp", 	-- 时间戳 timestamp 为旧的类型
 	}
 }
+
+local DATA_DIRNAME = skynet.getenv("data_dirname") or skynet.getenv("node")
+assert(DATA_DIRNAME)
+DATABASE_BASEDIR = nil
+ROOT_DATABASE_BASEDIR = nil
+if DATABASE_BASEDIR then
+	DATABASE_BASEDIR = "../data/" .. DATA_DIRNAME .. "/"
+	ROOT_DATABASE_BASEDIR = "data/" .. DATA_DIRNAME .. "/"
+else
+	DATABASE_BASEDIR = "../data/unknow"
+	ROOT_DATABASE_BASEDIR = "data/unknow"
+end
+
+LIST_BASEPATH = DATABASE_BASEDIR .. "list"
+ROLE_BASEPATH = DATABASE_BASEDIR .. "role"
+MOD_BASEPATH = DATABASE_BASEDIR .. "dat"
+ROLEACT_BASEPATH = DATABASE_BASEDIR .. "roleact"
+RECORD_BASEPATH = DATABASE_BASEDIR .."record"
+CHEATRECORD_BASEPATH = DATABASE_BASEDIR .. "cheatrecord"
+SVRBATTLE_TMPBASEDIR = DATABASE_BASEDIR .. "tmprecord"
+RESULTRECORD_BASEPATH = DATABASE_BASEDIR .. "resultrecord"
+ROOT_CHEATRECORD_BASEPATH = DATABASE_BASEDIR .. "cheatrecord"
+

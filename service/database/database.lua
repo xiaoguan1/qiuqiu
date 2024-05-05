@@ -116,6 +116,28 @@ skynet.register_protocol {
 }
 
 if is_filedb then
+	local FDATABASE = Improt("service/database/fdatabase.lua")
+	skynet.start(function ()
+		PROXYSVR = Import("lualib/base/proxysvr.lua")
+		local DBALTER = Import("service/database/dbalter.lua")
+		DBALTER.CreateGameLogTable()
+
+		skynet.dispatch("lua", function (session, source, command, ...)
+			if command == "closealldb" then
+				FDATABASE.RESPONSE.closedb()
+				skynet.retpack(true)
+			else
+				local f
+				if session == 0 then
+					f = assert(FDATABASE.ACCEPT[command])
+					f(...)
+				else
+					f = assert(FDATABASE.RESPONSE[command])
+					skynet.retpack(f(...))
+				end
+			end
+		end)
+	end)
 else
 	skynet.forward_type({[skynet.PTYPE_LUA] = skynet.PTYPE_TRANS}, function ()
 		PROXYSVR = Import("lualib/base/proxysvr.lua")

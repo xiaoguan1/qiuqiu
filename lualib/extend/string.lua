@@ -8,7 +8,9 @@ function string.split(str, reps, retIndex)
 	if type(str) ~= "string" then return end
 
 	local retList = {}
-	string.gsub( str, "[^".. reps .."]+", function(splitstr) retList[#retList + 1] = splitstr end )
+	local _ = string.gsub(str, "[^".. reps .."]+", function(splitstr)
+			retList[#retList + 1] = splitstr
+		end)
 
 	if retIndex then return retList[retIndex] end
 	return retList
