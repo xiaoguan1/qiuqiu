@@ -23,3 +23,24 @@
 	继续一直dbcheck等数据代码
 
 	注意重点在于理解 父数据库服务 和 子数据库服务的调用关系，其他都是其次。因为代码太多了
+
+
+
+云风的字符串哈希值
+https://blog.codingnow.com/cloud/CodeCollection
+static int
+lhash(lua_State *L) {
+
+	const char *str = luaL_checkstring(L, 1);
+	lua_Integer len = luaL_checkinteger(L, 2);
+	unsigned long h = (unsigned long)len;
+	size_t step = (len>>5)+1;
+
+	for (size_t i=len; i>=step; i-=step)
+		h = h ^ ((h<<5)+(h>>2)+(unsigned long)str[i-1]);
+	
+	lua_pushinteger(L, h);
+	return 1;
+}
+
+
