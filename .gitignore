@@ -1,1 +1,5 @@
-log/
+log/info/
+log/main_node/
+log/warn/
+log/error/
+log/mem/
