@@ -1824,6 +1824,28 @@ static int str_unpack (lua_State *L) {
   return n + 1;
 }
 
+
+static int str_hash (lua_State *L) {
+	const char *str = luaL_checkstring(L, 1);
+  uint32_t hashMod = luaL_checkinteger(L, 2);
+  unsigned long len = (unsigned long)strlen(str);
+  unsigned long h = len;
+  size_t step = (len >> 5) + 1;
+
+  for (size_t i = len; i >= step; i -= step)
+    h = h ^ ((h << 5) + (h >> 2) + (unsigned long)str[i-1]);
+
+  if (h > hashMod && (hashMod & (hashMod-1)) ==0)
+    //余数值的范围处于[0,求余的底数),且求余底数是2的幂次方的结果。
+    //此时 与运算 可代替求余运算！
+    h = h & (hashMod - 1);
+  else
+    h = h % hashMod;
+
+  lua_pushinteger(L, h);
+  return 1;
+}
+
 /* }====================================================== */
 
 
@@ -1845,6 +1867,7 @@ static const luaL_Reg strlib[] = {
   {"pack", str_pack},
   {"packsize", str_packsize},
   {"unpack", str_unpack},
+  {"hash", str_hash},   // create by guanguowei
   {NULL, NULL}
 };
 
