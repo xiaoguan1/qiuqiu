@@ -5,6 +5,7 @@ local ipairs = ipairs
 local table = table
 local sys = sys
 local Improt = Improt
+local string = string
 
 local is_filedb = (skynet.getenv("is_filedb") == "true") and true or false
 local DB_CNT = tonumber(skynet.getenv("database_num")) or 10
@@ -89,7 +90,7 @@ function CMD.assign(session, source, command, assigndata, msg, sz)
 	local dbno = nil
 	if command == "battlerecord_deletelist" then
 		for _, _fId in pairs(assigndata) do
-			-- dbno = lutil.strhash(_fId,DB_CNT)	-- 字符串哈希计算
+			dbno = string.hash(_fId, DB_CNT)
 			break
 		end
 		if not dbno then
@@ -98,7 +99,7 @@ function CMD.assign(session, source, command, assigndata, msg, sz)
 			error(msg)
 		end
 	else
-		-- dbno = lutil.strhash(_fId,DB_CNT)	-- 字符串哈希计算
+		dbno = string.hash(_fId, DB_CNT)
 	end
 	local addr = address[dbno] and address[dbno].addr
 	if not addr then
