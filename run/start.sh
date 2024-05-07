@@ -26,14 +26,25 @@ lua ./charvar/agent/var_name.lua
 lua ./charvar/gameserver/var_name.lua
 lua ./charvar/activity/var_name.lua
 
-case ${1} in
-	"1")
-		./skynet/skynet ./etc/main_node
-		;;
-	"2")
-		./skynet/skynet ./etc/config.node2
-		;;
-	*)
-		echo "error start"
-		;;
-esac
+echo "选择题:"
+select w in 启动游戏 关闭游戏
+do
+	case $w in
+		启动游戏)
+			./skynet/skynet ./etc/main_node
+			break
+			;;
+	esac
+done
+
+# case ${1} in
+# 	"1")
+# 		./skynet/skynet ./etc/main_node
+# 		;;
+# 	"2")
+# 		./skynet/skynet ./etc/config.node2
+# 		;;
+# 	*)
+# 		echo "error start"
+# 		;;
+# esac
