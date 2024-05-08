@@ -17,7 +17,8 @@ if [ "$RUNUSER" != "game" -a "X$nogame" = "X" ]; then
 fi
 
 RUNDIR=`getDir`	# 当前路径
-DELETE_DB_SH=$RUNDIR/delete/deletedb.sh
+CREATE_DB_SH=$RUNDIR/createdb/createdb.sh
+DELETE_DB_SH=$RUNDIR/deletedb/deletedb.sh
 
 echo "选择题:"
 select w in 一键重置数据库
@@ -61,8 +62,8 @@ do
 			echo "try create database $dbname..."
 			sh $CREATE_DB_SH $dbname
 			echo ""
-			sh $RUNDIR/database/create/create_centerdata.sh centerdata
-			sh $RUNDIR/database/create/insert_centerdata.sh centerdata
+			sh $RUNDIR/database/createdb/create_centerdata.sh centerdata
+			sh $RUNDIR/database/createdb/insert_centerdata.sh centerdata
 			break
 			;;
 	esac

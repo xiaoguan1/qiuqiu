@@ -10,9 +10,9 @@ if ["$isTrue"x == "yes"x]; then
 fi
 
 mysql -hlocalhost -uroot -proot $dbname << EOF 2 >>/dev/null
-delete from globalusr;
+delete from globaluser;
 EOF
-[ $? eq 0 ] && echo "delete table globalusr ok" || echo "delete table globalusr fail";
+[ $? eq 0 ] && echo "delete table globaluser ok" || echo "delete table globaluser fail";
 
 mysql -hlocalhost -uroot -proot $dbname << EOF 2 >>/dev/null
 delete from list;
