@@ -13,13 +13,9 @@ RUNDIR=`getDir`	# 当前路径
 
 # 默认编译lua的路径
 LUADIR=$RUNDIR/../skynet/3rd/lua
-cd $LUADIR
-make linux
 
 # 默认编译skynet引擎的路径
 SKYNETDIR=$RUNDIR/../skynet/
-cd $SKYNETDIR
-make linux
 
 cd $RUNDIR/..
 lua ./charvar/agent/var_name.lua
