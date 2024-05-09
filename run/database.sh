@@ -17,8 +17,9 @@ if [ "$RUNUSER" != "game" -a "X$nogame" = "X" ]; then
 fi
 
 RUNDIR=`getDir`	# 当前路径
-CREATE_DB_SH=$RUNDIR/createdb/createdb.sh
-DELETE_DB_SH=$RUNDIR/deletedb/deletedb.sh
+CREATE_DB_SH=$RUNDIR/database/createdb/createdb.sh
+DELETE_DB_SH=$RUNDIR/database/deletedb/deletedb.sh
+MAIN_CONFIG=$RUNDIR/../etc/main_node
 
 echo "选择题:"
 select w in 一键重置数据库
@@ -43,7 +44,7 @@ do
 				cross_pid=`ps -ef | grep skynet | grep cross | awk '{printf("%d", $2);}'`
 			done
 			dbname=`grep "dbname\s*=\s*" $MAIN_CONFIG | grep -o 'server[0-9]*'`
-			if [ "X$dbname" != "X" ]; then
+			if [ "X$dbname" == "X" ]; then
 				echo "database_name error"
 				exit 1
 			fi
