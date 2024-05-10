@@ -65,7 +65,7 @@ do
 			# sh $CREATE_DB_SH $dbname
 			echo ""
 			sh $RUNDIR/database/createdb/create_centerdata.sh centerdata
-			# sh $RUNDIR/database/createdb/insert_centerdata.sh centerdata
+			sh $RUNDIR/database/insertdb/insert_centerdata.sh centerdata
 			break
 			;;
 	esac
