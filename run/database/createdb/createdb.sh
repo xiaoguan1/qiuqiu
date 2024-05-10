@@ -3,13 +3,13 @@
 dbname=$1
 
 ######################create db######################
-mysql -hlocalhost -uroot -proot << EOF 2>>/dev/null
+mysql -hlocalhost -uroot -proot << EOF 2>/dev/null
 CREATE DATABASE $dbname default charset utf8mb4 COLLATE utf8mb4_general_ci;
 EOF
 [ $? -eq 0 ] && echo "create database: $dbname" || echo "exists database: $dbname";
 
 ######################create table######################
-mysql -hlocalhost -uroot -proot $dbname << EOF 2>>/dev/null
+mysql -hlocalhost -uroot -proot $dbname << EOF 2>/dev/null
 CREATE TABLE globaluser (
 	account varchar(64) NOT NULL COMMENT '账号',
 	passwd varchar(32) NOT NULL COMMENT '密码',
@@ -20,7 +20,7 @@ CREATE TABLE globaluser (
 EOF
 [ $? -eq 0 ] && echo "create database: globaluser" || echo "exists database: globaluser";
 
-mysql -hlocalhost -uroot -proot $dbname << EOF 2>>/dev/null
+mysql -hlocalhost -uroot -proot $dbname << EOF 2>/dev/null
 CREATE TABLE list (
 	acct_id varchar(64) NOT NULL COMMENT '外部账号_区服编号组合而成',
 	list_data text NOT NULL COMMENT '账号数据',
@@ -29,7 +29,7 @@ CREATE TABLE list (
 EOF
 [ $? -eq 0 ] && echo "create database: list" || echo "exists database: list";
 
-mysql -hlocalhost -uroot -proot $dbname << EOF 2>>/dev/null
+mysql -hlocalhost -uroot -proot $dbname << EOF 2>/dev/null
 CREATE TABLE role_data (
 	uid varchar(32) NOT NULL COMMENT '玩家唯一id',
 	name varchar(64) NOT NULL COMMENT '玩家名字',
@@ -42,7 +42,7 @@ CREATE TABLE role_data (
 EOF
 [ $? -eq 0 ] && echo "create database: role_data" || echo "exists database: role_data";
 
-mysql -hlocalhost -uroot -proot $dbname << EOF 2>>/dev/null
+mysql -hlocalhost -uroot -proot $dbname << EOF 2>/dev/null
 CREATE TABLE role (
 	uid varchar(32) NOT NULL COMMENT '玩家唯一id',
 	name varchar(64) NOT NULL COMMENT '玩家名字',
@@ -51,7 +51,7 @@ CREATE TABLE role (
 EOF
 [ $? -eq 0 ] && echo "create database: role" || echo "exists database: role";
 
-mysql -hlocalhost -uroot -proot $dbname << EOF 2>>/dev/null
+mysql -hlocalhost -uroot -proot $dbname << EOF 2>/dev/null
 CREATE TABLE module (
 	mod_name varchar(128) NOT NULL COMMENT '模块名字',
 	data longtext NOT NULL COMMENT '模块数据',
@@ -60,7 +60,7 @@ CREATE TABLE module (
 EOF
 [ $? -eq 0 ] && echo "create database: module" || echo "exists database: module";
 
-mysql -hlocalhost -uroot -proot $dbname << EOF 2>>/dev/null
+mysql -hlocalhost -uroot -proot $dbname << EOF 2>/dev/null
 CREATE TABLE setting (
 	name varchar(128) NOT NULL COMMENT '数据表名字',
 	data longtext NOT NULL COMMENT '表格数据',
@@ -69,7 +69,7 @@ CREATE TABLE setting (
 EOF
 [ $? -eq 0 ] && echo "create database: setting" || echo "exists database: setting";
 
-mysql -hlocalhost -uroot -proot $dbname << EOF 2>>/dev/null
+mysql -hlocalhost -uroot -proot $dbname << EOF 2>/dev/null
 CREATE TABLE servercmd (
 	id bigint(20) NOT NULL AUTO_INCREMENT,
 	serverid int(11) DEFAULT '0' COMMENT '服务器id',
