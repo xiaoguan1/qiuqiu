@@ -19,7 +19,6 @@ lua_cpath = "./luaclib/?.so;" .. "./skynet/luaclib/?.so"
 
 --节点编号
 --node = "node1"
-server_id = 1
 
 --自己添加的环境
 set_preload = "./lualib/base/preload.lua"   -- 每个服务器都要加载的脚本
@@ -61,3 +60,11 @@ database_info = [[{
 }]]
 
 data_dirname	= "main"
+
+centerdatadb_info = [[{
+	dbhost = "127.0.0.1",
+	dbport = 3306,
+	dbname = "centerdata",
+	dbuser = "root",
+	dbpasswd = "root",
+}]]
