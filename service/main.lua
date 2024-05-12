@@ -49,7 +49,7 @@ local function GetNodeInfoByDatabase()
 	else
 		-- 游戏服
 		-- 设置服务器环境
-
+		NODEINFO.GetGameNodeInfoByDatabase()
 		-- local DPCLUSTER_NODE = GetNodeInfo()
 		-- local CLUSTERCFG = GetClusterCfg()
 		-- if not DPCLUSTER_NODE or not CLUSTERCFG then

@@ -16,7 +16,8 @@ local function _GetDb()
 	local function on_connect(db)
 		db:query("set charset utf8")
 	end
-	local db = mysql.connet({
+
+	local db = mysql.connect({
 		host = DATABASE_CFG.dbhost,
 		port = DATABASE_CFG.dbport,
 		database = DATABASE_CFG.dbname,
@@ -143,6 +144,7 @@ local function _GetGameNodeInfoByDatabase(db)
 			end
 		end
 	end
+
 	return true, dpcluster
 end
 
