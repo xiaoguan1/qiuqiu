@@ -3,10 +3,14 @@ local mysql = require "skynet.db.mysql"
 local assert = assert
 local table = table
 local pairs = pairs
-local is_crossserver = (skynet.genenv("is_cross") == "true") and true or false
-local DATABASE_CFG = assert(load("return " .. skynet.genenv("centerdatadb_info"))())
-local SNODE = assert(skynet.genenv("node"))
-local host_id = tonumber(skynet.getfenv("server_id"))
+local is_crossserver = (skynet.getenv("is_cross") == "true") and true or false
+local DATABASE_CFG = assert(load("return " .. skynet.getenv("centerdatadb_info"))())
+local SNODE = assert(skynet.getenv("node"))
+local host_id = tonumber(skynet.getenv("server_id"))
+local merge_hosts = skynet.getenv("merge_hosts")
+if merge_hosts then
+	merge_hosts = assert(load("return " .. merge_hosts))()
+end
 
 local function _GetDb()
 	local function on_connect(db)
@@ -34,15 +38,113 @@ local function _GetGameNodeInfoByDatabase(db)
 	end
 
 	local dpcluster = {}
-	local gsql = string.format("select * from game_server where server_id = %d", host_id)
+	local gsql = string.format("select * from game_server where server_id = %d;", host_id)
 	local gres = db:query(gsql)
 	if not gres["badresult"] then
 		local dbData = gres[1]
-		local 
+		local node = skynet.getenv("node")
+		if not node then
+			return false, "skynet get fenv not has`t node"
+		end
+		node = node .. "_node"
+		local node_ipport = dbData[node .. "_ip"] .. ":" .. dbData[node .. "_port"]
+		if not node_ipport then
+			return false, string.format("database has`t node:%s", node)
+		end
+
+		dpcluster.node_ipport = node_ipport
+		dpcluster[node] = node_ipport
+
+		for _key, _value in pairs(dbData) do
+			if string.endswith(_key, "_serverid") then
+				local sIdx = string.find(_key, "_serverid") - 1
+				local cNode = string.sub(_key, 1, sIdx) .. "_node"
+				local startNodeCol = "is_startup_" .. string.sub(_key, 1, sIdx)
+				if _value == host_id then
+					return false, string.format("cross:%s can not use same server_id:%s", _key, _value)
+				end
+				-- 获取数据库
+				local csql = string.format("select * from cross_server where server_id = %d;", _value)
+				local cres = db:query(csql)
+				if not cres["badresult"] then
+					local crossData = cres[1]
+					local node_ipport = crossData["node_ip"] .. ":" .. crossData["node_port"]
+					-- 判断是否活动开启，如果不是则报错
+					if crossData[startNodeCol] ~= 1 then
+						return false, string.format("cross:%s is not startup in database table:cross_server server_id:%s", _key, _value)
+					end
+					local namedData = nil
+					for _serviceName, _namedData in pairs(CROSS_NAMED_SERVER_NODE) do
+						if _namedData.node == cNode then
+							namedData = _namedData
+						end
+					end
+					-- 判断一下是否是 servercross 类型的服务
+					if namedData and namedData.servercross then
+						dpcluster[cNode] = {}
+						dpcluster[cNode][host_id] = node_ipport
+					else
+						dpcluster[cNode] = node_ipport
+					end
+				else
+					return false, string.format("query:%s database error! res:%s", csql, sys.dump(cres))
+				end
+			end
+		end
+	else
+		return false, string.format("query:%s database error! res:%s", gsql, sys.dump(gres))
 	end
+
+	local check_svrdata = gres[1]
+	for _server_id, _ in pairs(merge_hosts or {}) do
+		if _server_id ~= host_id then
+			local gsql = string.format("select * from game_server where server_id = %d;", _server_id)
+			local gres = db:query(gsql)
+			if not gres["badresult"] then
+				if #gres == 1 then
+					local data = gres[1]
+					local isCheck = false
+					for _key, _value in pairs(check_svrdata) do
+						-- 如果是 servercross 类型的跨服则加对应服的地址
+						if string.endswith(_key, "_serverid") then
+							local sIdx = string.find(_key, "_serverid") - 1
+							local cNode = string.sub(_key, 1, sIdx) .. "_node"
+							local startNodeCol = "is_startup_" .. string.sub(_key, 1, sIdx)
+
+							-- 获取数据库
+							local csql = string.format("select * from cross_server where server_id = %d;", _value)
+							local cres = db:query(csql)
+							if not cres["badresult"] and #cres == 1 then
+								local crossData = cres[1]
+								local node_ipport = crossData["node_ip"] .. ":" .. crossData["node_port"]
+								-- 判断是否活动开启，如果不是则报错
+								if crossData[startNodeCol] ~= 1 then
+									return false, string.format("cross:%s is not startup in database table:cross_server server_id:%s", _key, data[_key])
+								end
+								local namedData = nil
+								for _serviceName, _namedData in pairs(CROSS_NAMED_SERVER_NODE) do
+									if _namedData.node == cNode then
+										namedData = _namedData
+									end
+								end
+								-- 判断一下是否是 servercross 类型的跨服
+								if namedData and namedData.servercross then
+									dpcluster[cNode][_server_id] = node_ipport
+									isCheck = true
+								end
+							else
+								return false, string.format("query:%s database error! res:%s", csql, sys.dump(cres))
+							end
+						end
+					end
+				end
+			else
+				return false, string.format("query merge server:%s database error! res:%s", gsql, sys.dump(gres))
+			end
+		end
+	end
+	return true, dpcluster
 end
-
-
 
 -- 注意：里面有协程的，会阻塞当前协程，需要处理重入问题
 function GetGameNodeInfoByDatabase()

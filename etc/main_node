@@ -17,9 +17,6 @@ lua_cpath = "./luaclib/?.so;" .. "./skynet/luaclib/?.so"
 -- daemon = "./log/skynet.pid"
 -- logger = "./log/userlog"
 
---节点编号
---node = "node1"
-
 --自己添加的环境
 set_preload = "./lualib/base/preload.lua"   -- 每个服务器都要加载的脚本
 
@@ -36,7 +33,12 @@ log_svccpu_path = "./log/main_node/svccpu"
 is_cross = false
 server_id = 1
 nowaiting = true			-- 不挂起【其中利弊还未考量】
-node_name = "game_node"		-- 游戏服节点
+node = "main_node"
+node_type = "game_node"		-- 游戏服节点
+
+merge_host = [[{			-- 合服的服务器编号
+	-- [2] = true
+}]]
 
 ------------------ 网关信息 ------------------
 login_slavecnt = 8

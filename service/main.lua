@@ -10,6 +10,7 @@ local table = table
 DPCLUSTER_NODE = nil
 CLUSTERCFG = nil
 DATABASE_OPERATE = false
+NODEINFO = false
 -- 获取当前节点的信息
 local function GetNodeInfo()
 	local config = DATABASE_OPERATE.GetServerConfig()
@@ -48,13 +49,14 @@ local function GetNodeInfoByDatabase()
 	else
 		-- 游戏服
 		-- 设置服务器环境
-		local DPCLUSTER_NODE = GetNodeInfo()
-		local CLUSTERCFG = GetClusterCfg()
-		if not DPCLUSTER_NODE or not CLUSTERCFG then
-			error("service env config error!")
-		end
-		skynet.setenv("DPCLUSTER_NODE", sys.dumptree(DPCLUSTER_NODE))
-		skynet.setenv("CLUSTERCFG", sys.dumptree(CLUSTERCFG))
+
+		-- local DPCLUSTER_NODE = GetNodeInfo()
+		-- local CLUSTERCFG = GetClusterCfg()
+		-- if not DPCLUSTER_NODE or not CLUSTERCFG then
+		-- 	error("service env config error!")
+		-- end
+		-- skynet.setenv("DPCLUSTER_NODE", sys.dumptree(DPCLUSTER_NODE))
+		-- skynet.setenv("CLUSTERCFG", sys.dumptree(CLUSTERCFG))
 	end
 end
 
@@ -68,10 +70,10 @@ end
 
 -- 游戏服启动
 local function _GameStart()
-	local nodeName = skynet.getenv("node_name")
+	local nodeType = skynet.getenv("node_type")
 	for svrName, svrInfo in pairs(NODE_SERVER_INFO) do
 		local isSelfNode = false
-		if type(svrInfo.node) == "string" and svrInfo.node == nodeName then
+		if type(svrInfo.node) == "string" and svrInfo.node == nodeType then
 			isSelfNode = true
 		elseif type(svrInfo.node) == "table" and table.is_has_value(svrInfo.node) then
 			isSelfNode = true
@@ -112,7 +114,8 @@ skynet.start(function ()
 	dofile(set_preload)
 
 	-- 加载 dbcluster 配置(暂时这样处理 没有更好的办法)
-	DATABASE_OPERATE = Import("service/database/database_operate.lua")
+	-- DATABASE_OPERATE = Import("service/database/database_operate.lua")
+	NODEINFO = Import("lualib/base/nodeinfo.lua")
 	GetNodeInfoByDatabase()
 
 	-- 初始化
@@ -127,10 +130,10 @@ skynet.start(function ()
 	DPCLUSTER_NODE = load("return" .. DPCLUSTER_NODE)()
 	CLUSTERCFG = load("return" .. CLUSTERCFG)()
 
-	local nodeName = skynet.getenv("node_name")
-	local startFunc = nodeName and NODE_START_FUNC[nodeName]
+	local nodeType = skynet.getenv("node_type")
+	local startFunc = nodeType and NODE_START_FUNC[nodeType]
 	if not startFunc then
-		error(string.format("node name:%s not find start func!", nodeName))
+		error(string.format("node type:%s not find start func!", nodeType))
 	end
 	startFunc()
 

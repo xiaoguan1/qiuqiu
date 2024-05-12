@@ -34,7 +34,7 @@ function _SOURCE_G.Import(filepath)
 
 	local filebody = loadfile(rltFilepath, "bt", _fileG)
 	if not filebody then
-		error(sformat("import filepath:%s error", filepath))
+		error(sformat("Import filepath:%s error", filepath))
 	end
 
 	local isOk, err = pcall(filebody)
