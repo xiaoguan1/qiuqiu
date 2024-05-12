@@ -14,7 +14,7 @@ local is_testserver = (skynet.getenv("is_testserver") == "true") and true or fal
 
 -- 加载活动存盘列表，可能要加mysql活动列表
 local ACTIVITY_DB_VARS_MOD = Import("charvar/activity/db.lua")
-local GAMESERVER_DB_VARS_MOD = Import("charvar/activity/db.lua")
+local GAMESERVER_DB_VARS_MOD = Import("charvar/gameserver/db.lua")
 local SCM_DB_SCM_MOD = Import("charvar/agent/scm_rolevar.lua")
 
 local LOG_CREATE_PARTITION_YEAR = 3             -- 拆分年限
@@ -432,7 +432,7 @@ function CreateSyncDataTable()
 		error("connect mysql error!")
 	end
 	for tName, tData in pairs(sync_xls) do
-		local desc = dbObj:query(string.format("desc %s;"), tName)
+		local desc = dbObj:query(string.format("desc %s;", tName))
 		-- 建表
 		if desc.badresult then
 			local columns = {}

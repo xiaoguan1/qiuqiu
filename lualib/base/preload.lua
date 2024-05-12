@@ -90,14 +90,14 @@ end
 
 if NODE_SERVER_INFO[SERVICE_NAME] or (EVERY_NODE_SERVER[SERVICE_NAME]) then
 	DPCLUSTER_NODE = skynet.getenv("DPCLUSTER_NODE")
-	CLUSTERCFG = skynet.getenv("CLUSTERCFG")
+	-- CLUSTERCFG = skynet.getenv("CLUSTERCFG")
 
 	if not DPCLUSTER_NODE then
 		error(SERVICE_NAME .. " service env config error!")
 	end
 
 	DPCLUSTER_NODE = load("return" .. DPCLUSTER_NODE)()
-	CLUSTERCFG = load("return" .. CLUSTERCFG)()
+	-- CLUSTERCFG = load("return" .. CLUSTERCFG)()
 
 	DPCLUSTER_NODE.self = DPCLUSTER_NODE.main_ip_port
 end

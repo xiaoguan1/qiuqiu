@@ -11,21 +11,18 @@ DPCLUSTER_NODE = nil
 CLUSTERCFG = nil
 DATABASE_OPERATE = false
 NODEINFO = false
--- 获取当前节点的信息
-local function GetNodeInfo()
+
+-- 这里仅仅只是抄项目的，具体到时涉及到跨服再仔细考量!!!!!
+local function GetClusterCfg()
+	-- 获取当前节点的信息
 	local config = DATABASE_OPERATE.GetServerConfig()
-	return {
+	local DPCLUSTER_NODE = {
 		no = config.server_id,	-- 当前节点的服务器编号
 		main_node_ip = config.main_node_ip,
 		main_ip_port = config.main_node_ip .. ":" .. config.main_node_port,	-- 服务器地址
 		cluster_ip_port = config.cluster_node_ip .. ":" .. config.cluster_node_port, -- 集群地址
 		gateway_posts = config.gateway_posts,
 	}
-end
-
--- 这里仅仅只是抄项目的，具体到时涉及到跨服再仔细考量!!!!!
-local function GetClusterCfg()
-	local DPCLUSTER_NODE = GetNodeInfo()
 	if not DPCLUSTER_NODE then
 		error("GetClusterCfg error.")
 	end
@@ -41,21 +38,20 @@ local function GetClusterCfg()
 	return ret
 end
 
-
+-- 设置服务器环境
 local function GetNodeInfoByDatabase()
 	if is_cross then
 		-- 普通跨服
 
 	else
 		-- 游戏服
-		-- 设置服务器环境
-		NODEINFO.GetGameNodeInfoByDatabase()
-		-- local DPCLUSTER_NODE = GetNodeInfo()
+		local isOk, DPCLUSTER_NODE = NODEINFO.GetGameNodeInfoByDatabase()
+		if not isOk then
+			error(DPCLUSTER_NODE)
+		end
+		skynet.setenv("DPCLUSTER_NODE", sys.dumptree(DPCLUSTER_NODE))
+
 		-- local CLUSTERCFG = GetClusterCfg()
-		-- if not DPCLUSTER_NODE or not CLUSTERCFG then
-		-- 	error("service env config error!")
-		-- end
-		-- skynet.setenv("DPCLUSTER_NODE", sys.dumptree(DPCLUSTER_NODE))
 		-- skynet.setenv("CLUSTERCFG", sys.dumptree(CLUSTERCFG))
 	end
 end
@@ -90,8 +86,8 @@ local function _GameStart()
 		end
 	end
 
-	cluster.reload(CLUSTERCFG)
-	cluster.open(DPCLUSTER_NODE.main_ip_port)
+	-- cluster.reload(CLUSTERCFG)
+	-- cluster.open(DPCLUSTER_NODE.main_ip_port)
 end
 
 -- 跨服启动
@@ -113,8 +109,6 @@ skynet.start(function ()
 	skynet.setenv("preload", set_preload)
 	dofile(set_preload)
 
-	-- 加载 dbcluster 配置(暂时这样处理 没有更好的办法)
-	-- DATABASE_OPERATE = Import("service/database/database_operate.lua")
 	NODEINFO = Import("lualib/base/nodeinfo.lua")
 	GetNodeInfoByDatabase()
 
@@ -123,12 +117,12 @@ skynet.start(function ()
 	every_node_server()
 
 	DPCLUSTER_NODE = skynet.getenv("DPCLUSTER_NODE")
-	CLUSTERCFG = skynet.getenv("CLUSTERCFG")
 	if not DPCLUSTER_NODE then
 		error("service env config error!")
 	end
 	DPCLUSTER_NODE = load("return" .. DPCLUSTER_NODE)()
-	CLUSTERCFG = load("return" .. CLUSTERCFG)()
+	-- CLUSTERCFG = skynet.getenv("CLUSTERCFG")
+	-- CLUSTERCFG = load("return" .. CLUSTERCFG)()
 
 	local nodeType = skynet.getenv("node_type")
 	local startFunc = nodeType and NODE_START_FUNC[nodeType]
