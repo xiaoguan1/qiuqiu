@@ -170,9 +170,9 @@ function CreateRoleColumns()
 				if _columnsName == _cdata.Field then
 					if _filedType ~= _cdata.Type then
 						hasModify = true
-					else
-						hasColumns = true
 					end
+				else
+					hasColumns = true
 				end
 				break
 			end

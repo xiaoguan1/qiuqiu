@@ -159,14 +159,14 @@ else
 		end)
 
 		for i = 1, DB_CNT do
-			local db = skynet.newservice("database", skynet.self(), i)
-			table.insert(address, {
-				addr = db,
-				proxy = PROXYSVR.GetProxy(db, SNODE_NAME)
-			})
+			-- local db = skynet.newservice("database", skynet.self(), i)
+			-- table.insert(address, {
+			-- 	addr = db,
+			-- 	proxy = PROXYSVR.GetProxy(db, SNODE_NAME)
+			-- })
 		end
 
-		DBCHECK = Improt("service/database/dbcheck.lua")
+		DBCHECK = Import("service/database/dbcheck.lua")
 		DBCHECK.StartUpCheck()
 	end)
 end

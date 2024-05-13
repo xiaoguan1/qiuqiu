@@ -6,7 +6,7 @@ local os = os
 local io = io
 local is_filedb = (skynet.getenv("is_filedb") == "true" and true or false)
 local not_loaderrdb = (skynet.getenv("load_errdb") == "false") and true or false
-local DATABASE_COMMON = Import("global/database_common.lua")
+local DATABASE_COMMON = Import("service/database/database_common.lua")
 
 local DATABASE_BASEDIR = DATABASE_BASEDIR
 local LIST_BASEPATH = LIST_BASEPATH

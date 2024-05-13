@@ -7,7 +7,7 @@ local LOAD_FILES = {
 	"./lualib/extend/string.lua",
 	"./lualib/extend/table.lua",
 	"./lualib/extend/sys.lua",
-	"./lualib/extend/stat.lua",
+	"./lualib/extend/file.lua",
 	"./lualib/extend/common.lua",
 	"./lualib/extend/os.lua",
 	"./lualib/extend/import.lua",

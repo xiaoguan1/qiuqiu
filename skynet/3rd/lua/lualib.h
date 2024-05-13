@@ -44,11 +44,11 @@ LUAMOD_API int (luaopen_debug) (lua_State *L);
 #define LUA_LOADLIBNAME	"package"
 LUAMOD_API int (luaopen_package) (lua_State *L);
 
-#define LUA_STATLIBNAME "stat"
-LUAMOD_API int (luaopen_stat) (lua_State *L);
-
-#define LUA_SERIALIZE "serialize"
+#define LUA_SERIALIZELIBNAME "serialize"
 LUAMOD_API int (luaopen_serialize) (lua_State *L);
+
+#define LUA_FILELIBNAME "file"
+LUAMOD_API int (luaopen_file) (lua_State *L);
 
 #define LUA_CACHELIB
 LUAMOD_API int (luaopen_cache) (lua_State *L);
