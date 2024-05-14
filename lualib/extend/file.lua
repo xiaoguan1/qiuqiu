@@ -6,12 +6,14 @@ end
 
 function file.is_dir (filepath)
 	if not filepath then return end
-	return file.type(filepath) == "dir"
+	local fdt = file.detailed(filepath)
+	return fdt and fdt.type == "dir"
 end
 
 function file.is_file (filepath)
 	if not filepath then return end
-	return file.type(filepath) == "file"
+	local fdt = file.detailed(filepath)
+	return fdt and fdt.type == "file"
 end
 
 -- 创建一个文件夹
