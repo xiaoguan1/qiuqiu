@@ -4,6 +4,7 @@ local error = error
 local assets = assert
 local os = os
 local io = io
+local file = file
 local is_filedb = (skynet.getenv("is_filedb") == "true" and true or false)
 local not_loaderrdb = (skynet.getenv("load_errdb") == "false") and true or false
 local DATABASE_COMMON = Import("service/database/database_common.lua")
@@ -25,15 +26,15 @@ local function _RestoreDataFromFile(fileName)
 end
 
 local function _CheckPath(dname, path)
-	if not posix.stat(path) then return end
+	if not file.detailed(path) then return end
 	for file in posix.files(path) do
 		if file ~= "." and file ~= ".." and file ~= ".svn" then
 			local pathFile = path .. "/" ..file
 			local fileType = posix.stat(pathFile).type
 
-			if fileType == "directory" then
+			if fileType == "dir" then
 				_CheckPath(dname, pathFile)
-			elseif fileType == "regular" then
+			elseif fileType == "file" then
 				if string.endswith(pathFile, ".dat") then
 					if dname == "list" then
 						local sp = string.split(pathFile, "/")

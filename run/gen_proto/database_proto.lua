@@ -3,15 +3,15 @@
 -------- 必须具备这些自定义脚本文件 --------
 dofile "../lualib/extend/table.lua"
 dofile "../lualib/extend/string.lua"
-local filelib = dofile "../lualib/filelib.lua"
+dofile "../lualib/extend/file.lua"
 -------- 必须具备这些自定义脚本文件 --------
 
 -- 计算绝对路径
-local nowPath = filelib.getNowPath()
+local nowPath = file.crtpath()
 local protoPath = nowPath .. "/../protobuf/database/proto/"
 local pbPath = nowPath .. "/../protobuf/database/pb/"
 
-local protofiles = filelib.getFileList(protoPath)
+local protofiles = file.getFileList(protoPath)
 if not protofiles or type(protofiles) ~= "table" or table.empty(protofiles) then
 	error("not find protofiles")
 end

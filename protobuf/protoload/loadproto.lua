@@ -1,13 +1,13 @@
 local pb = require "protobuf"
-local filelib = require "filelib"
+local file = file
 
 function load_proto()
-	local nowPath = filelib.getNowPath()
+	local nowPath = file.crtpath()
 	local networkPbPath = nowPath .. "/protobuf/network/pb/"
 	local databasePbPath = nowPath .. "/protobuf/database/pb/"
 
-	local networkPbFiles = filelib.getFileList(networkPbPath)
-	local databasePbFiles = filelib.getFileList(databasePbPath)
+	local networkPbFiles = file.getFileList(networkPbPath)
+	local databasePbFiles = file.getFileList(databasePbPath)
 
 	if not (networkPbFiles and networkPbFiles) then
 		error(string.format("proto load fail."))

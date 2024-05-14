@@ -11,6 +11,7 @@
 #include "lualib.h"
 #include <sys/stat.h>
 #include <string.h>
+#include <unistd.h>
 
 // 获取文件的详细信息(文件类型、文件权限)
 static int ldetailed (lua_State *L) {
@@ -121,6 +122,16 @@ static int lfchmod(lua_State *L) {
 	return 0;
 }
 
+// 返回当前路径
+static int lcrtpath(lua_State *L) {
+	char path[PATH_MAX]; //PATH_MAX is defined in limits.h
+	if (getcwd(path,sizeof(path)) == NULL)
+		return luaL_error(L, "not find current path!");
+
+	lua_pushstring(L, path);
+	return 1;
+}
+
 
 /* }====================================================== */
 
@@ -128,6 +139,7 @@ LUAMOD_API int luaopen_file (lua_State *L) {
 	luaL_Reg l[] = {
 		{"detailed",	ldetailed},
 		{"chmod", 		lfchmod},
+		{"crtpath",		lcrtpath},
 		{NULL, 			NULL},
 	};
 	luaL_newlib(L, l);
