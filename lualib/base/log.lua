@@ -6,7 +6,7 @@ local tconcat = table.concat
 local os_date = os.date
 local print = print
 local sformat = string.format
-local stat = stat
+local file = file
 local logStdin = skynet.getenv("log_stdin") == "true"
 local HEADER = "\27"
 local END_FORMAT = "\27[0m"
@@ -162,7 +162,7 @@ local _MEM_LOG_PATH = {
 -- 日志输出
 local function _log_info(context)
 	if not LOG_FILE_OBJ or not io.type(LOG_FILE_OBJ) then
-		if not stat.is_dir(_INFO_LOG_PATH[1]) then
+		if not file.is_dir(_INFO_LOG_PATH[1]) then
 			os.execute("mkdir " .. _INFO_LOG_PATH[1])
 		end
 		_INFO_LOG_PATH[3] = os_date("%Y%m%d")
@@ -172,7 +172,7 @@ local function _log_info(context)
 end
 local function _log_warn(context)
 	if not WARN_FILE_OBJ or not io.type(WARN_FILE_OBJ) then
-		if not stat.is_dir(_WARN_LOG_PATH[1]) then
+		if not file.is_dir(_WARN_LOG_PATH[1]) then
 			os.execute("mkdir " .. _WARN_LOG_PATH[1])
 		end
 		_WARN_LOG_PATH[3] = os_date("%Y%m%d")
@@ -182,7 +182,7 @@ local function _log_warn(context)
 end
 local function _log_error(context)
 	if not ERROR_FILE_OBJ or not io.type(ERROR_FILE_OBJ) then
-		if not stat.is_dir(_ERROR_LOG_PATH[1]) then
+		if not file.is_dir(_ERROR_LOG_PATH[1]) then
 			os.execute("mkdir " .. _ERROR_LOG_PATH[1])
 		end
 		_ERROR_LOG_PATH[3] = os_date("%Y%m%d")
@@ -192,7 +192,7 @@ local function _log_error(context)
 end
 local function _log_mem(context)
 	if not MEM_FILE_OBJ or not io.type(MEM_FILE_OBJ) then
-		if not stat.is_dir(_MEM_LOG_PATH[1]) then
+		if not file.is_dir(_MEM_LOG_PATH[1]) then
 			os.execute("mkdir " .. _MEM_LOG_PATH[1])
 		end
 		_MEM_LOG_PATH[3] = os_date("%Y%m%d")
