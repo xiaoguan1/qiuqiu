@@ -10,7 +10,7 @@ getDir(){
 }
 
 RUNDIR=`getDir`	# 当前路径
-echo $RUNDIR
+
 # 默认lua的路径
 LUADIR=$RUNDIR/../skynet/3rd/lua/lua
 
