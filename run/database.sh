@@ -70,30 +70,3 @@ do
 			;;
 	esac
 done
-
-
-
-
-
-
-# echo "一键重置数据库..."
-
-# # 找出主节点进程并杀死
-# game_pid=`ps -ef | grep skynet | grep main | awk '{printf("%d", $2);}'`
-# while [ "X$game_pid" != "X" ]; do
-# 	if [ "X$game_pid" != "X" ]; then
-# 		kill $game_pid
-# 	fi
-# 	sleep 1
-# 	game_pid=`ps -ef | grep skynet | grep main | awk '{printf("%d", $2);}'`
-# done
-
-# # 创建表
-# #sh $RUNDIR/database/deletedb.sh	
-# sh $RUNDIR/database/create/server_db.sh
-# sh $RUNDIR/database/create/common_db.sh
-
-# if [ $? -eq 0 ]; then
-# 	# 插入数据
-# 	sh $RUNDIR/database/insert/common_db.sh
-# fi
