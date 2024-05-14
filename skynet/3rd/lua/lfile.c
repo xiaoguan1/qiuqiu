@@ -10,7 +10,7 @@
 #include "lauxlib.h"
 #include "lualib.h"
 #include <sys/stat.h>
-#include <strings.h>
+#include <string.h>
 
 // 获取文件的详细信息(文件类型、文件权限)
 static int ldetailed (lua_State *L) {
