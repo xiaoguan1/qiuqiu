@@ -7,6 +7,8 @@ local setmetatable = setmetatable
 local assert = assert
 local error = error
 local type = type
+local DPCLUSTER_NODE = DPCLUSTER_NODE
+local selfnode_name = DPCLUSTER_NODE.self
 
 local readonly_meta = {__newindex = function () error("read only") end}
 local cluster = require "skynet.cluster"
@@ -19,6 +21,7 @@ local cluster_call = cluster.call
 
 ALL_PROXYSVR = {
 	self_node = {},
+	othernode = {},
 	-- ....
 }
 
@@ -102,25 +105,45 @@ local function gen_call(addr, prototype)
 	})
 end
 
-local function create_proxysvr(addrname, prototype)
-	assert(type(addrname) == "string")
+local READONLY_META = { __newindex = function () error("read only") end }
 
-	return {
-		addrname = addrname,
+local function create_proxysvr(addr, nodeName, clustertype, prototype)
+	return setmetatable({
+		addr = addr,
+		nodeName = nodeName,
+		clustertype = clustertype,
 		prototype = prototype,
-		send = gen_send(addrname, prototype),
-		call = gen_call(addrname, prototype),
-	}
+
+		send = gen_send(addr, prototype),
+		call = gen_call(addr, prototype),
+	}, READONLY_META)
 end
 
 
 -- 外部接口 ------------------------------
-function GetProxy(addrname, prototype)
-	if ALL_PROXYSVR.self_node[addrname] and ALL_PROXYSVR.self_node[addrname].prototype == prototype then
-		return ALL_PROXYSVR.self_node[addrname]
+function GetProxy(addr, node_name, clustertype, prototype)
+	if node_name == selfnode_name then
+		-- 本服节点
+		if ALL_PROXYSVR.self_node[addr] and ALL_PROXYSVR.self_node[addr].prototype == prototype then
+			return ALL_PROXYSVR.self_node[addr]
+		else
+			local proxy = create_proxysvr(addr, node_name, clustertype, prototype)
+			ALL_PROXYSVR.self_node[addr] = proxy
+			return proxy
+		end
 	else
-		local proxy = create_proxysvr(addrname, prototype)
-		ALL_PROXYSVR.self_node[addrname] = proxy
-		return proxy
+		-- 跨服节点
+		assert(node_name)
+		if ALL_PROXYSVR.othernode[addr] and ALL_PROXYSVR.othernode[addr][node_name] and ALL_PROXYSVR.othernode[addr][node_name].prototype == prototype then
+			local proxy = ALL_PROXYSVR.othernode[addr][node_name]
+			assert(clustertype == proxy.clustertype)
+			return proxy
+		else
+			local proxy = create_proxysvr(addr, node_name, clustertype, prototype)
+			ALL_PROXYSVR.othernode[addr] = ALL_PROXYSVR.othernode[addr] or {}
+			ALL_PROXYSVR.othernode[addr][node_name] = ALL_PROXYSVR.othernode[addr][node_name] or {}
+			ALL_PROXYSVR.othernode[addr][node_name] = proxy
+			return proxy
+		end
 	end
 end

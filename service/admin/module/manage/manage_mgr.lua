@@ -1,5 +1,6 @@
 local skynet = require "skynet"
 local runconfig = require "runconfig"
+local DPCLUSTER_NODE = DPCLUSTER_NODE
 
 function shutdown()		-- 关服
 	-- 关闭顺序不能改变
@@ -30,25 +31,25 @@ function ping()		-- ping所有服务
 end
 
 function mem()
-	local proxy = PROXYSVR.GetProxy(".launcher")
+	local proxy = PROXYSVR.GetProxy(".launcher", DPCLUSTER_NODE.self)
 	local ret = proxy.call.MEM()
 	return sys.dump(ret)
 end
 
 function rt()		-- "ping一下所有服务，并获取相应时间差"
-	local proxy = PROXYSVR.GetProxy(".launcher")
+	local proxy = PROXYSVR.GetProxy(".launcher", DPCLUSTER_NODE.self)
 	local ret = proxy.call.SERVICE_RT()
 	return sys.dump(ret)
 end
 
 function stat()
-	local proxy = PROXYSVR.GetProxy(".launcher")
+	local proxy = PROXYSVR.GetProxy(".launcher", DPCLUSTER_NODE.self)
 	local ret = proxy.call.SERVICE_STAT()
 	return sys.dump(ret)
 end
 
 function service_mem()
-	local proxy = PROXYSVR.GetProxy(".launcher")
+	local proxy = PROXYSVR.GetProxy(".launcher", DPCLUSTER_NODE.self)
 	local ret = proxy.call.SERVICE_MEM()
 
 	-- 将ret格式化 是返回的ret更好看

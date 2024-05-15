@@ -23,7 +23,15 @@ MEM_IGNORE_ALARM = {
 	["GroupRiskTimerFunc"] = true,		-- 创建机器人
 	["UpdateAreaRankData"] = true,		-- 竞技场欺负需要刷新排行榜
 }
-local SCALLOUT_SVR = PROXYSVR.GetProxy(EVERY_NODE_SERVER.stimer, "callout")
+if not PROXYSVR then
+	PROXYSVR = Import("lualib/base/proxysvr.lua")
+end
+
+local stimerld = EVERY_NODE_SERVER and EVERY_NODE_SERVER.stimer and EVERY_NODE_SERVER.stimer.named
+if not stimerld then
+	error("stimer service not localname")
+end
+local SCALLOUT_SVR = PROXYSVR.GetProxy(stimerld, SNODE_NAME, nil, "callout")
 
 local CALLOUT_RT = 0.1					-- 定时器响应时间x秒以上则打印(精确度0.01)
 local ALARM_CALLOUT_RT = 1.5			-- 定时器响应时间x秒以上则警报
@@ -162,7 +170,7 @@ local function CallOutByType(Env, func, timeOut, callType, ...)
 		else
 			msg = sformat("CallOut callIdx:%d funcName:%s timeOut:%s", idx, func, timeOut)
 		end
-		print(msg) -- 缺一个运行定时器的日志打印
+		_INFO(msg)
 	end
 	return idx
 end

@@ -19,8 +19,9 @@ SERVER = {
 
 skynet.start(function ()
 	if is_son then
-		
+
 	else
+		CALLOUT = Import("lualib/call_out.lua")
 		MASTERFUNC = Import("service/logind/masterfunc.lua")
 		skynet.dispatch("lua", function (_, source, command, ...)
 			skynet.ret(skynet.pack())

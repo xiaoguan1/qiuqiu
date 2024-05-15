@@ -4,11 +4,10 @@ local socket = require "skynet.socket"
 local table = table
 local pcall = pcall
 
-local DPCLUSTER = Import("base/dpcluster.lua")
-local PROXYSVR = Import("base/proxysvr.lua")
-
+-- local DPCLUSTER = Import("base/dpcluster.lua")
+local PROXYSVR = Import("/base/proxysvr.lua")
 local CMD = CMD
-local SERVICE = SERVICE
+local SERVER = SERVER
 
 socket_error = {}
 server_list = {}
@@ -228,7 +227,7 @@ end
 
 
 -- SERVICE -------------------------------------------
-function SERVICE.login_handler(usr, uid, corp_id, secret, extData)
+function SERVER.login_handler(usr, uid, corp_id, secret, extData)
 	-- only one can login, because disallow multilogin
 	local last = acct_online[usr]
 	if last then
@@ -263,7 +262,7 @@ function SERVICE.login_handler(usr, uid, corp_id, secret, extData)
 	return true, serverinfo.gate_ip, serverinfo.port, serverinfo.sport
 end
 
-function SERVICE.command_handler(command, ...)
+function SERVER.command_handler(command, ...)
 	local f = assert(CMD[command], command)
 	return f(...)
 end
@@ -367,9 +366,9 @@ function CMD.relisten(conf)
 	local backlog = conf.backlog or 128
 	local balance = 1
 
-	SERVICE.host = host
-	SERVICE.port = port
-	SERVICE.backlog = backlog
+	SERVER.host = host
+	SERVER.port = port
+	SERVER.backlog = backlog
 
 	skynet.error(string.format("login server relisten at %s:%d:%d", host, port, backlog))
 	local ENV = getfenv(1)
@@ -380,7 +379,7 @@ function CMD.relisten(conf)
 	socket.close(oLSocket)	-- 关闭旧的socket
 
 	socket.start(listen_socket, function (fd, addr)
-		AcceptClient(fd, addr, SERVICE)
+		AcceptClient(fd, addr, SERVER)
 	end)
 end
 

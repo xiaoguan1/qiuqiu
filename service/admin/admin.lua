@@ -8,6 +8,7 @@ local httpd = require "http.httpd"
 local urllib = require "http.url"
 local sys = sys
 local os = os
+local DPCLUSTER_NODE = DPCLUSTER_NODE
 
 -- 内部调用 ------------------------------------------------------
 
@@ -78,6 +79,6 @@ skynet.start(function (...)
 
 	dofile("./service/admin/init/loading.lua")
 
-	local launcher = PROXYSVR.GetProxy(".launcher")
+	local launcher = PROXYSVR.GetProxy(".launcher", DPCLUSTER_NODE.self)
 	launcher.call.SERVICE_CPU_ON()
 end)

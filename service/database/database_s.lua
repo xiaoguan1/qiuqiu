@@ -1,16 +1,12 @@
 local skynet = require "skynet"
-local PROFILE_CMD = Improt("lualib/profile_cmd.lua")
-
-local parg = {...}
-DB_MGRNO = tonumber(parg[1])
-DB_NO = tonumber(parg[2])
+local PROFILE_CMD = Import("lualib/profile_cmd.lua")
 
 RESPONSE = {}
 ACCEPT = {}
 
 skynet.start(function ()
 	CALLOUT = Import("lualib/call_out.lua")
-	DBSAVE = Import("service/database/dbsave.lua")
+	-- DBSAVE = Import("service/database/dbsave.lua")
 
 	skynet.dispatch("lua", function (session, source, command, ...)
 		local f
@@ -29,11 +25,11 @@ skynet.start(function ()
 				skynet.retpack(f(...))
 			end
 		end
-		DBSAVE.CheckEnd()
+		-- DBSAVE.CheckEnd()
 		if isRecord then
 			PROFILE_CMD.CmdCal_S(command)
 		end
 	end)
-	DBSAVE.StartDb()
+	-- DBSAVE.StartDb()
 end)
 

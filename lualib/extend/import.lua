@@ -1,6 +1,7 @@
 local skynet = require "skynet"
 local skyerror = skynet.error
 local core = require "skynet.core"
+local SERVICE_NAME = SERVICE_NAME
 
 local _SOURCE_G = core.serviceG() -- 当前服务的全局环境表 _G
 local pcall = _SOURCE_G.pcall
@@ -15,7 +16,7 @@ local LoadModule = {} -- 已加载的模块
 
 function _SOURCE_G.Import(filepath)
 	if not filepath then
-		error("Improt not filepath!!!")
+		error("Import not filepath!!!")
 	end
 
 	if LoadModule[filepath] then
@@ -32,9 +33,9 @@ function _SOURCE_G.Import(filepath)
 		end,
 	})
 
-	local filebody = loadfile(rltFilepath, "bt", _fileG)
+	local filebody, err = loadfile(rltFilepath, "bt", _fileG)
 	if not filebody then
-		error(sformat("Import filepath:%s error", filepath))
+		error(sformat("service_name:%s Import filepath:%s error:%s", SERVICE_NAME, filepath, err))
 	end
 
 	local isOk, err = pcall(filebody)
