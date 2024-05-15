@@ -5,7 +5,7 @@ local table = table
 local pcall = pcall
 
 -- local DPCLUSTER = Import("base/dpcluster.lua")
-local PROXYSVR = Import("/base/proxysvr.lua")
+local PROXYSVR = Import("lualib/base/proxysvr.lua")
 local CMD = CMD
 local SERVER = SERVER
 
