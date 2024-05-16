@@ -9,7 +9,7 @@ harbor = 0 --不使用主从节点模式
 
 --lua配置
 lualoader = "./skynet/lualib/loader.lua" 
-luaservice = "./service/?.lua;" .."./service/?/?.lua;".. "./skynet/service/?.lua;" .. "./skynet/test/?.lua;"
+luaservice = "./service/?/?.lua;".. "./skynet/service/?.lua;" .. "./skynet/test/?.lua;" .. "./startup/?.lua"
 lua_path = "./service/common/?.lua;" .. "./etc/?.lua;" .. "./lualib/?.lua;" .. "./db/?.lua;" .. "./skynet/lualib/?.lua;" .. "./skynet/lualib/?/init.lua"
 lua_cpath = "./luaclib/?.so;" .. "./skynet/luaclib/?.so"
 

@@ -5,7 +5,7 @@ local sys = sys
 -- 任何节点都必须启动的服务
 EVERY_NODE_SERVER = {
 	{service = "loadxls", named = ".LOADXLS"},		-- 公共配置表服务
-	{service = "database", named = ".DATABASE"},	-- 数据库服务(优先！因为要提前设置服务器环境配置)
+	{service = "database", named = ".DATABASE"},	-- 数据库服务
 	{service = "stimer", named = ".STIMER"},		-- 定时器服务
 }
 

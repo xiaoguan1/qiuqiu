@@ -1,12 +1,16 @@
 local skynet = require "skynet"
-local Import = Import
 local PROFILE_CMD = Import("lualib/profile_cmd.lua")
+local Import = Import
+
+local parg = {...}
+DB_MGRNO = tonumber(parg[1])
+DB_NO = tonumber(parg[2])
 
 ACCEPT, RESPONSE = {}, {}
 
 skynet.start(function ()
 	CALLOUT = Import("lualib/call_out.lua")
-	DBSAVE = Import("service/database/dbsave.lua")
+	DBSAVE = Import("service/databasecell/dbsave.lua")
 
 	skynet.dispatch("lua", function (session, source, command, ...)
 		local f

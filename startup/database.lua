@@ -121,10 +121,10 @@ skynet.register_protocol {
 }
 
 if is_filedb then
-	local FDATABASE = Import("service/database/fdatabase.lua")
+	local FDATABASE = Import("service/databasecell/fdatabase.lua")
 	skynet.start(function ()
 		PROXYSVR = Import("lualib/base/proxysvr.lua")
-		local DBALTER = Import("service/database/dbalter.lua")
+		local DBALTER = Import("service/databasecell/dbalter.lua")
 		DBALTER.CreateGameLogTable()
 
 		skynet.dispatch("lua", function (session, source, command, ...)
@@ -146,7 +146,7 @@ if is_filedb then
 else
 	skynet.forward_type({[skynet.PTYPE_LUA] = skynet.PTYPE_TRANS}, function ()
 		PROXYSVR = Import("lualib/base/proxysvr.lua")
-		local DBALTER = Import("service/database/dbalter.lua")
+		local DBALTER = Import("service/databasecell/dbalter.lua")
 		DBALTER.CreateRoleColumns()
 		DBALTER.CreateGameLogTable()
 		DBALTER.CreateSyncDataTable()
@@ -164,7 +164,7 @@ else
 
 		skynet.fork(function ()
 			for i = 1, DB_CNT do
-				local db = skynet.newservice("database", skynet.self(), i)
+				local db = skynet.newservice("databasecell", skynet.self(), i)
 				table.insert(address, {
 					addr = db,
 					proxy = PROXYSVR.GetProxy(db, SNODE_NAME)
@@ -172,7 +172,7 @@ else
 			end
 		end)
 
-		DBCHECK = Import("service/database/dbcheck.lua")
+		DBCHECK = Import("service/databasecell/dbcheck.lua")
 		DBCHECK.StartUpCheck()
 	end)
 end
