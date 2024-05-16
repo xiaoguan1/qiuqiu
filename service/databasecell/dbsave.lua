@@ -11,6 +11,22 @@ local stringgub = string.gsub
 local EMPTY_TABLE_PACK = "{}"
 local DATABASE_CFG = assert(load("return " .. skynet.getenv("database_info"))())
 local LOG = Import("lualib/base/log.lua")
+local DBCACHE = Import("service/databasecell/dbcache.lua")
+
+local CACHE_FRAME_SECTIME = 1		-- 1秒
+
+local CACHE_FRAME_URS_SAVECNT = 1	-- 每次CACHE_FRAME_SECTIME秒存urs多少个（每次存盘会根据时间/个数决定）
+local CACHE_FRAME_UID_SAVECNT = 1	-- 每次CACHE_FRAME_SECTIME秒存uid多少个（每次存盘会根据时间/个数决定）
+local CACHE_FRAME_MOD_SAVECNT = 1	-- 每次CACHE_FRAME_SECTIME秒存mod多少个（每次存盘会根据时间/个数决定）
+local THRESHOLD_FRAME_SAVECNT = 10
+local CACHE_SAVE_SECTIME = 25 * 60 + math.random(10 * 60)	-- 25~35分钟 存盘一次
+
+CacheSaveUrs = {}
+CacheSaveUid = {}
+CacheSaveMod = {}
+DelCacheSaveUrs = {}
+DelCacheSaveUid = {}
+DelCacheSaveMod = {}
 
 DBObj = false
 Invalid = false
@@ -27,8 +43,6 @@ local GCPERFORM_FTIME = 100				-- gc处理时间间隔1秒
 local DATABASE_HEATBEAT_FTIME = 6000	-- 1分钟
 HEARTBEAT_OVERTIME = 10 * 60			-- 10分钟超时时间
 HEARTBEAT_CHECKTIME = 5					-- 5秒检测时间
-
-local CACHE_SAVE_SECTIME = 25 * 60 + math.random(10 * 60)
 
 -- 当closedb的时候要看ReqTbl是否处理完，处理外才能关闭db连接
 ReqTbl = {}
@@ -225,6 +239,104 @@ local function GcPerform()
 		collectgarbage("step", 512)
 		-- collectgarbage("collect")
 	end
+end
+
+function CacheFrameTimer(isFull)
+	if _GetDbInvalid() then
+		return
+	end
+	if isFull then
+		local tmpUrs = CacheSaveUrs
+		local tmpUid = CacheSaveUid
+		local tmpMod = CacheSaveMod
+		CacheSaveUrs = {}
+		CacheSaveUid = {}
+		CacheSaveMod = {}
+
+		for _urs, _ in pairs(tmpUrs) do
+			real_list_setdata_ptrq(_urs, DelCacheSaveUrs[_urs])
+		end
+		for _uid, _ in pairs(tmpUid) do
+			-- 获取该玩家的所有活动，然后再调用
+			local alist = DBCACHE.GetCacheUidActList(_uid)
+			if alist then
+				for _, _actName in pairs(alist) do
+					real_role_setdata_ptrq(_uid, _actName, DelCacheSaveUid[_uid])
+				end
+			end
+		end
+		for _mod, _ in pairs(tmpMod) do
+			real_mod_setdata_ptrq(_mod, DelCacheSaveMod[_mod])
+		end
+	else
+		for i = 1, CACHE_FRAME_URS_SAVECNT do
+			local urs = _PopCache(CacheSaveUrs)
+			if not urs then
+				break
+			end
+			real_list_setdata_ptrq(urs, DelCacheSaveUrs[urs])
+		end
+		for i = 1, CACHE_FRAME_UID_SAVECNT do
+			local uid = _PopCache(CacheSaveUid)
+			if not uid then
+				break
+			end
+			-- 获取该玩家的所有活动，然后再调用
+			local alist = DBCACHE.GetCacheUidActList(uid)
+			if alist then
+				for _, _actName in pairs(alist) do
+					real_role_setdata_ptrq(uid, _actName, DelCacheSaveUid[uid])
+				end
+			end
+		end
+		for i = 1, CACHE_FRAME_MOD_SAVECNT do
+			local mod = _PopCache(CacheSaveUid)
+			if not mod then
+				break
+			end
+			real_mod_setdata_ptrq(mod, DelCacheSaveMod[mod])
+		end
+	end
+
+end
+
+-- 定时复制表，每秒定时存多少个，最后那一秒全部存，复制的时候知道有多少个，然后定制要删除多少个
+function CacheSaveTimer()
+	if _GetDbInvalid() then
+		return
+	end
+
+	-- 把剩余缓存的全部存一次
+	TryCall(CacheFrameTimer, true)
+
+	-- 记录当前需要存的数据
+	CacheSaveUrs, DelCacheSaveUrs, CACHE_FRAME_URS_SAVECNT = DBCACHE.GetAllCaCheUrs()
+	CacheSaveUid, DelCacheSaveUid, CACHE_FRAME_UID_SAVECNT = DBCACHE.GetAllCaCheUid()
+	CacheSaveMod, DelCacheSaveMod, CACHE_FRAME_MOD_SAVECNT = DBCACHE.GetAllCaCheMod()
+	local aUrsSaveCnt = CACHE_FRAME_URS_SAVECNT
+	local aUidSaveCnt = CACHE_FRAME_UID_SAVECNT
+	local aModSaveCnt = CACHE_FRAME_MOD_SAVECNT
+
+	-- 计算每秒存多少个
+	CACHE_FRAME_URS_SAVECNT = math.ceil(CACHE_FRAME_URS_SAVECNT / CACHE_SAVE_SECTIME)
+	CACHE_FRAME_UID_SAVECNT = math.ceil(CACHE_FRAME_UID_SAVECNT / CACHE_SAVE_SECTIME)
+	CACHE_FRAME_MOD_SAVECNT = math.ceil(CACHE_FRAME_MOD_SAVECNT / CACHE_SAVE_SECTIME)
+
+	if CACHE_FRAME_URS_SAVECNT > THRESHOLD_FRAME_SAVECNT or
+		CACHE_FRAME_UID_SAVECNT > THRESHOLD_FRAME_SAVECNT or
+		CACHE_FRAME_MOD_SAVECNT > THRESHOLD_FRAME_SAVECNT
+	then
+		LOG._WARN_F("CacheSaveTimer urs_cnt[%s:%s] uid_cnt[%s:%s] mod_cnt[%s:%s]",
+			aUrsSaveCnt, CACHE_FRAME_URS_SAVECNT,
+			aUidSaveCnt, CACHE_FRAME_UID_SAVECNT,
+			aModSaveCnt, CACHE_FRAME_MOD_SAVECNT
+		)
+	end
+	LOG._INFO_F("CacheSaveTimer urs_cnt[%s:%s] uid_cnt[%s:%s] mod_cnt[%s:%s]",
+		aUrsSaveCnt, CACHE_FRAME_URS_SAVECNT,
+		aUidSaveCnt, CACHE_FRAME_UID_SAVECNT,
+		aModSaveCnt, CACHE_FRAME_MOD_SAVECNT
+	)
 end
 
 function StartDb()
