@@ -20,9 +20,6 @@ NODE_SERVER_INFO = {
 	-- 网关
 	logind	= {named = ".LOGIND", node = "game_node", son_num = 5},
 
-	-- 场景服务
-	scene 	= {named = ".SCENE", node = "game_node"},
-
 	-- 运营管理
 	admin	= {named = ".ADMIN", node = "game_node",}
 }
