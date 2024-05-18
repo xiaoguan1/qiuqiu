@@ -8,6 +8,10 @@ local tconcat = table.concat
 local string = string
 local stringrep = string.rep
 local stringgub = string.gsub
+local pcall = pcall
+local xpcall = xpcall
+local TryCall = TryCall
+local traceback = debug.traceback
 local EMPTY_TABLE_PACK = "{}"
 local DATABASE_CFG = assert(load("return " .. skynet.getenv("database_info"))())
 local LOG = Import("lualib/base/log.lua")
@@ -30,6 +34,7 @@ DelCacheSaveUid = {}
 DelCacheSaveMod = {}
 
 DBObj = false
+EndCo = false
 Invalid = false
 urs_cs_map = {}		-- {[urs] = cs, ...}
 uid_cs_map = {}		-- {[uid] = cs, ...}
@@ -74,6 +79,13 @@ DELETE_BATTLERECORD_SLEEP = 20		-- 删除多少个战报睡眠1秒
 ReqTbl = {}
 ReqIndex = 0			-- 不能程序改变
 MaxIndex = 10000000		-- 不能程序改变
+
+local function _IsEmptyReqTbl()
+	for _, _ in pairs(ReqTbl) do
+		return false
+	end
+	return true
+end
 
 local function _GetDbInvalid()
 	return Invalid
@@ -123,6 +135,16 @@ local function _GetReqIndex()
 			ReqIndex = MaxIndex + 1
 			MaxIndex = MaxIndex * 2
 			return ReqIndex
+		end
+	end
+end
+
+local function IsUnUrs(urs)
+	for i = 1, #urs do
+		local c = urs:sub(i, i)
+		local ord = c:byte()
+		if ord > 127 then
+			return true
 		end
 	end
 end
@@ -243,6 +265,21 @@ function ACCEPT.resultrecord_delete(rId)
 	tinsert(DelayDelRIdList_S, rId)
 end
 
+function RESPONSE.closedb()				-- 关闭前先去除查询那些，后面的都返回false
+	if _GetDbInvalid() then				-- 已经设置停服
+		return
+	end
+	_SetDbInvalid(true)
+	pcall(DBObj.query, DBObj, "desc module;")
+	if not _IsEmptyReqTbl() then		-- 一直阻塞到ReqTbl为0个，返回后表示这个service已经可以安全退出
+		EndCo = coroutine.running()
+		skynet.wait()
+		EndCo = nil
+	end
+	-- 最后存盘一次
+	CloseAllCache()
+	return true
+end
 
 function HeatBeatCheck()
 	if DBObj and not _GetDbInvalid() then
@@ -363,7 +400,7 @@ function real_list_setdata_ptrq(urs, isdel_cache)
 	ReqTbl[nowIndex] = nil
 end
 
-local function _cs_role_setdata(uid, actName, isdel_cache)
+local function _cs_role_setactdata(uid, actName, isdel_cache)
 	local data_ptr, sz, quotedsz, name = DBCACHE.GetCacheUid(uid)
 	if not data_ptr then
 		local msg = string.format("not uid:%s actName:%s data but save", uid, actName) -- 可能会存在的，连续几次调用存盘(定时与关服等)
@@ -433,7 +470,7 @@ function real_role_setdata_ptrq(uid, actName, isdel_cache)
 	local nowIndex = _GetReqIndex()
 
 	ReqTbl[nowIndex] = true
-	TryCall(cs, _cs_role_setdata, uid, actName, isdel_cache)
+	TryCall(cs, _cs_role_setactdata, uid, actName, isdel_cache)
 	ReqTbl[nowIndex] = nil
 end
 
@@ -624,6 +661,31 @@ local function GetResultRecordSavePath(rId)
 	return string.format("%s/%s/%s/%s.dat", RESULTRECORD_BASEPATH, string.sub(rId, 1, 2), string.sub(rId, 3, 11), rId)
 end
 
+-- 注意：存盘的目录结构不能变，因为涉及了存数据库失败后存文件，文件启动需要套检测目录结构的
+local function GetListSavePath(urs)
+	if IsUnUrs(urs) then
+		local l = string.len(urs)
+		return string.format("%s/un/%s/%s/%s.dat", LIST_BASEPATH, l, l, urs)
+	else
+		return string.format("%s/%s/%s/%s/%s.dat", LIST_BASEPATH, string.sub(urs, 1, 1), string.sub(urs, 2, 2), string.sub(urs, 3, 3), urs)
+	end
+end
+
+-- 注意：存盘的目录结构不能变，因为涉及了存数据库失败后存文件，文件启动需要套检测目录结构的
+local function GetRoleSavePath(uid)
+	return string.format("%s/%s/%s/%s.dat", ROLE_BASEPATH, string.sub(uid, 1, 5), string.sub(uid, 6, 7), string.sub, uid)
+end
+
+-- 注意：存盘的目录结构不能变，因为涉及了存数据库失败后存文件，文件启动需要套检测目录结构的
+local function GetRoleActSavePath(uid, actName)
+	return string.format("%s/%s/%s/%s/%s.dat", ROLEACT_BASEPATH, string.sub(uid, 1, 5), string.sub(uid, 6, 7), uid, actName)
+end
+
+-- 注意：存盘的目录结构不能变，因为涉及了存数据库失败后存文件，文件启动需要套检测目录结构的
+function GetModuleSavePath(modname)
+	return string.format("%s/%s.dat", MOD_BASEPATH, modname)
+end
+
 function CheckDelayDelBattleRecord()
 	if _GetDbInvalid() then
 		return
@@ -677,6 +739,124 @@ function CheckDelayDelResultRecord()
 			end
 			LOG.LOG_EVENT(DATABASE_FILE, "result_removelist", lserialize.lua_seri_str(needDeleteData))
 		end)
+	end
+end
+
+-- touch 一个文件出来，如果没有相关路径，会自动创建
+local function touch(pathFile)
+	if file.detailed(pathFile) then
+		return
+	end
+	file.createFile(pathFile)
+	if not file.detailed(pathFile) then
+		local fh = io.open(pathFile, "a+")
+		if not fh then
+			LOG._ERROR_F("can not open file:%s", pathFile)
+			return
+		end
+		fh:close()
+	end
+end
+
+local function SaveToFile(fileName, data)
+	touch(fileName)
+	local tmpFile = fileName .. ".tmp"
+	local fh = io.open(tmpFile, "w+")
+	fh:write(data)
+	fh:close()
+	os.rename(tmpFile, fileName)
+	return
+end
+
+-- 关服存盘，如果有错误的则丢到一个特殊的目录，启动游戏的时候判断如果该目录下有文件则不让启动
+function CloseAllCache()
+	local tmpUrs = DBCACHE.GetAllCacheUrs()
+	local tmpUid = DBCACHE.GetAllCaCheUid()
+	local tmpMod = DBCACHE.GetAllCaCheMod()
+	for _urs, _ in pairs(tmpUrs) do
+		local cs = _GetQueueByUrs(_urs)
+		local ok, emsg = xpcall(cs, traceback, _cs_list_setdata)
+		if not ok then
+			local data_ptr, sz, quotedsz = DBCACHE.GetCacheUrs(_urs)
+			local fileName = nil
+			if data_ptr and sz then
+				fileName = GetListSavePath(_urs)
+				TryCall(SaveToFile, fileName, data)
+			end
+			local msg = string.format("shuntdown save urs:%s emsg:%s filePath:%s", _urs, emsg, fileName or "")
+			LOG._ERROR_A_ALARM(msg)
+		end
+	end
+	for _uid, _ in pairs(tmpUid) do
+		-- 获取该玩家的所有活动，然后再调用
+		local alist = DBCACHE.GetCacheUidActList(_uid)
+		if alist then
+			local cs = _GetQueueByUid(_uid)
+			for _, _actName in pairs(alist) do
+				local ok, emsg = xpcall(cs, traceback, _cs_role_setactdata, _uid, _actName, true)
+				if not ok then
+					local data_ptr, sz, quotedsz, name DBCACHE.GetCacheUid(_uid, _actName)
+					local fileName = nil
+					if data_ptr and sz then
+						local data = skynet.tostring(data_ptr, sz)
+						if _actName == "data" then
+							fileName = GetRoleSavePath(_uid)
+						else
+							fileName = GetRoleActSavePath(_uid, _actName)
+						end
+						TryCall(SaveToFile, fileName, data)
+					end
+					local msg = string.format("shuntdown save uid:%s actName:%s emsg:%s filePath", _uid, _actName, emsg, fileName or "")
+					LOG._ERROR_A_ALARM(msg)
+				end
+			end
+		end
+	end
+	for _mod, _ in pairs(tmpMod) do
+		local cs = _GetQueueByMod(_mod)
+		local ok, emsg = xpcall(cs, traceback, _cs_mod_setdata, _mod, true)
+		if not ok then	-- 失败了，需要存文件
+			local data_ptr, sz, quotedsz = DBCACHE.GetCacheMod(_mod)
+			local fileName = nil
+			local saveMsg = nil
+			if data_ptr and sz then
+				local data = skynet.tostring(data_ptr, sz)
+				fileName = GetModuleSavePath(_mod)
+				TryCall(SaveToFile, fileName, data)
+			end
+			local msg = string.format("shuntdown save mod:%s emsg:%s filePath", _mod, emsg, fileName or "")
+			LOG._ERROR_A_ALARM(msg)
+		end
+	end
+
+	-- 删除剩余的战报
+	for _, _list in pairs({DelayDelFIdList_F, DelayDelFIdList_S}) do
+		for _, _fId in pairs(_list) do
+			local fileName = GetRecordSavePath(_fId)
+			local ok, err = os.remove(fileName)
+			if not ok then
+				local msg = string.format("CloseAllCache delete record error, fId:%s err:%s", _fId, err)
+				LOG._ERROR(msg)
+			end
+		end
+	end
+
+	-- 删除剩余的战报
+	for _, _list in pairs({DelayDelRIdList_F, DelayDelRIdList_S}) do
+		for _, _rId in pairs(_list) do
+			local fileName = GetRecordSavePath(_rId)
+			local ok, err = os.remove(fileName)
+			if not ok then
+				local msg = string.format("CloseAllCache delete record error, rId:%s err:%s", _rId, err)
+				LOG._ERROR(msg)
+			end
+		end
+	end
+end
+
+function CheckEnd()
+	if _GetDbInvalid() and EndCo and _IsEmptyReqTbl() then
+		skynet.wakeup(EndCo)
 	end
 end
 
