@@ -20,6 +20,7 @@ local CACHE_FRAME_UID_SAVECNT = 1	-- 每次CACHE_FRAME_SECTIME秒存uid多少个
 local CACHE_FRAME_MOD_SAVECNT = 1	-- 每次CACHE_FRAME_SECTIME秒存mod多少个（每次存盘会根据时间/个数决定）
 local THRESHOLD_FRAME_SAVECNT = 10
 local CACHE_SAVE_SECTIME = 25 * 60 + math.random(10 * 60)	-- 25~35分钟 存盘一次
+local DELAY_DELETE_FID_TIME = 30 * 20		-- 1分钟1次删除，2个缓存的
 
 CacheSaveUrs = {}
 CacheSaveUid = {}
@@ -43,6 +44,31 @@ local GCPERFORM_FTIME = 100				-- gc处理时间间隔1秒
 local DATABASE_HEATBEAT_FTIME = 6000	-- 1分钟
 HEARTBEAT_OVERTIME = 10 * 60			-- 10分钟超时时间
 HEARTBEAT_CHECKTIME = 5					-- 5秒检测时间
+
+local THRESHOLD_DATALEN		= THRESHOLD_DATALEN		-- 4m的警报阈值
+local E_THRESHOLD_DATALEN	= E_THRESHOLD_DATALEN	-- 8m的错误阈值
+
+local _SAVE_LISTDB_DATA_FORMAT = {
+	"update list set list_data='",
+	"' where acct_id=%s;",
+}
+
+local _SAVE_ROLEDB_ACTDATA_FORMAT = {
+	"update role_data set %s='",
+	"' where uid='%s';"
+}
+
+local _SAVE_MODDB_DATA_FORMAT = {
+	"update module set data='",
+	"' where mod_name=%s;"
+}
+
+DelayDelFIdList_F = {}
+DelayDelFIdList_S = {}
+
+DelayDelRIdList_F = {}
+DelayDelRIdList_S = {}
+DELETE_BATTLERECORD_SLEEP = 20		-- 删除多少个战报睡眠1秒
 
 -- 当closedb的时候要看ReqTbl是否处理完，处理外才能关闭db连接
 ReqTbl = {}
@@ -198,6 +224,25 @@ function ACCEPT.list_createnexist(urs)
 	end
 end
 
+function ACCEPT.battlerecord_delete(fId)
+	if _GetDbInvalid() then
+		return
+	end
+	tinsert(DelayDelFIdList_S, fId)
+end
+function ACCEPT.battlerecord_deletelist(fIdList)
+	if _GetDbInvalid() then
+		return
+	end
+	for _, _fId in pairs(fIdList) do
+		tinsert(DelayDelFIdList_S, _fId)
+	end
+end
+
+function ACCEPT.resultrecord_delete(rId)
+	tinsert(DelayDelRIdList_S, rId)
+end
+
 
 function HeatBeatCheck()
 	if DBObj and not _GetDbInvalid() then
@@ -206,7 +251,6 @@ function HeatBeatCheck()
 		HEARTBEAT_NOWTIME = false
 	end
 end
-
 
 function TimeOutCheck()
 	if not HEARTBEAT_NOWTIME then
@@ -238,6 +282,239 @@ local function GcPerform()
 		skynet.sleep(GCPERFORM_FTIME)
 		collectgarbage("step", 512)
 		-- collectgarbage("collect")
+	end
+end
+
+
+
+
+local function _cs_list_setdata(urs, isdel_cache)
+	-- 获取缓存里面的
+	local data_ptr, sz, quotedsz = DBCACHE.GetCacheUrs(urs)
+	if not data_ptr then
+		local msg = string.format("not urs:%s data but save", urs) -- 可能会存在的，连续几次调用存盘(定时与关服等)
+		LOG.LOG_EVENT(DATABASE_ERRFILE, msg)
+		-- if is_testserver then
+		-- 	LOG._WARN(msg)
+		-- end
+		return
+	end
+	if DBCACHE.IsSaveCacheUrs(urs) then
+		if isdel_cache then
+			-- 删除缓存里面的
+			DBCACHE.DelCacheUrs(urs)
+		end
+		return
+	end
+	if sz > THRESHOLD_DATALEN then
+		local msg = string.format("urs:%s data sz:%s >= threshold sz:%s", urs, sz, THRESHOLD_DATALEN)
+		LOG._WARN(msg)
+		if sz > E_THRESHOLD_DATALEN then
+			local msg = string.format("urs:%s data sz:%s >= threshold sz:%s", urs, sz, E_THRESHOLD_DATALEN)
+			LOG._ERROR(msg)
+		end
+	end
+
+	local omd5 = DBCACHE.GetUrsMd5(urs)
+	local nmd5 = UTIL.Sumhexa(data_ptr, sz)
+	if omd5 and omd5 == nmd5 then		-- 数据一样则不存
+		if isdel_cache then
+			-- 删除缓存里面的
+			DBCACHE.DelCacheUrs(urs)
+		else
+			DBCACHE.SetSaveCacheUrs(urs, true)
+		end
+		LOG.LOG_EVENT(DATABASE_FILE, "list(same save data)", urs, sz, quotedsz)
+		return true
+	end
+
+	local isOk, res = pcall(DBObj.query_ptr_ex, DBObj,	-- 使用指针减少多次复制
+		_SAVE_LISTDB_DATA_FORMAT[1],
+		string.format(_SAVE_LISTDB_DATA_FORMAT[2], mysql.quote_sql_str(urs)),
+		data_ptr, sz, quotedsz
+	)
+	if isOk and not res[ErrorStr] and res.affected_rows == 1 then
+		if isdel_cache then
+			-- 删除缓存里面的
+			DBCACHE.DelCacheUrs(urs)
+		else
+			DBCACHE.SetSaveCacheUrs(urs, true)
+		end
+		DBCACHE.RefresUrsMd5(urs, nmd5)		-- 成功才记录md5
+		LOG.LOG_EVENT(DATABASE_FILE, "list", urs, sz, quotedsz)
+		return true
+	end
+
+	local msg = string.format("_cs_list_setdata error, urs:%s, res:%s", urs, dump(res))
+	LOG.LOG_EVENT(DATABASE_ERRFILE, msg, skynet.tostring(data_ptr, sz))
+	LOG._ERROR_A_ALARM(msg)
+	error(msg)
+end
+
+function real_list_setdata_ptrq(urs, isdel_cache)
+	if _GetDbInvalid() then
+		return
+	end
+	local cs = _GetQueueByUrs(urs)
+	local nowIndex = _GetReqIndex()
+
+	ReqTbl[nowIndex] = true
+	TryCall(cs, _cs_list_setdata, urs, isdel_cache)
+	ReqTbl[nowIndex] = nil
+end
+
+local function _cs_role_setdata(uid, actName, isdel_cache)
+	local data_ptr, sz, quotedsz, name = DBCACHE.GetCacheUid(uid)
+	if not data_ptr then
+		local msg = string.format("not uid:%s actName:%s data but save", uid, actName) -- 可能会存在的，连续几次调用存盘(定时与关服等)
+		LOG.LOG_EVENT(DATABASE_ERRFILE, msg)
+		-- if is_testserver then
+		-- 	LOG._WARN(msg)
+		-- end
+		return
+	end
+	if DBCACHE.IsSaveCacheUid(uid, actName) then
+		if isdel_cache then
+			-- 删除缓存里面的
+			DBCACHE.DelCacheUid(uid, actName)
+		end
+		return
+	end
+	if sz > THRESHOLD_DATALEN then
+		local msg = string.format("uid:%s actName:%s data sz:%s >= threshold sz:%s", uid, actName, sz, THRESHOLD_DATALEN)
+		LOG._WARN(msg)
+		if sz > E_THRESHOLD_DATALEN then
+			local msg = string.format("uid:%s actName:%s data sz:%s >= threshold sz:%s", uid, actName, sz, THRESHOLD_DATALEN)
+			LOG._ERROR(msg)
+		end
+	end
+
+	local omd5 = DBCACHE.GetUidMd5(uid, actName)
+	local nmd5 = UTIL.Sumhexa(data_ptr, sz)
+	if omd5 and omd5 == nmd5 then		-- 数据一样则不存
+		if isdel_cache then
+			-- 删除缓存里面的
+			DBCACHE.DelCacheUid(uid, actName)
+		else
+			DBCACHE.SetSaveCacheUid(uid, actName, true)
+		end
+		LOG.LOG_EVENT(DATABASE_FILE, "role_data(same save data)", uid, actName, sz, quotedsz)
+		return true
+	end
+
+	local isOk, res = pcall(DBObj.query_ptr_ex, DBObj,	-- 使用指针减少多次复制
+		string.format(_SAVE_ROLEDB_ACTDATA_FORMAT[1], actName),
+		string.format(_SAVE_ROLEDB_ACTDATA_FORMAT[2], uid),
+		data_ptr, sz, quotedsz
+	)
+	if isOk and not res[ErrorStr] and res.affected_rows == 1 then
+		if isdel_cache then
+			-- 删除缓存里面的
+			DBCACHE.DelCacheUid(uid, actName)
+		else
+			DBCACHE.SetSaveCacheUid(uid, actName, true)
+		end
+		DBCACHE.RefresUidMd5(uid, actName, nmd5)		-- 成功才记录md5
+		LOG.LOG_EVENT(DATABASE_FILE, "role_data", uid, actName, sz, quotedsz)
+		return true
+	end
+
+	local msg = string.format("_cs_role_setactdata error, uid:%s, actName:%s sz:%s res:%s", uid, actName, sz, dump(res))
+	LOG.LOG_EVENT(DATABASE_ERRFILE, msg, skynet.tostring(data_ptr, sz))
+	LOG._ERROR_A_ALARM(msg)
+	error(msg)
+end
+
+function real_role_setdata_ptrq(uid, actName, isdel_cache)
+	if _GetDbInvalid() then
+		return
+	end
+	local cs = _GetQueueByUid(uid)
+	local nowIndex = _GetReqIndex()
+
+	ReqTbl[nowIndex] = true
+	TryCall(cs, _cs_role_setdata, uid, actName, isdel_cache)
+	ReqTbl[nowIndex] = nil
+end
+
+local function _cs_mod_setdata(modname, isdel_cache)
+	local data_ptr, sz, quotedsz = DBCACHE.GetCacheMod(modname)
+	if not data_ptr then
+		local msg = string.format("not mod:%s data but save", modname) -- 可能会存在的，连续几次调用存盘(定时与关服等)
+		LOG.LOG_EVENT(DATABASE_ERRFILE, msg)
+		-- if is_testserver then
+		-- 	LOG._WARN(msg)
+		-- end
+		return
+	end
+	if DBCACHE.IsSaveCacheMod(modname) then
+		if isdel_cache then
+			-- 删除缓存里面的
+			DBCACHE.DelCacheMod(modname)
+		end
+		return
+	end
+	if sz > THRESHOLD_DATALEN then
+		local msg = string.format("modname:%s data sz:%s >= threshold sz:%s", modname, sz, THRESHOLD_DATALEN)
+		LOG._WARN(msg)
+		if sz > E_THRESHOLD_DATALEN then
+			local msg = string.format("modname:%s data sz:%s >= threshold sz:%s", modname, sz, THRESHOLD_DATALEN)
+			LOG._ERROR(msg)
+		end
+	end
+
+	local omd5 = DBCACHE.GetModMd5(modname)
+	local nmd5 = UTIL.Sumhexa(data_ptr, sz)
+	if omd5 and omd5 == nmd5 then		-- 数据一样则不存
+		if isdel_cache then
+			-- 删除缓存里面的
+			DBCACHE.DelCacheMod(modname)
+		else
+			DBCACHE.SetSaveCacheMod(modname, true)
+		end
+		LOG.LOG_EVENT(DATABASE_FILE, "modname(same save data)", modname, sz, quotedsz)
+		return true
+	end
+
+	local isOk, res = pcall(DBObj.query_ptr_ex, DBObj,	-- 使用指针减少多次复制
+		_SAVE_MODDB_DATA_FORMAT[1],
+		string.format(_SAVE_MODDB_DATA_FORMAT[2], mysql.quote_sql_str(modname)),
+		data_ptr, sz, quotedsz
+	)
+	if isOk and not res[ErrorStr] and res.affected_rows == 1 then
+		if isdel_cache then
+			-- 删除缓存里面的
+			DBCACHE.DelCacheMod(modname)
+		else
+			DBCACHE.SetSaveCacheUid(modname, true)
+		end
+		DBCACHE.RefresModMd5(modname, nmd5)		-- 成功才记录md5
+		LOG.LOG_EVENT(DATABASE_FILE, "module", modname, sz, quotedsz)
+		return true
+	end
+
+	local msg = string.format("_cs_mod_setdata error, mod:%s, sz:%s res:%s", modname, sz, dump(res))
+	LOG.LOG_EVENT(DATABASE_ERRFILE, msg, skynet.tostring(data_ptr, sz))
+	LOG._ERROR_A_ALARM(msg)
+	error(msg)
+end
+
+function real_mod_setdata_ptrq(modname, isdel_cache)
+	if _GetDbInvalid() then
+		return
+	end
+	local cs = _GetQueueByMod(modname)
+	local nowIndex = _GetReqIndex()
+
+	ReqTbl[nowIndex] = true
+	TryCall(cs, _cs_mod_setdata, modname, isdel_cache)
+	ReqTbl[nowIndex] = nil
+end
+
+local function _PopCache(cache)
+	for _k, _ in pairs(cache) do
+		cache[_k] = nil
+		return _k
 	end
 end
 
@@ -310,7 +587,7 @@ function CacheSaveTimer()
 	TryCall(CacheFrameTimer, true)
 
 	-- 记录当前需要存的数据
-	CacheSaveUrs, DelCacheSaveUrs, CACHE_FRAME_URS_SAVECNT = DBCACHE.GetAllCaCheUrs()
+	CacheSaveUrs, DelCacheSaveUrs, CACHE_FRAME_URS_SAVECNT = DBCACHE.GetAllCacheUrs()
 	CacheSaveUid, DelCacheSaveUid, CACHE_FRAME_UID_SAVECNT = DBCACHE.GetAllCaCheUid()
 	CacheSaveMod, DelCacheSaveMod, CACHE_FRAME_MOD_SAVECNT = DBCACHE.GetAllCaCheMod()
 	local aUrsSaveCnt = CACHE_FRAME_URS_SAVECNT
@@ -339,10 +616,77 @@ function CacheSaveTimer()
 	)
 end
 
+local function GetRecordSavePath(fId)
+	return string.format("%s/%s/%s/%s.dat", RECORD_BASEPATH, string.sub(fId, 1, 2), string.sub(fId, 3, 11), fId)
+end
+
+local function GetResultRecordSavePath(rId)
+	return string.format("%s/%s/%s/%s.dat", RESULTRECORD_BASEPATH, string.sub(rId, 1, 2), string.sub(rId, 3, 11), rId)
+end
+
+function CheckDelayDelBattleRecord()
+	if _GetDbInvalid() then
+		return
+	end
+	local needDeleteData = DelayDelFIdList_F
+	DelayDelFIdList_F = DelayDelFIdList_S
+	DelayDelFIdList_S = {}
+
+	if #needDeleteData > 0 then
+		skynet.fork(function ()
+			local dcnt = 0
+			for _, _fId in pairs(needDeleteData) do
+				dcnt = dcnt + 1
+				if dcnt % DELETE_BATTLERECORD_SLEEP == 0 then
+					skynet.sleep(100)
+				end
+				local fileName = GetRecordSavePath(_fId)
+				local ok, err = os.remove(fileName)
+				if not ok then
+					local msg = string.format("CheckDelayDelBattleRecord fid:%s err:%s", _fId, err)
+					LOG._ERROR(msg)
+				end
+			end
+			LOG.LOG_EVENT(DATABASE_FILE, "result_removelist", lserialize.lua_seri_str(needDeleteData))
+		end)
+	end
+end
+
+function CheckDelayDelResultRecord()
+	if _GetDbInvalid() then
+		return
+	end
+	local needDeleteData = DelayDelRIdList_F
+	DelayDelRIdList_F = DelayDelRIdList_S
+	DelayDelRIdList_S = {}
+
+	if #needDeleteData > 0 then
+		skynet.fork(function ()
+			local dcnt = 0
+			for _, _rId in pairs(needDeleteData) do
+				dcnt = dcnt + 1
+				if dcnt % DELETE_BATTLERECORD_SLEEP == 0 then
+					skynet.sleep(100)
+				end
+				local fileName = GetResultRecordSavePath(_rId)
+				local ok, err = os.remove(fileName)
+				if not ok then
+					local msg = string.format("CheckDelayDelResultRecord fid:%s err:%s", _rId, err)
+					LOG._ERROR(msg)
+				end
+			end
+			LOG.LOG_EVENT(DATABASE_FILE, "result_removelist", lserialize.lua_seri_str(needDeleteData))
+		end)
+	end
+end
+
 function StartDb()
 	_ConnectDatabase()
 	skynet.timeout(0, DealwishTimer)	-- 使用skynet的定时器会好一些，因为里面也有重入的
 	skynet.timeout(0, GcPerform)
 
-	-- CALLOUT.CallFre("CacheSaveTimer", CACHE_SAVE_SECTIME)
+	CALLOUT.CallFre("CacheSaveTimer", CACHE_SAVE_SECTIME)
+	CALLOUT.CallFre("CacheFrameTimer", CACHE_FRAME_SECTIME)
+	CALLOUT.CallFre("CheckDelayDelBattleRecord", DELAY_DELETE_FID_TIME)
+	CALLOUT.CallFre("CheckDelayDelResultRecord", DELAY_DELETE_FID_TIME)
 end
