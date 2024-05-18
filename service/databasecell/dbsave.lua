@@ -322,9 +322,6 @@ local function GcPerform()
 	end
 end
 
-
-
-
 local function _cs_list_setdata(urs, isdel_cache)
 	-- 获取缓存里面的
 	local data_ptr, sz, quotedsz = DBCACHE.GetCacheUrs(urs)
@@ -863,7 +860,7 @@ end
 function StartDb()
 	_ConnectDatabase()
 	skynet.timeout(0, DealwishTimer)	-- 使用skynet的定时器会好一些，因为里面也有重入的
-	skynet.timeout(0, GcPerform)
+	skynet.timeout(0, GcPerform)		-- 使用skynet的定时器会好一些，防止一直步数都没完成就有定时器来
 
 	CALLOUT.CallFre("CacheSaveTimer", CACHE_SAVE_SECTIME)
 	CALLOUT.CallFre("CacheFrameTimer", CACHE_FRAME_SECTIME)

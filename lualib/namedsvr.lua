@@ -4,9 +4,9 @@ local sys = sys
 
 -- 任何节点都必须启动的服务
 EVERY_NODE_SERVER = {
+	{service = "stimer", named = ".STIMER"},		-- 定时器服务
 	{service = "loadxls", named = ".LOADXLS"},		-- 公共配置表服务
 	{service = "database", named = ".DATABASE"},	-- 数据库服务
-	{service = "stimer", named = ".STIMER"},		-- 定时器服务
 }
 
 -- 节点启动详情
@@ -102,18 +102,3 @@ for svrName, svrInfo in pairs(NODE_SERVER_INFO) do
 	end
 end
 -- PRINT("SERVER_SON_NAMED_MAP: ", SERVER_SON_NAMED_MAP)
-
-function GetSonNamed(svrName, idx)
-	local fatherInfo = NODE_SERVER_INFO[svrName]
-	if not fatherInfo then
-		return
-	end
-
-	local maxIdx = fatherInfo.son_num or 0
-	if maxIdx < idx or idx <= 0 then
-		return
-	end
-
-	return fatherInfo.named .. "_SON_" .. idx
-end
-

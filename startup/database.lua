@@ -162,15 +162,13 @@ else
 			skynet.ignoreret()
 		end)
 
-		skynet.fork(function ()
-			for i = 1, DB_CNT do
-				local db = skynet.newservice("databasecell", skynet.self(), i)
-				table.insert(address, {
-					addr = db,
-					proxy = PROXYSVR.GetProxy(db, SNODE_NAME)
-				})
-			end
-		end)
+		for i = 1, DB_CNT do
+			local db = skynet.newservice("databasecell", skynet.self(), i)
+			table.insert(address, {
+				addr = db,
+				proxy = PROXYSVR.GetProxy(db, SNODE_NAME)
+			})
+		end
 
 		DBCHECK = Import("service/databasecell/dbcheck.lua")
 		DBCHECK.StartUpCheck()
