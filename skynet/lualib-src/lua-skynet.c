@@ -410,6 +410,12 @@ lserviceG(lua_State *L) {
 	return 1;
 }
 
+// 使用雪花算法生成唯一id
+static int
+lcreate_id(lua_State *L) {
+	return 1;
+}
+
 #define MAX_LEVEL 3
 
 struct source_info {
@@ -505,6 +511,7 @@ luaopen_skynet_core(lua_State *L) {
 		{ "now", lnow },
 		{ "hpc", lhpc },	// getHPCounter
 		{"serviceG", lserviceG},	// create by guanguowei
+		{"create_id", lcreate_id},	// create by guanguowei
 		{ NULL, NULL },
 	};
 
