@@ -57,3 +57,5 @@ startup这个目录 是一个无奈之举，去实现启动多个子服务而创
 雪花算法：生成唯一id
 https://github.com/hanxi/skynet-demo/tree/master
 
+
+-- 云风牢大的编译skynet的一些文字介绍https://github.com/cloudwu/skynet/wiki/Build
