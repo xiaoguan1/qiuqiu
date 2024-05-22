@@ -410,9 +410,27 @@ lserviceG(lua_State *L) {
 	return 1;
 }
 
+/////////////////// 还未完成 ////////////////////////
+#include <pthread.h>
+struct snowflake_count {
+	uint16_t count;		// 数值范围：0~4095 
+	uint64_t sec;
+};
+
+static struct snowflake_count SF_NODE;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 // 使用雪花算法生成唯一id
 static int
 lcreate_id(lua_State *L) {
+	uint64_t startServerTime = luaL_checkinteger(L, 1);
+	uint16_t serverId = luaL_checkinteger(L, 2);
+	uint16_t robotNo = luaL_checkinteger(L, 3);
+
+	pthread_mutex_lock(&mutex);
+	uint64_t id = 0;
+	uint64_t nowTime = ((skynet_starttime() * 100) + (skynet_now() / 1000000000)) - startServerTime;
+
+	pthread_mutex_unlock(&mutex);
 	return 1;
 }
 
