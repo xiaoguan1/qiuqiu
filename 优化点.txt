@@ -58,6 +58,8 @@ startup这个目录 是一个无奈之举，去实现启动多个子服务而创
 https://github.com/hanxi/skynet-demo/tree/master
 	考虑是否自定义一个结构体来装载唯一id
 	最终考虑自定义锁
+	通过移动5bit来获得结果，0~v可以写死一个数组【不必完全最求和项目一摸一样，因为也看不到源码有点费力】
+
 
 
 -- 云风牢大的编译skynet的一些文字介绍https://github.com/cloudwu/skynet/wiki/Build
