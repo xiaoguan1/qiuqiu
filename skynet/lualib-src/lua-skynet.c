@@ -410,26 +410,116 @@ lserviceG(lua_State *L) {
 	return 1;
 }
 
-/////////////////// 还未完成 ////////////////////////
+/////////////////// 半完成品 ////////////////////////
 #include <pthread.h>
+#include <skynet_timer.h>
 struct snowflake_count {
-	uint16_t count;		// 数值范围：0~4095 
+	uint16_t seq;
 	uint64_t sec;
 };
-
 static struct snowflake_count SF_NODE;
+
+#define MAX_SERVER_ID 1073741823	// 区服id的最大值
+#define SERVER_MAX_BIT 30			// 区服id的最大读取比特数
+
+#define MAX_ROBOT_NO 31 			// 机器类型最大编号
+#define ROBOT_MAX_BIT 10			// 机器类型的最大读取比特数
+
+#define TIME_MAX_BIT 35				// 时间戳的最大读取比特数
+
+#define SEQ_MAX_VALUE 32767			// 序列号的最大值2^15次方
+#define SEQ_MAX_BIT	15				// 序列号的最大读取比特数
+
+#define SF_STEP 5	// 移位步数（32进制即5bit）
+#define SF_BASE_NUM 31 // 与运算的基数（32进制即5bit，最大值31）
+
+#define BASE_CHAR "0123456789abcdefghijklmnopqrstuv"
+#define ARR_SUM_LEN ((SERVER_MAX_BIT + ROBOT_MAX_BIT + TIME_MAX_BIT + SEQ_MAX_BIT) / SF_STEP) + 1
+
+union bkt{	// 容器
+	uint8_t split;
+	uint32_t serverId;		// 区服
+	uint64_t timestamp;		// 时间戳
+	uint8_t robotNo;		// 机器类型
+};
+
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-// 使用雪花算法生成唯一id
+// 使用雪花算法生成唯一id(32进制)
 static int
 lcreate_id(lua_State *L) {
-	uint64_t startServerTime = luaL_checkinteger(L, 1);
-	uint16_t serverId = luaL_checkinteger(L, 2);
-	uint16_t robotNo = luaL_checkinteger(L, 3);
-
 	pthread_mutex_lock(&mutex);
-	uint64_t id = 0;
-	uint64_t nowTime = ((skynet_starttime() * 100) + (skynet_now() / 1000000000)) - startServerTime;
+	char result[ARR_SUM_LEN] = {};
+	uint8_t index = 0;
+	union bkt ubkt;
 
+	ubkt.serverId = luaL_checkinteger(L, 1);
+	if (ubkt.serverId <= 0 || ubkt.serverId > MAX_SERVER_ID)
+		luaL_error(L, "serverId range from 1 to %s", MAX_SERVER_ID);
+	for (int i = 0; i < (SERVER_MAX_BIT / SF_STEP); i++) {
+		char sC = BASE_CHAR[ubkt.split & SF_BASE_NUM];
+		if (!sC)
+			luaL_error(L, "serverId invalid number split:%s", ubkt.split);
+
+		result[index] = sC;
+		ubkt.serverId = ubkt.serverId >> SF_STEP;
+		index++;
+	}
+
+	ubkt.robotNo = luaL_checkinteger(L, 2);
+	if (ubkt.robotNo <= 0 || ubkt.robotNo > MAX_ROBOT_NO)
+		return luaL_error(L, "serverId range from 1 to %s", MAX_ROBOT_NO);
+
+	for (int i = 0; i < (ROBOT_MAX_BIT / SF_STEP); i++) {
+		char rC = BASE_CHAR[ubkt.split & SF_BASE_NUM];
+		if (!rC)
+			return luaL_error(L, "robotNo invalid number split:%s", ubkt.split);
+
+		result[index] = rC;
+		ubkt.robotNo = ubkt.robotNo >> SF_STEP;
+		index++;
+	}
+
+	uint64_t nowtime = (uint64_t)skynet_starttime() + (skynet_now() / 1000000000);
+	ubkt.timestamp = nowtime;
+	for (int i = 0; i < (TIME_MAX_BIT / SF_STEP); i++) {
+		char tC = BASE_CHAR[ubkt.split & SF_BASE_NUM];
+		if (!tC)
+			return luaL_error(L, "timestamp invalid number split:%s", ubkt.split);
+
+		result[index] = tC;
+		ubkt.timestamp = ubkt.timestamp >> SF_STEP;
+		index++;
+	}
+
+	uint16_t seq = SF_NODE.seq;
+	if (SF_NODE.sec == 0) {
+		SF_NODE.sec = nowtime;
+		SF_NODE.seq = 0;
+	} else if (SF_NODE.seq > SEQ_MAX_VALUE && SF_NODE.sec == nowtime) {
+		// 一秒钟最多产生出SEQ_MAX_VALUE个id
+		luaL_error(L, "create id fail");
+	} else if (SF_NODE.seq > SEQ_MAX_VALUE && SF_NODE.sec != nowtime) {
+		SF_NODE.seq = 0;
+		SF_NODE.sec = nowtime;
+	} else {
+		SF_NODE.seq += 1;
+	}
+
+	for (int i = 0; i < (SEQ_MAX_BIT / SF_STEP); i++) {
+		char sC = BASE_CHAR[seq & SF_BASE_NUM];
+		if (!sC)
+			luaL_error(L, "%s seq invalid number", seq);
+
+		result[index] = sC;
+		seq = seq >> SF_STEP;
+		index++;
+	}
+
+	if (index != ARR_SUM_LEN - 1)
+		luaL_error(L, "create id fail, index:%s sumlen:%s", index, ARR_SUM_LEN);
+	// result[index] = '\n';
+
+	lua_pushstring(L, result);
 	pthread_mutex_unlock(&mutex);
 	return 1;
 }
