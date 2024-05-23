@@ -414,7 +414,7 @@ lserviceG(lua_State *L) {
 #include <pthread.h>
 #include <skynet_timer.h>
 struct snowflake_count {
-	uint16_t seq;
+	uint32_t seq;
 	uint64_t sec;
 };
 static struct snowflake_count SF_NODE;
@@ -427,8 +427,8 @@ static struct snowflake_count SF_NODE;
 
 #define TIME_MAX_BIT 35				// 时间戳的最大读取比特数
 
-#define SEQ_MAX_VALUE 32767			// 序列号的最大值2^15次方
-#define SEQ_MAX_BIT	15				// 序列号的最大读取比特数
+#define SEQ_MAX_VALUE 1073741823	// 序列号的最大值2^30次方
+#define SEQ_MAX_BIT	30				// 序列号的最大读取比特数
 
 #define SF_STEP 5	// 移位步数（32进制即5bit）
 #define SF_BASE_NUM 31 // 与运算的基数（32进制即5bit，最大值31）
@@ -449,49 +449,18 @@ static int
 lcreate_id(lua_State *L) {
 	pthread_mutex_lock(&mutex);
 	char result[ARR_SUM_LEN] = {};
-	uint8_t index = 0;
+	result[ARR_SUM_LEN - 1] = '\0';
+	uint8_t index = ARR_SUM_LEN - 2;
 	union bkt ubkt;
 
-	ubkt.serverId = luaL_checkinteger(L, 1);
-	if (ubkt.serverId <= 0 || ubkt.serverId > MAX_SERVER_ID)
-		luaL_error(L, "serverId range from 1 to %s", MAX_SERVER_ID);
-	for (int i = 0; i < (SERVER_MAX_BIT / SF_STEP); i++) {
-		char sC = BASE_CHAR[ubkt.split & SF_BASE_NUM];
-		if (!sC)
-			luaL_error(L, "serverId invalid number split:%s", ubkt.split);
-
-		result[index] = sC;
-		ubkt.serverId = ubkt.serverId >> SF_STEP;
-		index++;
-	}
-
-	ubkt.robotNo = luaL_checkinteger(L, 2);
-	if (ubkt.robotNo <= 0 || ubkt.robotNo > MAX_ROBOT_NO)
+	lua_Integer serverId = luaL_checkinteger(L, 1);
+	lua_Integer robotNo = luaL_checkinteger(L, 2);
+	if (serverId <= 0 || serverId > MAX_SERVER_ID)
+		return luaL_error(L, "serverId range from 1 to %s", MAX_SERVER_ID);
+	if (robotNo <= 0 || robotNo > MAX_ROBOT_NO)
 		return luaL_error(L, "serverId range from 1 to %s", MAX_ROBOT_NO);
 
-	for (int i = 0; i < (ROBOT_MAX_BIT / SF_STEP); i++) {
-		char rC = BASE_CHAR[ubkt.split & SF_BASE_NUM];
-		if (!rC)
-			return luaL_error(L, "robotNo invalid number split:%s", ubkt.split);
-
-		result[index] = rC;
-		ubkt.robotNo = ubkt.robotNo >> SF_STEP;
-		index++;
-	}
-
 	uint64_t nowtime = (uint64_t)skynet_starttime() + (skynet_now() / 1000000000);
-	ubkt.timestamp = nowtime;
-	for (int i = 0; i < (TIME_MAX_BIT / SF_STEP); i++) {
-		char tC = BASE_CHAR[ubkt.split & SF_BASE_NUM];
-		if (!tC)
-			return luaL_error(L, "timestamp invalid number split:%s", ubkt.split);
-
-		result[index] = tC;
-		ubkt.timestamp = ubkt.timestamp >> SF_STEP;
-		index++;
-	}
-
-	uint16_t seq = SF_NODE.seq;
 	if (SF_NODE.sec == 0) {
 		SF_NODE.sec = nowtime;
 		SF_NODE.seq = 0;
@@ -504,6 +473,7 @@ lcreate_id(lua_State *L) {
 	} else {
 		SF_NODE.seq += 1;
 	}
+	uint32_t seq = SF_NODE.seq;
 
 	for (int i = 0; i < (SEQ_MAX_BIT / SF_STEP); i++) {
 		char sC = BASE_CHAR[seq & SF_BASE_NUM];
@@ -512,12 +482,44 @@ lcreate_id(lua_State *L) {
 
 		result[index] = sC;
 		seq = seq >> SF_STEP;
-		index++;
+		index--;
 	}
 
-	if (index != ARR_SUM_LEN - 1)
+	ubkt.timestamp = nowtime;
+	for (int i = 0; i < (TIME_MAX_BIT / SF_STEP); i++) {
+		char tC = BASE_CHAR[ubkt.split & SF_BASE_NUM];
+		if (!tC)
+			return luaL_error(L, "timestamp invalid number split:%s", ubkt.split);
+
+		result[index] = tC;
+		ubkt.timestamp = ubkt.timestamp >> SF_STEP;
+		index--;
+	}
+
+	ubkt.robotNo = robotNo;
+	for (int i = 0; i < (ROBOT_MAX_BIT / SF_STEP); i++) {
+		char rC = BASE_CHAR[ubkt.split & SF_BASE_NUM];
+		if (!rC)
+			return luaL_error(L, "robotNo invalid number split:%s", ubkt.split);
+
+		result[index] = rC;
+		ubkt.robotNo = ubkt.robotNo >> SF_STEP;
+		index--;
+	}
+
+	ubkt.serverId = serverId;
+	for (int i = 0; i < (SERVER_MAX_BIT / SF_STEP); i++) {
+		char sC = BASE_CHAR[ubkt.split & SF_BASE_NUM];
+		if (!sC)
+			luaL_error(L, "serverId invalid number split:%s", ubkt.split);
+
+		result[index] = sC;
+		ubkt.serverId = ubkt.serverId >> SF_STEP;
+		index--;
+	}
+
+	if (index != 255)
 		luaL_error(L, "create id fail, index:%s sumlen:%s", index, ARR_SUM_LEN);
-	// result[index] = '\n';
 
 	lua_pushstring(L, result);
 	pthread_mutex_unlock(&mutex);
