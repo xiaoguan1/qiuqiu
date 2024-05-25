@@ -1,10 +1,10 @@
--- 主节点配置
+-- 普通跨服节点配置
 
 thread = 8 --启用多少个工作线
 cpath = "./skynet/cservice/?.so" --用C编写的服务模块的位置
 bootstrap = "snlua bootstrap" --启动的第一个服务
 --bootstrap配置
-start = "gservice_start" --主服务
+start = "cservice_start" --主服务
 harbor = 0 --不使用主从节点模式
 
 --lua配置
@@ -27,31 +27,24 @@ extendlib = "./lualib/extend/extlibload.lua"
 log_stdin = true
 
 -- cpu使用率日志
-log_svccpu_path = "./log/main_node/svccpu"
+log_svccpu_path = "./log/cross_node/svccpu"
 
 profile = true		-- 默认位true的
 profile_cmd = true	-- 细化指令检测
 
 ------------------ 节点信息 ------------------
-is_cross = false
-server_id = 1
-nowaiting = true			-- 不挂起【其中利弊还未考量】
-node = "main"				-- 节点名
-node_type = "game_node"		-- 节点类型(游戏服节点)
+is_cross = true
+server_id = 55001
+node = "cross"				-- 节点名
+node_type = "cross_node"	-- 节点类型(游戏服节点)
 
-merge_host = [[{			-- 合服的服务器编号
-	-- [2] = true
-}]]
+is_filedb = false			-- 是否是文件存盘
+is_websocket = true			-- 是否是websocket
+check_cmem = false			-- 开启c内存检测
+is_testserver = true		-- 是否位测试服
+gen_charvar = true			-- 是否生成对象属性
 
------------------- 网关信息 ------------------
-login_slavecnt = 8
-login_port = 33001
-
------------------- 战斗场景 ------------------
-scene = [[{
-	[1] = 1001,
-	[2] = 1002,
-}]]
+global_cpu_threshold_tipstime = 60000	-- 60000 为 6%
 
 ------------------ 数据库 ------------------
 database_cachecnt = 100		-- 每个数据库链接缓存数据数量
@@ -59,12 +52,10 @@ database_num = 10			-- 每个链接数据库的个数
 database_info = [[{
 	dbhost = "127.0.0.1",
 	dbport = 3306,
-	dbname = "server1",
+	dbname = "server55001",
 	dbuser = "root",
 	dbpasswd = "root",
 }]]
-
-data_dirname	= "main"
 
 centerdatadb_info = [[{
 	dbhost = "127.0.0.1",
@@ -73,3 +64,16 @@ centerdatadb_info = [[{
 	dbuser = "root",
 	dbpasswd = "root",
 }]]
+
+mongodb_info = [[{								-- 日志数据库信息
+	dbhost = "127.0.0.1",
+	dbport = 27017,
+	wechat_dbname = "candroid_beam_mongodb",	-- 微信分享数据库
+	dbuser = "",
+	dbpasswd = "",
+}]]
+
+------------------ 登录和网关配置 ------------------
+mcs_port		= 61001
+mcs_noipcheck	= false				-- 不检测ip,正式服要false
+merge_loadencrypt = true
