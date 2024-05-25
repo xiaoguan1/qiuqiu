@@ -23,11 +23,15 @@ lua ./charvar/gameserver/var_name.lua
 lua ./charvar/activity/var_name.lua
 
 echo "选择题:"
-select w in 启动游戏 编译并启动游戏 关闭游戏
+select w in 启动游戏 启动跨服 编译并启动游戏 关闭游戏
 do
 	case $w in
 		启动游戏)
 			./skynet/skynet ./etc/main_node
+			break
+			;;
+		启动跨服)
+			./skynet/skynet ./etc/cross_node
 			break
 			;;
 		编译并启动游戏)

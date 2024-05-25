@@ -179,7 +179,7 @@ function LoadFile()
 		end
 	end
 	if is_testserver then
-		skynet.error(string.format("load setting use mem:%s(m)"), preMem)
+		skynet.error(string.format("load setting use mem:%s(m)", preMem))
 	end
 
 	-- 加载客户端技能展示技能
