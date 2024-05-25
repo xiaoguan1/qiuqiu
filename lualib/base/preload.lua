@@ -4,6 +4,8 @@ local traceback = debug.traceback
 local SERVICE_NAME = SERVICE_NAME
 local error = error
 local sys = sys
+local table = table
+local tis_has_value = table.is_has_value
 
 -- 加载文件路径(先加载不依赖外部数据的模块)
 local LOAD_FILES = {
@@ -88,7 +90,10 @@ function TryCall(func, ...)
 	return _RetFunc(xpcall(func, traceback, ...))
 end
 
-if NODE_SERVER_INFO[SERVICE_NAME] or (EVERY_NODE_SERVER[SERVICE_NAME]) or SERVICE_NAME == "databasecell" then
+if tis_has_value(NODE_SERVER_INFO, SERVICE_NAME, "service") or
+	tis_has_value(EVERY_NODE_SERVER, SERVICE_NAME, "service") or
+	SERVICE_NAME == "databasecell"
+then
 	DPCLUSTER_NODE = skynet.getenv("DPCLUSTER_NODE")
 	-- CLUSTERCFG = skynet.getenv("CLUSTERCFG")
 

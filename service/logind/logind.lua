@@ -8,6 +8,17 @@ local login_port = tonumber(skynet.getenv("login_port"))
 -- local port_index = tonumber(...)
 local is_son = ...
 
+local sonnum
+for _, svrInfo in pairs(NODE_SERVER_INFO) do
+	if svrInfo.service == SERVICE_NAME and svrInfo.son_num and svrInfo.son_num > 0 then
+		sonnum = svrInfo.son_num
+		break
+	end
+end
+if not sonnum then
+	error(string.format("%s not define son service num", SERVICE_NAME))
+end
+
 
 CMD = {}
 WS_HANDLER = {}
@@ -25,10 +36,9 @@ skynet.start(function ()
 		MASTERFUNC = Import("service/logind/masterfunc.lua")
 		skynet.dispatch("lua", function (_, source, command, ...)
 			skynet.ret(skynet.pack())
-			
 		end)
 		local GATEWAY_SON = Import("service/logind/logind_son.lua")
-		skynet.fork(GATEWAY_SON.LaunchService, NODE_SERVER_INFO.logind.son_num)
+		skynet.fork(GATEWAY_SON.LaunchService, sonnum)
 	end
 end)
 

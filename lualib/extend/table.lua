@@ -20,10 +20,18 @@ function table.empty(t)
 	return true
 end
 
-function table.is_has_value(tbl, value)
+function table.is_has_value(tbl, value, tkey)
 	if type(tbl) ~= "table" then return end
 	for _, _value in pairs(tbl) do
-		if value == _value then return true end
+		if tkey and type(_value) == "table" then
+			if _value[tkey] == value then
+				return true
+			end
+		else
+			if value == _value then
+				return true
+			end
+		end
 	end
 	return false
 end
