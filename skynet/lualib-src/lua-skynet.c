@@ -460,7 +460,7 @@ lcreate_id(lua_State *L) {
 	if (robotNo <= 0 || robotNo > MAX_ROBOT_NO)
 		return luaL_error(L, "serverId range from 1 to %s", MAX_ROBOT_NO);
 
-	uint64_t nowtime = (uint64_t)skynet_starttime() + (skynet_now() / 1000000000);
+	uint64_t nowtime = (uint64_t)skynet_starttime() + (skynet_now() / 100);
 	if (SF_NODE.sec == 0) {
 		SF_NODE.sec = nowtime;
 		SF_NODE.seq = 0;
