@@ -43,7 +43,24 @@ local skynet = {
 	PTYPE_TRACE = 12,	-- use for debug trace
 	PTYPE_CALLOUT = 13,	-- callout guanguowei
 	PTYPE_TRANS = 14, -- database ghost
+	PTYPE_RPC = 15,		-- to do by ghost
 }
+
+function skynet.get_proto(name)
+	return proto[name]
+end
+
+function skynet.get_prototype_id(name)
+	return proto[name] and proto[name].id
+end
+
+function skynet.get_prototype_pack(name)
+	return proto[name] and proto[name].pack
+end
+
+function skynet.get_prototype_unpack(name)
+	return proto[name] and proto[name].unpack
+end
 
 -- code cache
 skynet.cache = require "skynet.codecache"

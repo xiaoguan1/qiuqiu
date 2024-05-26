@@ -3,6 +3,9 @@ local skynet = require "skynet"
 ONE_DAY_SEC = 86400		-- 一天的时间秒数
 ONE_WEEK_SEC = 604800 	-- 一周的时间秒数
 
+-- 节点类型
+GAME_NODE_TYPE = "game_node"	-- 普通游戏服节点
+CROSS_NODE_TYPE = "cross_node"	-- 普通跨服节点
 
 GCPERFORM_STEP = 64
 

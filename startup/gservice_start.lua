@@ -10,10 +10,11 @@ local Import = Import
 local nodeType = skynet.getenv("node_type")
 
 skynet.start(function ()
-	assert(nodeType == "game_node" and not is_cross)
 
 	skynet.setenv("preload", set_preload)
 	dofile(set_preload)
+
+	assert(nodeType == GAME_NODE_TYPE and not is_cross)
 
 	local NODEINFO = Import("lualib/base/nodeinfo.lua")
 	local isOk, DPCLUSTER_NODE = NODEINFO.GetGameNodeInfoByDatabase()

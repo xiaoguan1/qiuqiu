@@ -9,10 +9,10 @@ local table = table
 local nodeType = skynet.getenv("node_type")
 
 skynet.start(function ()
-	assert(nodeType == "cross_node" or is_cross)
-
 	skynet.setenv("preload", set_preload)
 	dofile(set_preload)
+
+	assert(nodeType == CROSS_NODE_TYPE or is_cross)
 
 	local NODEINFO = Import("lualib/base/nodeinfo.lua")
 	local isOk, DPCLUSTER_NODE = NODEINFO.GetCrossNodeInfoByDatabase()

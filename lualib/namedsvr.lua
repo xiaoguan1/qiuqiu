@@ -1,3 +1,5 @@
+local skynet = require "skynet"
+local nodeType = skynet.getenv("node_type")
 local error = error
 local string = string
 local sys = sys
@@ -13,16 +15,22 @@ EVERY_NODE_SERVER = {
 -- @named 注册的服务名
 -- @node 限制某些节点才能启动
 -- @son_num 子服务的数量
-NODE_SERVER_INFO = {
-	-- 节点管理
-	{service = "nodemgr", named = ".NODEMGR", node = {"game_node", "cross_node"}},
+if nodeType == GAME_NODE_TYPE then
+	NODE_SERVER_INFO = {
+		-- 节点管理
+		{service = "nodemgr", named = ".NODEMGR", node = {GAME_NODE_TYPE, CROSS_NODE_TYPE}},
 
-	-- 运营管理
-	{service = "admin", named = ".ADMIN", node = "game_node"},
+		-- 运营管理
+		{service = "admin", named = ".ADMIN", node = GAME_NODE_TYPE},
 
-	-- 网关
-	{service = "logind", named = ".LOGIND", node = "game_node", son_num = 5},
-}
+		-- 网关
+		{service = "logind", named = ".LOGIND", node = GAME_NODE_TYPE, son_num = 5},
+	}
+elseif nodeType == GAME_NODE_TYPE then
+	NODE_SERVER_INFO = {}
+else
+	error("error node type")
+end
 
 -- 跨服服务
 CROSS_NAMED_SERVER_NODE = {
