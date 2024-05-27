@@ -26,7 +26,7 @@ if nodeType == GAME_NODE_TYPE then
 		-- 网关
 		{service = "logind", named = ".LOGIND", node = GAME_NODE_TYPE, son_num = 5},
 	}
-elseif nodeType == GAME_NODE_TYPE then
+elseif nodeType == CROSS_NODE_TYPE then
 	NODE_SERVER_INFO = {}
 else
 	error("error node type")
