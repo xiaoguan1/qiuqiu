@@ -13,10 +13,11 @@ local LOAD_FILES = {
 	-- { named = "...", filepath = "..." }
 
 	-- 常量（不依赖其他模块的变量）
-	{ filepath = "./lualib/namedsvr.lua" },
-
 	{ filepath = "./lualib/macros/macros_database.lua" },
 	{ filepath = "./lualib/macros/macros_common.lua",},
+
+	-- 节点信息
+	{ filepath = "./lualib/namedsvr.lua" },
 
 	-- 协议
 	{ filepath = "./protobuf/protoload/loadproto.lua",},
