@@ -265,6 +265,153 @@ function ACCEPT.resultrecord_delete(rId)
 	tinsert(DelayDelRIdList_S, rId)
 end
 
+local function _cs_mod_createnexist(modname)
+	local quote_modname = mysql.quote_sql_str(modname)
+	local reqstr = string.format(
+		"insert into module(mod_name, data) select %s, '%s' from dual where not exists(select * format module where mod_name = %s)",
+		quote_modname, EMPTY_TABLE_PACK, quote_modname
+	)
+	return DBObj:query(reqstr)
+end
+
+function ACCEPT.mod_createnexist(modname)
+	if _GetDbInvalid() then
+		return
+	end
+	local cs = _GetQueueByMod(modname)
+	local nowIndex = _GetReqIndex()
+
+	ReqTbl[nowIndex] = true
+	local isOk, res = pcall(cs, _cs_mod_createnexist, modname)
+	ReqTbl[nowIndex] = nil
+
+	if not isOk then
+		local msg = string.format("mod_createnexist error, modname:%s, res:%s", modname, res or "nothing")
+		LOG.LOG_EVENT(DATABASE_ERRFILE, msg)
+		LOG._ERROR_A_ALARM(msg)
+	end
+end
+
+local function _cs_mod_setdata(modname, isdel_cache)
+	local data_ptr, sz, quotedsz = DBCACHE.GetCacheMod(modname)
+	if not data_ptr then
+		local msg = string.format("not mod:%s data but save", modname)
+		LOG.LOG_EVENT(DATABASE_ERRFILE, msg)
+		-- if is_testserver then
+		-- 	LOG._WARN(msg)
+		-- end
+		return
+	end
+	if DBCACHE.IsSaveCacheMod(modname) then	-- 已经存盘过
+		if isdel_cache then
+			-- 删除缓存里面的
+			DBCACHE.DelCacheMod(modname)
+		end
+		return
+	end
+	if sz > THRESHOLD_DATALEN then
+		local msg = string.format("modname:%s data sz:%s >= threshold sz:%s", modname, sz, THRESHOLD_DATALEN)
+		LOG._WARN(msg)
+		if sz > E_THRESHOLD_DATALEN then
+			local msg = string.format("modname:%s data sz:%s >= e_threshold sz:%s", modname, sz, E_THRESHOLD_DATALEN)
+			LOG._ERROR(msg)
+		end
+	end
+
+	local omd5 = DBCACHE.GetModMd5(modname)
+	local nmd5 = UTIL.Sumhexa(data_ptr, sz)
+	if omd5 and omd5 == nmd5 then
+		if isdel_cache then
+			-- 删除缓存里哦面的
+			DBCACHE.DelCacheMod(modname)
+		else
+			DBCACHE.SetSaveCacheMod(modname, true)
+		end
+		LOG.LOG_EVENT(DATABASE_FILE, "module(same save data)", modname, sz, quotedsz)
+		return true
+	end
+
+	local isOk, res = pcall(DBObj.query_ptr_ex, DBObj,
+		_SAVE_MODDB_DATA_FORMAT[1],
+		string.format(_SAVE_LISTDB_DATA_FORMAT[2], mysql.quote_sql_str(modname)),
+		data_ptr, sz, quotedsz
+	)
+
+	if isOk and res[ErrorStr] and res.affected_rows == 1 then
+		if isdel_cache then
+			-- 删除缓存里面的
+			DBCACHE.DelCacheMod(modname)
+		else
+			DBCACHE.SetSaveCacheMod(modname, true)
+		end
+		DBCACHE.RefresModMd5(modname, nmd5)
+		LOG.LOG_EVENT(DATABASE_FILE, "module", modname, sz, quotedsz)
+		return true
+	end
+
+	local msg = string.format("_cs_mod_setdata error, mod:%s, sz:%s res:%s", modname, sz, dump(res))
+	LOG.LOG_EVENT(DATABASE_FILE, msg, skynet.tostring(data_ptr, sz))
+	LOG._ERROR_A_ALARM(msg)
+	error(msg)
+end
+
+local function _cs_mod_cache(modname, data_ptr, sz, quotedsz, isimm)
+	DBCACHE.DelCacheMod(modname)
+	DBCACHE.AddCacheMod(modname, data_ptr, sz, quotedsz)
+	if isimm then	-- 立即存盘
+		_cs_mod_setdata(modname)
+	end
+end
+
+function ACCEPT.mod_setdata_ptrq(modname, data_ptr, sz, quotedsz, isimm)
+	if _GetDbInvalid() then
+		return
+	end
+	local cs = _GetQueueByMod(modname)
+	local nowIndex = _GetReqIndex()
+
+	ReqTbl[nowIndex] = true
+	TryCall(cs, _cs_mod_cache, modname, data_ptr, sz, quotedsz, isimm)
+	ReqTbl[nowIndex] = nil
+end
+
+local function _cs_mod_getdata(modname)
+	local data_ptr, sz = DBCACHE.GetCacheMod(modname)	-- 缓存里面有
+	if data_ptr and sz then
+		local data = skynet.tostring(data_ptr, sz)
+		return data
+	end
+	local quote_modname = mysql.quote_sql_str(modname)
+	local reqstr = string.format(
+		"select data from module where mod_name = %s",
+		quote_modname
+	)
+	local res = DBObj:query(reqstr)
+	if not res[ErrorStr] and res[1] and res[1].data then
+		return res[1].data
+	end
+end
+
+function RESPONSE.mod_getdata(modname)
+	if _GetDbInvalid then
+		return
+	end
+	local cs = _GetQueueByMod(modname)
+	local nowIndex = _GetReqIndex()
+
+	ReqTbl[nowIndex] = true
+	local isOk, data = pcall(cs, _cs_mod_getdata, modname)
+	ReqTbl[nowIndex] = nil
+	if isOk and data then
+		return true, data
+	else
+		local msg = string.format("mod_getdata error, modname:%s errmsg:%s", modname, data)
+		LOG.LOG_EVENT(DATABASE_ERRFILE, msg)
+		LOG._ERROR_A_ALARM(msg)
+	end
+	return false
+end
+
 function RESPONSE.closedb()				-- 关闭前先去除查询那些，后面的都返回false
 	if _GetDbInvalid() then				-- 已经设置停服
 		return
