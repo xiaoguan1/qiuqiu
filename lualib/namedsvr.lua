@@ -9,7 +9,7 @@ EVERY_NODE_SERVER = {
 	{service = "stimer", named = ".STIMER"},		-- 定时器服务
 	{service = "loadxls", named = ".LOADXLS"},		-- 公共配置表服务
 	{service = "database", named = ".DATABASE"},	-- 数据库服务
-	{service = "dpclusterd", name = "DPCLUSTERD"}, 	-- 集群服务
+	{service = "dpclusterd", named = "DPCLUSTERD"}, 	-- 集群服务
 }
 
 -- 节点启动详情
