@@ -9,7 +9,7 @@ local is_crossserver = skynet.getenv("is_cross") == "true" and true or false
 assert(not is_crossserver, "cross service can not load rpc")
 local is_testserver = skynet.getenv("is_testserver")
 
-local PROXYSVR = Import("base/proxysvr.lua")
+local PROXYSVR = Import("lualib/base/proxysvr.lua")
 local assert = assert
 local os_time = os.time
 local coroutine = coroutine
