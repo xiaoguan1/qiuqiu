@@ -43,11 +43,7 @@ local function _GetGameNodeInfoByDatabase(db)
 	local gres = db:query(gsql)
 	if not gres["badresult"] then
 		local dbData = gres[1]
-		local node = skynet.getenv("node")
-		if not node then
-			return false, "skynet get fenv not has`t node"
-		end
-		node = node .. "_node"
+		node = SNODE .. "_node"
 		local node_ipport = dbData[node .. "_ip"] .. ":" .. dbData[node .. "_port"]
 		if not node_ipport then
 			return false, string.format("database has`t node:%s", node)
