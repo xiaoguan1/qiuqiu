@@ -9,13 +9,64 @@ local localhost = DPCLUSTER_NODE.self
 local string = string
 
 ALL_CLUSTER_ADDRESS = false		-- 集群的网络地址
+RELOAD_CFG = false				-- cluster加载配置
 CONNECTING = {}					-- 正在连接的对端
 
-skynet.register_protocol({
-	name = "rpc",
-	id = skynet.PTYPE_RPC,
-})
+-- 内部方法 --------------------
+local function _Reload()
+	-- 加载全部网络地址
+	RELOAD_CFG = {__nowaiting = true}
+	ALL_CLUSTER_ADDRESS = {}
+	for nodeName, address in pairs(DPCLUSTER_NODE) do
+		if address ~= localhost then
+			if type(address) == "table" then
+				for _, _address in pairs(address) do
+					local host, port = string.match(_address, "([^:]+):(.*)$")
+					if not host or not port then
+						error(string.format("%s network address error", address))
+					end
 
+					if not ALL_CLUSTER_ADDRESS[_address] then
+						ALL_CLUSTER_ADDRESS[_address] = _address
+						RELOAD_CFG[_address] = _address
+					end
+				end
+			else
+				local host, port = string.match(address, "([^:]+):(.*)$")
+				if not host or not port then
+					error(string.format("%s network address error", address))
+				end
+
+				if not ALL_CLUSTER_ADDRESS[address] then
+					ALL_CLUSTER_ADDRESS[address] = address
+					RELOAD_CFG[address] = address
+				end
+			end
+		end
+	end
+	cluster.reload(RELOAD_CFG)
+end
+
+local function _NodeCluster()
+	assert(ALL_CLUSTER_ADDRESS)
+	-- 节点集群
+	if node_type == GAME_NODE_TYPE then
+		-- 游戏服节点（主动连接普通跨服）
+		for nodeName, address in pairs(ALL_CLUSTER_ADDRESS) do
+			local dp = cluster.query(address, "dpclusterd")
+			CONNECTING[address] = dp
+		end
+	elseif node_type == CROSS_NODE_TYPE then -- 跨服
+		-- 普通跨服节点（开启网络监听，等待游戏服进行连接）
+		cluster.open(localhost)
+	else
+		error("dpcluster deal cluster, but node type error!")
+	end
+end
+
+-- 内部方法 --------------------
+
+-- 命令方法 --------------------
 CMD = {}
 function CMD.req_heartbeat()
 end
@@ -41,65 +92,16 @@ function CMD.interrupt(...)
 	local node = ...
 	CONNECTING[node] = nil
 end
+-- 命令方法 --------------------
 
+skynet.register_protocol({
+	name = "rpc",
+	id = skynet.PTYPE_RPC,
+})
 skynet.start(function ()
-	-- 收集全部网络地址
-	local ALL_CLUSTER_ADDRESS = {__nowaiting = true}
-	for nodeName, address in pairs(DPCLUSTER_NODE) do
-		if type(address) == "table" then
-			for _, _address in pairs(address) do
-				local host, port = string.match(_address, "([^:]+):(.*)$")
-				if not host or not port then
-					error(string.format("%s network address error", address))
-				end
-
-				if not ALL_CLUSTER_ADDRESS[_address] then
-					ALL_CLUSTER_ADDRESS[_address] = _address
-				end
-			end
-		else
-			local host, port = string.match(address, "([^:]+):(.*)$")
-			if not host or not port then
-				error(string.format("%s network address error", address))
-			end
-
-			if not ALL_CLUSTER_ADDRESS[address] then
-				ALL_CLUSTER_ADDRESS[address] = address
-			end
-		end
-	end
-	cluster.reload(ALL_CLUSTER_ADDRESS)	-- 后续 cluster.reload 要支持热更！
 	cluster.register("dpclusterd", skynet.self())
-
-	if node_type == "game_node" then
-		-- 游戏服节点（主动连接普通跨服）
-		for nodeName, address in pairs(DPCLUSTER_NODE) do
-			if string.endswith(nodeName, "_node") and address ~= localhost then
-				if type(address) == "table" then
-					for serverId, _address in pairs(address) do
-						if not CONNECTING[address] then
-							local dp = cluster.query(_address, "dpclusterd")
-							CONNECTING[address] = dp
-						end
-					end
-				else
-					if not CONNECTING[address] then
-						local dp = cluster.query(address, "dpclusterd")
-						CONNECTING[address] = dp
-						cluster.send(address, address, "aaaaaaa")
-					end
-				end
-			end
-		end
-
-		-- cluster.query()
-	elseif node_type == "cross_node" then
-		-- 普通跨服节点（开启网络监听，等待游戏服进行连接）
-		cluster.open(localhost)
-	else
-		error("dpcluster deal cluster, but node type error!")
-	end
-
+	_Reload()
+	_NodeCluster()
 
 	skynet.dispatch("lua", function (session, source, cmd, ...)
 		local f = cmd and CMD[cmd]
