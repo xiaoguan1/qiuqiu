@@ -7,6 +7,10 @@ local channel
 local session = 1
 local node, nodename, init_host, init_port = ...
 
+local dpclusterd_named = EVERY_NODE_SERVER and EVERY_NODE_SERVER["dpclusterd"] and EVERY_NODE_SERVER["dpclusterd"].named
+assert(dpclusterd_named)
+local pcall = pcall
+
 local command = {}
 
 local function send_request(addr, msg, sz)
@@ -64,9 +68,17 @@ function command.changenode(host, port)
 		channel:close()
 	else
 		channel:changehost(host, tonumber(port))
-		channel:connect(true)
+		channel:connect(true, skynet.self())
 	end
 	skynet.ret(skynet.pack(nil))
+end
+
+function command.interrupt()
+	command.changenode()
+	local named = skynet.localname(dpclusterd_named)
+	if named then
+		pcall(skynet.send, named, "lua", "interrupt", node)
+	end
 end
 
 skynet.start(function()

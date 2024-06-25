@@ -53,6 +53,11 @@ local function close_channel_socket(self)
 		-- never raise error
 		pcall(socket.close,so[1])
 	end
+	if self.__service then	-- create by guanguowei
+		-- 网络突然中断，向上层服务发送消息事件
+		pcall(skynet.send, self.__service, "lua", "interrupt")
+		self.__service = nil
+	end
 end
 
 local function wakeup_all(self, errmsg)
@@ -447,8 +452,9 @@ local function block_connect(self, once)
 	end
 end
 
-function channel:connect(once)
+function channel:connect(once, service)
 	self.__closed = false
+	self.__service = service	-- create by guanguowei
 	return block_connect(self, once)
 end
 
@@ -521,6 +527,7 @@ end
 
 function channel:close()
 	if not self.__closed then
+		self.__service = nil	-- 因为主动关闭close所以先设置为nil，避免触发中断事件(既向__service服务发送interrupt消息)
 		term_dispatch_thread(self)
 		self.__closed = true
 		close_channel_socket(self)
@@ -558,3 +565,9 @@ channel_socket.read = wrapper_socket_function(socket.read)
 channel_socket.readline = wrapper_socket_function(socket.readline)
 
 return socket_channel
+
+
+
+-- 二次改造开发日记
+-- 	1. 因为clustersender服务的socketchannel对象的socket中断时无任何向上反馈，故特地增加了__service字段
+--	   当socket中断时，向__service服务发送关闭消息
