@@ -9,7 +9,7 @@ EVERY_NODE_SERVER = {
 	{service = "stimer", named = ".STIMER"},		-- 定时器服务
 	{service = "loadxls", named = ".LOADXLS"},		-- 公共配置表服务
 	{service = "database", named = ".DATABASE"},	-- 数据库服务
-	{service = "dpclusterd", named = ".DPCLUSTERD"}, 	-- 集群服务
+	{service = "dpclusterd", named = ".DPCLUSTERD", cluster_named = "dpclusterd"}, 	-- 集群服务
 }
 
 -- 节点启动详情
@@ -81,7 +81,7 @@ for index, serverInfo in ipairs(EVERY_NODE_SERVER) do
 		error(string.format("EVERY_NODE_SERVER _index:%s service:%s named:%s config error",
 			index, serverInfo.service, serverInfo.named))
 	end
-	EVERY_NODE_SERVER[serverInfo.service] = {index = index, named = serverInfo.named}
+	EVERY_NODE_SERVER[serverInfo.service] = {index = index, named = serverInfo.named, cluster_named = serverInfo.cluster_named}
 end
 
 -- 检查 NODE_SERVER_INFO 配置

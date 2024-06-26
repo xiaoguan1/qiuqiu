@@ -6,9 +6,13 @@ local cluster = require "skynet.cluster.core"
 local channel
 local session = 1
 local node, nodename, init_host, init_port = ...
+local LOOP_TIME = 1000	-- 时间轮训的刻度为10秒
+local string = string
+local pack = skynet.pack
+local unpack = skynet.unpack
 
-local dpclusterd_named = EVERY_NODE_SERVER and EVERY_NODE_SERVER["dpclusterd"] and EVERY_NODE_SERVER["dpclusterd"].named
-assert(dpclusterd_named)
+local dpclusterd_cfg = EVERY_NODE_SERVER and EVERY_NODE_SERVER.dpclusterd
+assert(dpclusterd_cfg)
 local pcall = pcall
 
 local command = {}
@@ -70,14 +74,41 @@ function command.changenode(host, port)
 		channel:changehost(host, tonumber(port))
 		channel:connect(true, skynet.self())
 	end
-	skynet.ret(skynet.pack(nil))
+	skynet.ret(pack(nil))
 end
 
 function command.interrupt()
-	command.changenode()
-	local named = skynet.localname(dpclusterd_named)
+	skynet.error(string.format("interrupt cluster sender %s:%d", channel.__host, channel.__port))
+	channel:close()
+	channel.__interrupt = true
+	local named = skynet.localname(dpclusterd_cfg.named)
 	if named then
 		pcall(skynet.send, named, "lua", "interrupt", node)
+	end
+end
+
+-- create by guanguowei
+function loop()
+	while true do
+		skynet.sleep(LOOP_TIME)
+
+		if (channel.__interrupt and channel.__host and channel.__port)	-- 中途断线
+		or (channel.__service and channel.__host and channel.__port and not channel.__sock) -- 服务启动时就已经连接失败
+		then
+			local isOk, result = pcall(channel.connect, channel, true, skynet.self())
+			if isOk and result then
+				local isOk, msg = pcall(send_request, 0, pack(dpclusterd_cfg.cluster_named))
+				local named = skynet.localname(dpclusterd_cfg.named)
+				if isOk and named then
+					-- 重连成功且获取对面节点的dpclusterd服务地址才算成功.
+					skynet.send(named, "lua", "reconnection", node, unpack(msg))
+					channel.__interrupt = nil
+					skynet.error(string.format("Reconnection nodeName:%s success", node))
+				else
+					skynet.error(msg)
+				end
+			end
+		end
 	end
 end
 
@@ -92,4 +123,5 @@ skynet.start(function()
 		local f = assert(command[cmd])
 		f(...)
 	end)
+	skynet.fork(loop)
 end)

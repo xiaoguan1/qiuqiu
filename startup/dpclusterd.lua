@@ -7,10 +7,12 @@ local DPCLUSTER_NODE = DPCLUSTER_NODE
 assert(DPCLUSTER_NODE and DPCLUSTER_NODE.self)
 local localhost = DPCLUSTER_NODE.self
 local string = string
+local clusterName = EVERY_NODE_SERVER and EVERY_NODE_SERVER.dpclusterd and EVERY_NODE_SERVER.dpclusterd.cluster_named
+assert(clusterName)
 
 ALL_CLUSTER_ADDRESS = false		-- 集群的网络地址
 RELOAD_CFG = false				-- cluster加载配置
-CONNECTING = {}					-- 正在连接的对端
+CONNECTED = {}					-- 已连接的对端
 
 -- 内部方法 --------------------
 local function _Reload()
@@ -18,30 +20,27 @@ local function _Reload()
 	RELOAD_CFG = {__nowaiting = true}
 	ALL_CLUSTER_ADDRESS = {}
 	for nodeName, address in pairs(DPCLUSTER_NODE) do
-		if address ~= localhost then
-			if type(address) == "table" then
-				for _, _address in pairs(address) do
-					local host, port = string.match(_address, "([^:]+):(.*)$")
-					if not host or not port then
-						error(string.format("%s network address error", address))
-					end
-
-					if not ALL_CLUSTER_ADDRESS[_address] then
-						ALL_CLUSTER_ADDRESS[_address] = _address
-						RELOAD_CFG[_address] = _address
-					end
-				end
-			else
-				local host, port = string.match(address, "([^:]+):(.*)$")
+		if type(address) == "table" then
+			for _, _address in pairs(address) do
+				local host, port = string.match(_address, "([^:]+):(.*)$")
 				if not host or not port then
 					error(string.format("%s network address error", address))
 				end
 
-				if not ALL_CLUSTER_ADDRESS[address] then
-					ALL_CLUSTER_ADDRESS[address] = address
-					RELOAD_CFG[address] = address
+				if _address ~= localhost then
+					ALL_CLUSTER_ADDRESS[_address] = _address
 				end
+				RELOAD_CFG[_address] = _address
 			end
+		else
+			local host, port = string.match(address, "([^:]+):(.*)$")
+			if not host or not port then
+				error(string.format("%s network address error", address))
+			end
+			if address ~= localhost then
+				ALL_CLUSTER_ADDRESS[address] = address
+			end
+			RELOAD_CFG[address] = address
 		end
 	end
 	cluster.reload(RELOAD_CFG)
@@ -53,8 +52,10 @@ local function _NodeCluster()
 	if node_type == GAME_NODE_TYPE then
 		-- 游戏服节点（主动连接普通跨服）
 		for nodeName, address in pairs(ALL_CLUSTER_ADDRESS) do
-			local dp = cluster.query(address, "dpclusterd")
-			CONNECTING[address] = dp
+			local isOk, dp = TryCall(cluster.query, address, "dpclusterd")
+			if isOk and dp then
+				CONNECTED[address] = dp
+			end
 		end
 	elseif node_type == CROSS_NODE_TYPE then -- 跨服
 		-- 普通跨服节点（开启网络监听，等待游戏服进行连接）
@@ -89,17 +90,30 @@ end
 
 -- 网络中断
 function CMD.interrupt(...)
-	local node = ...
-	CONNECTING[node] = nil
+	local address = ...
+	CONNECTED[address] = nil
+end
+
+-- 网络重连成功
+function CMD.reconnection(...)
+	local address, dp = ...
+	if not address or not dp then
+		_ERROR_F("%s CMD.reconnection address:%s dp:%s error!", SERVICE_NAME, address, dp)
+		return
+	end
+	CONNECTED[address] = dp
+	_INFO_F("%s CMD.reconnection address:%s dp:%s success!", SERVICE_NAME, address, dp)
 end
 -- 命令方法 --------------------
+
 
 skynet.register_protocol({
 	name = "rpc",
 	id = skynet.PTYPE_RPC,
 })
+
 skynet.start(function ()
-	cluster.register("dpclusterd", skynet.self())
+	cluster.register(clusterName, skynet.self())
 	_Reload()
 	_NodeCluster()
 
@@ -114,4 +128,5 @@ skynet.start(function ()
 			skynet.response(f(...))
 		end
 	end)
+
 end)
