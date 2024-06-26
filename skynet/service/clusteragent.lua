@@ -4,7 +4,7 @@ local socket = require "skynet.socket"
 local cluster = require "skynet.cluster.core"
 local ignoreret = skynet.ignoreret
 
-local clusterd, gate, fd = ...
+local clusterd, gate, fd, nodename = ...
 clusterd = tonumber(clusterd)
 gate = tonumber(gate)
 fd = tonumber(fd)

@@ -88,6 +88,8 @@ end
 function CMD.closeall()
 end
 
+if node_type == GAME_NODE_TYPE then
+
 -- 网络中断
 function CMD.interrupt(...)
 	local address = ...
@@ -103,6 +105,8 @@ function CMD.reconnection(...)
 	end
 	CONNECTED[address] = dp
 	_INFO_F("%s CMD.reconnection address:%s dp:%s success!", SERVICE_NAME, address, dp)
+end
+
 end
 -- 命令方法 --------------------
 

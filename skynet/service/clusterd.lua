@@ -235,7 +235,7 @@ function command.socket(source, subcmd, fd, msg)
 		skynet.error(string.format("socket accept from %s", msg))
 		-- new cluster agent
 		cluster_agent[fd] = false
-		local agent = skynet.newservice("clusteragent", skynet.self(), source, fd)
+		local agent = skynet.newservice("clusteragent", skynet.self(), source, fd, msg)
 		local closed = cluster_agent[fd]
 		cluster_agent[fd] = agent
 		if closed then
