@@ -56,7 +56,6 @@ function command.push(addr, msg, sz)
 	if padding then	-- is multi push
 		session = new_session
 	end
-
 	channel:request(request, nil, padding)
 end
 
@@ -72,7 +71,9 @@ function command.changenode(host, port)
 		channel:close()
 	else
 		channel:changehost(host, tonumber(port))
-		channel:connect(true, skynet.self())
+		if channel:connect(true) then
+			channel:service(skynet.self())
+		end
 	end
 	skynet.ret(pack(nil))
 end
@@ -88,15 +89,15 @@ function command.interrupt()
 end
 
 -- create by guanguowei
-function loop()
+function Loop()
 	while true do
 		skynet.sleep(LOOP_TIME)
 
 		if (channel.__interrupt and channel.__host and channel.__port)	-- 中途断线
-		or (channel.__service and channel.__host and channel.__port and not channel.__sock) -- 服务启动时就已经连接失败
+			or (channel.__service and channel.__host and channel.__port and not channel.__sock) -- 服务启动时就已经连接失败
 		then
-			local isOk, result = pcall(channel.connect, channel, true, skynet.self())
-			if isOk and result then
+			if channel:connect(true) then
+				channel:service(skynet.self())
 				local isOk, msg = pcall(send_request, 0, pack(dpclusterd_cfg.cluster_named))
 				local named = skynet.localname(dpclusterd_cfg.named)
 				if isOk and named then
@@ -123,5 +124,5 @@ skynet.start(function()
 		local f = assert(command[cmd])
 		f(...)
 	end)
-	skynet.fork(loop)
+	skynet.fork(Loop)
 end)
