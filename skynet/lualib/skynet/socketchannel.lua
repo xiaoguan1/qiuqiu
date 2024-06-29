@@ -466,10 +466,13 @@ local function block_connect(self, once)
 	end
 end
 
-function channel:connect(once, service)
+function channel:connect(once)
 	self.__closed = false
-	self.__service = service	-- create by guanguowei
 	return block_connect(self, once)
+end
+
+function channel:service(service)
+	self.__service = service	-- create by guanguowei
 end
 
 local function wait_for_response(self, response)
