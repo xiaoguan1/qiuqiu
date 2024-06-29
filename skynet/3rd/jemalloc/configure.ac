@@ -510,23 +510,6 @@ typedef unsigned __int32 uint32_t;
       else
         AC_MSG_ERROR([cannot determine number of significant virtual address bits])
       fi
-      AC_CACHE_CHECK([rdtscp support],
-		     [je_cv_rdtscp],
-		     AC_RUN_IFELSE([AC_LANG_PROGRAM(
-[[
-#include <stdint.h>
-]],
-[[
-      unsigned int dx;
-      asm volatile("rdtscp" : "=d"(dx) ::);
-      return 0;
-]])],
-      [je_cv_rdtscp=yes],
-      [je_cv_rdstcp=no],
-      [je_cv_rdtscp=no]))
-      if test "x${je_cv_rdtscp}" = "xyes"; then
-        AC_DEFINE([HAVE_RDTSCP], 1, [])
-      fi
     fi
     ;;
   *)
@@ -671,9 +654,6 @@ case "${host}" in
 	SOREV="${rev}.${so}"
 	sbrk_deprecated="1"
 	SYM_PREFIX="_"
-	if test "${LG_SIZEOF_PTR}" = "3"; then
-	  default_retain="1"
-	fi
 	;;
   *-*-freebsd*)
 	JE_APPEND_VS(CPPFLAGS, -D_BSD_SOURCE)
@@ -1084,9 +1064,6 @@ AC_CHECK_FUNC([memalign],
 AC_CHECK_FUNC([valloc],
 	      [AC_DEFINE([JEMALLOC_OVERRIDE_VALLOC], [ ], [ ])
 	       public_syms="${public_syms} valloc"])
-AC_CHECK_FUNC([pvalloc],
-	      [AC_DEFINE([JEMALLOC_OVERRIDE_PVALLOC], [ ], [ ])
-	       public_syms="${public_syms} pvalloc"])
 AC_CHECK_FUNC([malloc_size],
 	      [AC_DEFINE([JEMALLOC_HAVE_MALLOC_SIZE], [ ], [ ])
 	       public_syms="${public_syms} malloc_size"])
@@ -1112,9 +1089,6 @@ if test "x${JEMALLOC_PREFIX}" = "x" ; then
   AC_CHECK_FUNC([__libc_valloc],
 		[AC_DEFINE([JEMALLOC_OVERRIDE___LIBC_VALLOC], [ ], [ ])
 		 wrap_syms="${wrap_syms} __libc_valloc"])
-  AC_CHECK_FUNC([__libc_pvalloc],
-		[AC_DEFINE([JEMALLOC_OVERRIDE___LIBC_PVALLOC], [ ], [ ])
-		 wrap_syms="${wrap_syms} __libc_pvalloc"])
   AC_CHECK_FUNC([__posix_memalign],
 		[AC_DEFINE([JEMALLOC_OVERRIDE___POSIX_MEMALIGN], [ ], [ ])
 		 wrap_syms="${wrap_syms} __posix_memalign"])
@@ -2024,15 +1998,6 @@ if test "x$have_sched_setaffinity" = "x1" ; then
   AC_DEFINE([JEMALLOC_HAVE_SCHED_SETAFFINITY], [ ], [ ])
 fi
 
-dnl Check if the pthread_setaffinity_np function exists.
-AC_CHECK_FUNC([pthread_setaffinity_np],
-              [have_pthread_setaffinity_np="1"],
-              [have_pthread_setaffinity_np="0"]
-             )
-if test "x$have_pthread_setaffinity_np" = "x1" ; then
-  AC_DEFINE([JEMALLOC_HAVE_PTHREAD_SETAFFINITY_NP], [ ], [ ])
-fi
-
 dnl Check if the Solaris/BSD issetugid function exists.
 AC_CHECK_FUNC([issetugid],
               [have_issetugid="1"],
@@ -2074,14 +2039,6 @@ AC_CHECK_FUNC([memcntl],
 	      )
 if test "x$have_memcntl" = "x1" ; then
   AC_DEFINE([JEMALLOC_HAVE_MEMCNTL], [ ], [ ])
-fi
-
-AC_CHECK_FUNC([prctl],
-	      [have_prctl="1"],
-	      [have_prctl="0"],
-	      )
-if test "x$have_prctl" = "x1" ; then
-  AC_DEFINE([JEMALLOC_HAVE_PRCTL], [ ], [ ])
 fi
 
 dnl Disable lazy locking by default.
@@ -2452,22 +2409,6 @@ else
   AC_DEFINE([JEMALLOC_TLS_MODEL], [ ], [ ])
 fi
 
-dnl Do not compile with debugging by default.
-AC_ARG_ENABLE([pageid],
-  [AS_HELP_STRING([--enable-pageid],
-                  [Enable named pages])],
-[if test "x$enable_pageid" = "xno" ; then
-  enable_pageid="0"
-else
-  enable_pageid="1"
-fi
-],
-[enable_pageid="0"]
-)
-if test "x$enable_pageid" = "x1" ; then
-  AC_DEFINE([JEMALLOC_PAGEID], [ ], [ ])
-fi
-
 dnl ============================================================================
 dnl Enable background threads if possible.
 
@@ -2724,6 +2665,5 @@ AC_MSG_RESULT([xmalloc            : ${enable_xmalloc}])
 AC_MSG_RESULT([log                : ${enable_log}])
 AC_MSG_RESULT([lazy_lock          : ${enable_lazy_lock}])
 AC_MSG_RESULT([cache-oblivious    : ${enable_cache_oblivious}])
-AC_MSG_RESULT([pageid             : ${enable_pageid}])
 AC_MSG_RESULT([cxx                : ${enable_cxx}])
 AC_MSG_RESULT([===============================================================================])

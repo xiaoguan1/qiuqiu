@@ -9,7 +9,7 @@ vpath % .
 SHELL := /bin/sh
 
 CC := gcc
-CXX := g++
+CXX := g++ -std=c++17
 
 # Configuration parameters.
 DESTDIR =
@@ -20,22 +20,22 @@ DATADIR := $(DESTDIR)/usr/local/share
 MANDIR := $(DESTDIR)/usr/local/share/man
 srcroot := 
 objroot := 
-abs_srcroot := /home/game/qiuqiu/skynet/3rd/jemalloc/
-abs_objroot := /home/game/qiuqiu/skynet/3rd/jemalloc/
+abs_srcroot := /home/game/ShareDemo/skynet/3rd/jemalloc/
+abs_objroot := /home/game/ShareDemo/skynet/3rd/jemalloc/
 
 # Build parameters.
 CPPFLAGS := -D_GNU_SOURCE -D_REENTRANT -I$(objroot)include -I$(srcroot)include
-CONFIGURE_CFLAGS := -std=gnu11 -Wall -Wextra -Wsign-compare -Wundef -Wno-format-zero-length -Wpointer-arith -Wno-missing-braces -Wno-missing-field-initializers -Wno-missing-attributes -pipe -g3 -fvisibility=hidden -O3 -funroll-loops
+CONFIGURE_CFLAGS := -std=gnu11 -Wall -Wextra -Wsign-compare -Wundef -Wno-format-zero-length -Wpointer-arith -Wno-missing-braces -Wno-missing-field-initializers -Wno-missing-attributes -pipe -g3 -fvisibility=hidden -Wimplicit-fallthrough -O3 -funroll-loops
 SPECIFIED_CFLAGS := 
 EXTRA_CFLAGS := 
 CFLAGS := $(strip $(CONFIGURE_CFLAGS) $(SPECIFIED_CFLAGS) $(EXTRA_CFLAGS))
-CONFIGURE_CXXFLAGS := -fvisibility=hidden -O3
+CONFIGURE_CXXFLAGS := -Wall -Wextra -g3 -fvisibility=hidden -Wimplicit-fallthrough -O3
 SPECIFIED_CXXFLAGS := 
 EXTRA_CXXFLAGS := 
 CXXFLAGS := $(strip $(CONFIGURE_CXXFLAGS) $(SPECIFIED_CXXFLAGS) $(EXTRA_CXXFLAGS))
 LDFLAGS := 
 EXTRA_LDFLAGS := 
-LIBS := -lm  -lgcc -lm -pthread -ldl
+LIBS := -lm -lstdc++ -lgcc -lm -pthread -ldl
 RPATH_EXTRA := 
 SO := so
 IMPORTLIB := so
@@ -314,7 +314,7 @@ ifeq (0, 1)
 TESTS_INTEGRATION += \
   $(srcroot)test/integration/smallocx.c
 endif
-ifeq (0, 1)
+ifeq (1, 1)
 CPP_SRCS := $(srcroot)src/jemalloc_cpp.cpp
 TESTS_INTEGRATION_CPP := $(srcroot)test/integration/cpp/basic.cpp \
 	$(srcroot)test/integration/cpp/infallible_new_true.cpp \
@@ -458,8 +458,6 @@ $(TESTS_OBJS): $(objroot)test/%.$(O): $(srcroot)test/%.c
 $(TESTS_CPP_OBJS): $(objroot)test/%.$(O): $(srcroot)test/%.cpp
 $(TESTS_OBJS): CPPFLAGS += -I$(srcroot)test/include -I$(objroot)test/include
 $(TESTS_CPP_OBJS): CPPFLAGS += -I$(srcroot)test/include -I$(objroot)test/include
-$(TESTS_OBJS): CFLAGS += -fno-builtin
-$(TESTS_CPP_OBJS): CPPFLAGS += -fno-builtin
 ifneq ($(IMPORTLIB),$(SO))
 $(CPP_OBJS) $(C_SYM_OBJS) $(C_OBJS) $(C_JET_SYM_OBJS) $(C_JET_OBJS): CPPFLAGS += -DDLLEXPORT
 endif
@@ -557,20 +555,18 @@ endif
 install_bin:
 	$(INSTALL) -d $(BINDIR)
 	@for b in $(BINS); do \
-	echo "$(INSTALL) -m 755 $$b $(BINDIR)"; \
-	$(INSTALL) -m 755 $$b $(BINDIR); \
+	$(INSTALL) -v -m 755 $$b $(BINDIR); \
 done
 
 install_include:
 	$(INSTALL) -d $(INCLUDEDIR)/jemalloc
 	@for h in $(C_HDRS); do \
-	echo "$(INSTALL) -m 644 $$h $(INCLUDEDIR)/jemalloc"; \
-	$(INSTALL) -m 644 $$h $(INCLUDEDIR)/jemalloc; \
+	$(INSTALL) -v -m 644 $$h $(INCLUDEDIR)/jemalloc; \
 done
 
 install_lib_shared: $(DSOS)
 	$(INSTALL) -d $(LIBDIR)
-	$(INSTALL) -m 755 $(objroot)lib/$(LIBJEMALLOC).$(SOREV) $(LIBDIR)
+	$(INSTALL) -v -m 755 $(objroot)lib/$(LIBJEMALLOC).$(SOREV) $(LIBDIR)
 ifneq ($(SOREV),$(SO))
 	ln -sf $(LIBJEMALLOC).$(SOREV) $(LIBDIR)/$(LIBJEMALLOC).$(SO)
 endif
@@ -578,15 +574,13 @@ endif
 install_lib_static: $(STATIC_LIBS)
 	$(INSTALL) -d $(LIBDIR)
 	@for l in $(STATIC_LIBS); do \
-	echo "$(INSTALL) -m 755 $$l $(LIBDIR)"; \
-	$(INSTALL) -m 755 $$l $(LIBDIR); \
+	$(INSTALL) -v -m 755 $$l $(LIBDIR); \
 done
 
 install_lib_pc: $(PC)
 	$(INSTALL) -d $(LIBDIR)/pkgconfig
 	@for l in $(PC); do \
-	echo "$(INSTALL) -m 644 $$l $(LIBDIR)/pkgconfig"; \
-	$(INSTALL) -m 644 $$l $(LIBDIR)/pkgconfig; \
+	$(INSTALL) -v -m 644 $$l $(LIBDIR)/pkgconfig; \
 done
 
 ifeq ($(enable_shared), 1)
@@ -600,15 +594,13 @@ install_lib: install_lib_pc
 install_doc_html: build_doc_html
 	$(INSTALL) -d $(DATADIR)/doc/jemalloc$(install_suffix)
 	@for d in $(DOCS_HTML); do \
-	echo "$(INSTALL) -m 644 $$d $(DATADIR)/doc/jemalloc$(install_suffix)"; \
-	$(INSTALL) -m 644 $$d $(DATADIR)/doc/jemalloc$(install_suffix); \
+	$(INSTALL) -v -m 644 $$d $(DATADIR)/doc/jemalloc$(install_suffix); \
 done
 
 install_doc_man: build_doc_man
 	$(INSTALL) -d $(MANDIR)/man3
 	@for d in $(DOCS_MAN3); do \
-	echo "$(INSTALL) -m 644 $$d $(MANDIR)/man3"; \
-	$(INSTALL) -m 644 $$d $(MANDIR)/man3; \
+	$(INSTALL) -v -m 644 $$d $(MANDIR)/man3; \
 done
 
 install_doc: install_doc_html install_doc_man

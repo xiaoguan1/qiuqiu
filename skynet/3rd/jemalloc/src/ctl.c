@@ -92,7 +92,6 @@ CTL_PROTO(config_xmalloc)
 CTL_PROTO(opt_abort)
 CTL_PROTO(opt_abort_conf)
 CTL_PROTO(opt_cache_oblivious)
-CTL_PROTO(opt_debug_double_free_max_scan)
 CTL_PROTO(opt_trust_madvise)
 CTL_PROTO(opt_confirm_conf)
 CTL_PROTO(opt_hpa)
@@ -142,7 +141,6 @@ CTL_PROTO(opt_prof)
 CTL_PROTO(opt_prof_prefix)
 CTL_PROTO(opt_prof_active)
 CTL_PROTO(opt_prof_thread_active_init)
-CTL_PROTO(opt_prof_bt_max)
 CTL_PROTO(opt_lg_prof_sample)
 CTL_PROTO(opt_lg_prof_interval)
 CTL_PROTO(opt_prof_gdump)
@@ -170,7 +168,6 @@ CTL_PROTO(arena_i_dirty_decay_ms)
 CTL_PROTO(arena_i_muzzy_decay_ms)
 CTL_PROTO(arena_i_extent_hooks)
 CTL_PROTO(arena_i_retain_grow_limit)
-CTL_PROTO(arena_i_name)
 INDEX_PROTO(arena_i)
 CTL_PROTO(arenas_bin_i_size)
 CTL_PROTO(arenas_bin_i_nregs)
@@ -470,7 +467,6 @@ static const ctl_named_node_t opt_node[] = {
 	{NAME("prof_prefix"),	CTL(opt_prof_prefix)},
 	{NAME("prof_active"),	CTL(opt_prof_active)},
 	{NAME("prof_thread_active_init"), CTL(opt_prof_thread_active_init)},
-	{NAME("prof_bt_max"), CTL(opt_prof_bt_max)},
 	{NAME("lg_prof_sample"), CTL(opt_lg_prof_sample)},
 	{NAME("lg_prof_interval"), CTL(opt_lg_prof_interval)},
 	{NAME("prof_gdump"),	CTL(opt_prof_gdump)},
@@ -483,9 +479,7 @@ static const ctl_named_node_t opt_node[] = {
 	{NAME("prof_sys_thread_name"),	CTL(opt_prof_sys_thread_name)},
 	{NAME("prof_time_resolution"),	CTL(opt_prof_time_res)},
 	{NAME("lg_san_uaf_align"),	CTL(opt_lg_san_uaf_align)},
-	{NAME("zero_realloc"),	CTL(opt_zero_realloc)},
-	{NAME("debug_double_free_max_scan"),
-		CTL(opt_debug_double_free_max_scan)}
+	{NAME("zero_realloc"),	CTL(opt_zero_realloc)}
 };
 
 static const ctl_named_node_t	tcache_node[] = {
@@ -505,12 +499,11 @@ static const ctl_named_node_t arena_i_node[] = {
 	 * Undocumented for now, since we anticipate an arena API in flux after
 	 * we cut the last 5-series release.
 	 */
-	{NAME("oversize_threshold"),	CTL(arena_i_oversize_threshold)},
-	{NAME("dirty_decay_ms"),	CTL(arena_i_dirty_decay_ms)},
-	{NAME("muzzy_decay_ms"),	CTL(arena_i_muzzy_decay_ms)},
-	{NAME("extent_hooks"),		CTL(arena_i_extent_hooks)},
-	{NAME("retain_grow_limit"),	CTL(arena_i_retain_grow_limit)},
-	{NAME("name"),			CTL(arena_i_name)}
+	{NAME("oversize_threshold"), CTL(arena_i_oversize_threshold)},
+	{NAME("dirty_decay_ms"), CTL(arena_i_dirty_decay_ms)},
+	{NAME("muzzy_decay_ms"), CTL(arena_i_muzzy_decay_ms)},
+	{NAME("extent_hooks"),	CTL(arena_i_extent_hooks)},
+	{NAME("retain_grow_limit"),	CTL(arena_i_retain_grow_limit)}
 };
 static const ctl_named_node_t super_arena_i_node[] = {
 	{NAME(""),		CHILD(named, arena_i)}
@@ -2135,8 +2128,6 @@ CTL_RO_CONFIG_GEN(config_xmalloc, bool)
 CTL_RO_NL_GEN(opt_abort, opt_abort, bool)
 CTL_RO_NL_GEN(opt_abort_conf, opt_abort_conf, bool)
 CTL_RO_NL_GEN(opt_cache_oblivious, opt_cache_oblivious, bool)
-CTL_RO_NL_GEN(opt_debug_double_free_max_scan,
-    opt_debug_double_free_max_scan, unsigned)
 CTL_RO_NL_GEN(opt_trust_madvise, opt_trust_madvise, bool)
 CTL_RO_NL_GEN(opt_confirm_conf, opt_confirm_conf, bool)
 
@@ -2209,7 +2200,6 @@ CTL_RO_NL_CGEN(config_prof, opt_prof_prefix, opt_prof_prefix, const char *)
 CTL_RO_NL_CGEN(config_prof, opt_prof_active, opt_prof_active, bool)
 CTL_RO_NL_CGEN(config_prof, opt_prof_thread_active_init,
     opt_prof_thread_active_init, bool)
-CTL_RO_NL_CGEN(config_prof, opt_prof_bt_max, opt_prof_bt_max, unsigned)
 CTL_RO_NL_CGEN(config_prof, opt_lg_prof_sample, opt_lg_prof_sample, size_t)
 CTL_RO_NL_CGEN(config_prof, opt_prof_accum, opt_prof_accum, bool)
 CTL_RO_NL_CGEN(config_prof, opt_lg_prof_interval, opt_lg_prof_interval, ssize_t)
@@ -2980,61 +2970,6 @@ arena_i_retain_grow_limit_ctl(tsd_t *tsd, const size_t *mib,
 	} else {
 		ret = EFAULT;
 	}
-label_return:
-	malloc_mutex_unlock(tsd_tsdn(tsd), &ctl_mtx);
-	return ret;
-}
-
-/*
- * When writing, newp should point to a char array storing the name to be set.
- * A name longer than ARENA_NAME_LEN will be arbitrarily cut. When reading,
- * oldp should point to a char array whose length is no shorter than
- * ARENA_NAME_LEN or the length of the name when it was set.
- */
-static int
-arena_i_name_ctl(tsd_t *tsd, const size_t *mib, size_t miblen,
-    void *oldp, size_t *oldlenp, void *newp, size_t newlen) {
-	int ret;
-	unsigned arena_ind;
-	char *name;
-
-	malloc_mutex_lock(tsd_tsdn(tsd), &ctl_mtx);
-	MIB_UNSIGNED(arena_ind, 1);
-	if (arena_ind == MALLCTL_ARENAS_ALL || arena_ind >=
-	    ctl_arenas->narenas) {
-		ret = EINVAL;
-		goto label_return;
-	}
-	arena_t *arena = arena_get(tsd_tsdn(tsd), arena_ind, false);
-	if (arena == NULL) {
-		ret = EFAULT;
-		goto label_return;
-	}
-
-	if (oldp != NULL && oldlenp != NULL) {
-		/*
-		 * Read the arena name.  When reading, the input oldp should
-		 * point to an array with a length no shorter than
-		 * ARENA_NAME_LEN or the length when it was set.
-		 */
-		if (*oldlenp != sizeof(char *)) {
-			ret = EINVAL;
-			goto label_return;
-		}
-		name = *(char **)oldp;
-		arena_name_get(arena, name);
-	}
-
-	if (newp != NULL) {
-		/* Write the arena name. */
-		WRITE(name, char *);
-		if (name == NULL) {
-			ret = EINVAL;
-			goto label_return;
-		}
-		arena_name_set(arena, name);
-	}
-	ret = 0;
 label_return:
 	malloc_mutex_unlock(tsd_tsdn(tsd), &ctl_mtx);
 	return ret;

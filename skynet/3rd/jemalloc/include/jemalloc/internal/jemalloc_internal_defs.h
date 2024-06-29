@@ -19,7 +19,6 @@
 /* #undef JEMALLOC_OVERRIDE___LIBC_MEMALIGN */
 /* #undef JEMALLOC_OVERRIDE___LIBC_REALLOC */
 /* #undef JEMALLOC_OVERRIDE___LIBC_VALLOC */
-/* #undef JEMALLOC_OVERRIDE___LIBC_PVALLOC */
 /* #undef JEMALLOC_OVERRIDE___POSIX_MEMALIGN */
 
 /*
@@ -46,7 +45,7 @@
 #define LG_VADDR 48
 
 /* Defined if C11 atomics are available. */
-/* #undef JEMALLOC_C11_ATOMICS */
+#define JEMALLOC_C11_ATOMICS 
 
 /* Defined if GCC __atomic atomics are available. */
 #define JEMALLOC_GCC_ATOMIC_ATOMICS 
@@ -162,12 +161,6 @@
 
 /* Use gcc intrinsics for profile backtracing if defined. */
 /* #undef JEMALLOC_PROF_GCC */
-
-/* JEMALLOC_PAGEID enabled page id */
-/* #undef JEMALLOC_PAGEID */
-
-/* JEMALLOC_HAVE_PRCTL checks prctl */
-#define JEMALLOC_HAVE_PRCTL 
 
 /*
  * JEMALLOC_DSS enables use of sbrk(2) to allocate extents from the data storage
@@ -392,9 +385,6 @@
 /* GNU specific sched_setaffinity support */
 #define JEMALLOC_HAVE_SCHED_SETAFFINITY 
 
-/* pthread_setaffinity_np support */
-#define JEMALLOC_HAVE_PTHREAD_SETAFFINITY_NP 
-
 /*
  * If defined, all the features necessary for background threads are present.
  */
@@ -421,7 +411,7 @@
 /* #undef JEMALLOC_OPT_SAFETY_CHECKS */
 
 /* Is C++ support being built? */
-/* #undef JEMALLOC_ENABLE_CXX */
+#define JEMALLOC_ENABLE_CXX 
 
 /* Performs additional size checks when defined. */
 /* #undef JEMALLOC_OPT_SIZE_CHECKS */

@@ -4,13 +4,13 @@
 #include <limits.h>
 #include <strings.h>
 
-#define JEMALLOC_VERSION "5.3.0-28-g1897f185d2c06307fefc4d8f4512eeb13c474999"
+#define JEMALLOC_VERSION "5.3.0-0-g54eaed1d8b56b1aa528be3bdd1877e59c56fa90c"
 #define JEMALLOC_VERSION_MAJOR 5
 #define JEMALLOC_VERSION_MINOR 3
 #define JEMALLOC_VERSION_BUGFIX 0
-#define JEMALLOC_VERSION_NREV 28
-#define JEMALLOC_VERSION_GID "1897f185d2c06307fefc4d8f4512eeb13c474999"
-#define JEMALLOC_VERSION_GID_IDENT 1897f185d2c06307fefc4d8f4512eeb13c474999
+#define JEMALLOC_VERSION_NREV 0
+#define JEMALLOC_VERSION_GID "54eaed1d8b56b1aa528be3bdd1877e59c56fa90c"
+#define JEMALLOC_VERSION_GID_IDENT 54eaed1d8b56b1aa528be3bdd1877e59c56fa90c
 
 #define MALLOCX_LG_ALIGN(la)	((int)(la))
 #if LG_SIZEOF_PTR == 2
@@ -142,7 +142,7 @@
 #  define JEMALLOC_COLD
 #endif
 
-#if (defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__)) && !defined(JEMALLOC_NO_RENAME)
+#if (defined(__APPLE__) || defined(__FreeBSD__)) && !defined(JEMALLOC_NO_RENAME)
 #  define JEMALLOC_SYS_NOTHROW
 #else
 #  define JEMALLOC_SYS_NOTHROW JEMALLOC_NOTHROW

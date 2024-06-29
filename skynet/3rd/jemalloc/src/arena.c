@@ -106,20 +106,17 @@ arena_stats_merge(tsdn_t *tsdn, arena_t *arena, unsigned *nthreads,
 	astats->metadata_thp += metadata_thp;
 
 	for (szind_t i = 0; i < SC_NSIZES - SC_NBINS; i++) {
-		/* ndalloc should be read before nmalloc,
-		 * since otherwise it is possible for ndalloc to be incremented,
-		 * and the following can become true: ndalloc > nmalloc */
-		uint64_t ndalloc = locked_read_u64(tsdn,
-		    LOCKEDINT_MTX(arena->stats.mtx),
-		    &arena->stats.lstats[i].ndalloc);
-		locked_inc_u64_unsynchronized(&lstats[i].ndalloc, ndalloc);
-		astats->ndalloc_large += ndalloc;
-
 		uint64_t nmalloc = locked_read_u64(tsdn,
 		    LOCKEDINT_MTX(arena->stats.mtx),
 		    &arena->stats.lstats[i].nmalloc);
 		locked_inc_u64_unsynchronized(&lstats[i].nmalloc, nmalloc);
 		astats->nmalloc_large += nmalloc;
+
+		uint64_t ndalloc = locked_read_u64(tsdn,
+		    LOCKEDINT_MTX(arena->stats.mtx),
+		    &arena->stats.lstats[i].ndalloc);
+		locked_inc_u64_unsynchronized(&lstats[i].ndalloc, ndalloc);
+		astats->ndalloc_large += ndalloc;
 
 		uint64_t nrequests = locked_read_u64(tsdn,
 		    LOCKEDINT_MTX(arena->stats.mtx),
@@ -1547,22 +1544,6 @@ arena_dss_prec_set(arena_t *arena, dss_prec_t dss_prec) {
 	return false;
 }
 
-void
-arena_name_get(arena_t *arena, char *name) {
-	char *end = (char *)memchr((void *)arena->name, '\0', ARENA_NAME_LEN);
-	assert(end != NULL);
-	size_t len = (uintptr_t)end - (uintptr_t)arena->name + 1;
-	assert(len > 0 && len <= ARENA_NAME_LEN);
-
-	strncpy(name, arena->name, len);
-}
-
-void
-arena_name_set(arena_t *arena, const char *name) {
-	strncpy(arena->name, name, ARENA_NAME_LEN);
-	arena->name[ARENA_NAME_LEN - 1] = '\0';
-}
-
 ssize_t
 arena_dirty_decay_ms_default_get(void) {
 	return atomic_load_zd(&dirty_decay_ms_default, ATOMIC_RELAXED);
@@ -1685,11 +1666,6 @@ arena_new(tsdn_t *tsdn, unsigned ind, const arena_config_t *config) {
 	/* Set arena before creating background threads. */
 	arena_set(ind, arena);
 	arena->ind = ind;
-
-	/* Init the name. */
-	malloc_snprintf(arena->name, sizeof(arena->name), "%s_%u",
-	    arena_is_auto(arena) ? "auto" : "manual", arena->ind);
-	arena->name[ARENA_NAME_LEN - 1] = '\0';
 
 	nstime_init_update(&arena->create_time);
 

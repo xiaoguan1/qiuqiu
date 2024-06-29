@@ -20,7 +20,7 @@ extern "C" {
 #define JEMALLOC_HAVE_ATTR_FORMAT_PRINTF
 
 /* Defined if fallthrough attribute is supported. */
-/* #undef JEMALLOC_HAVE_ATTR_FALLTHROUGH */
+#define JEMALLOC_HAVE_ATTR_FALLTHROUGH
 
 /* Defined if cold attribute is supported. */
 #define JEMALLOC_HAVE_ATTR_COLD
@@ -31,7 +31,6 @@ extern "C" {
  */
 #define JEMALLOC_OVERRIDE_MEMALIGN
 #define JEMALLOC_OVERRIDE_VALLOC
-#define JEMALLOC_OVERRIDE_PVALLOC
 
 /*
  * At least Linux omits the "const" in:
@@ -80,7 +79,7 @@ extern "C" {
 #  define je_malloc_stats_print je_malloc_stats_print
 #  define je_malloc_usable_size je_malloc_usable_size
 #  define je_mallocx je_mallocx
-#  define je_smallocx_1897f185d2c06307fefc4d8f4512eeb13c474999 je_smallocx_1897f185d2c06307fefc4d8f4512eeb13c474999
+#  define je_smallocx_54eaed1d8b56b1aa528be3bdd1877e59c56fa90c je_smallocx_54eaed1d8b56b1aa528be3bdd1877e59c56fa90c
 #  define je_nallocx je_nallocx
 #  define je_posix_memalign je_posix_memalign
 #  define je_rallocx je_rallocx
@@ -90,7 +89,6 @@ extern "C" {
 #  define je_xallocx je_xallocx
 #  define je_memalign je_memalign
 #  define je_valloc je_valloc
-#  define je_pvalloc je_pvalloc
 #endif
 
 #include <stdlib.h>
@@ -99,13 +97,13 @@ extern "C" {
 #include <limits.h>
 #include <strings.h>
 
-#define JEMALLOC_VERSION "5.3.0-28-g1897f185d2c06307fefc4d8f4512eeb13c474999"
+#define JEMALLOC_VERSION "5.3.0-0-g54eaed1d8b56b1aa528be3bdd1877e59c56fa90c"
 #define JEMALLOC_VERSION_MAJOR 5
 #define JEMALLOC_VERSION_MINOR 3
 #define JEMALLOC_VERSION_BUGFIX 0
-#define JEMALLOC_VERSION_NREV 28
-#define JEMALLOC_VERSION_GID "1897f185d2c06307fefc4d8f4512eeb13c474999"
-#define JEMALLOC_VERSION_GID_IDENT 1897f185d2c06307fefc4d8f4512eeb13c474999
+#define JEMALLOC_VERSION_NREV 0
+#define JEMALLOC_VERSION_GID "54eaed1d8b56b1aa528be3bdd1877e59c56fa90c"
+#define JEMALLOC_VERSION_GID_IDENT 54eaed1d8b56b1aa528be3bdd1877e59c56fa90c
 
 #define MALLOCX_LG_ALIGN(la)	((int)(la))
 #if LG_SIZEOF_PTR == 2
@@ -237,7 +235,7 @@ extern "C" {
 #  define JEMALLOC_COLD
 #endif
 
-#if (defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__)) && !defined(JEMALLOC_NO_RENAME)
+#if (defined(__APPLE__) || defined(__FreeBSD__)) && !defined(JEMALLOC_NO_RENAME)
 #  define JEMALLOC_SYS_NOTHROW
 #else
 #  define JEMALLOC_SYS_NOTHROW JEMALLOC_NOTHROW
@@ -312,12 +310,6 @@ JEMALLOC_EXPORT JEMALLOC_ALLOCATOR JEMALLOC_RESTRICT_RETURN
 #ifdef JEMALLOC_OVERRIDE_VALLOC
 JEMALLOC_EXPORT JEMALLOC_ALLOCATOR JEMALLOC_RESTRICT_RETURN
     void JEMALLOC_SYS_NOTHROW	*je_valloc(size_t size) JEMALLOC_CXX_THROW
-    JEMALLOC_ATTR(malloc);
-#endif
-
-#ifdef JEMALLOC_OVERRIDE_PVALLOC
-JEMALLOC_EXPORT JEMALLOC_ALLOCATOR JEMALLOC_RESTRICT_RETURN
-    void JEMALLOC_SYS_NOTHROW	*je_pvalloc(size_t size) JEMALLOC_CXX_THROW
     JEMALLOC_ATTR(malloc);
 #endif
 
@@ -424,7 +416,7 @@ struct extent_hooks_s {
 #  define malloc_stats_print je_malloc_stats_print
 #  define malloc_usable_size je_malloc_usable_size
 #  define mallocx je_mallocx
-#  define smallocx_1897f185d2c06307fefc4d8f4512eeb13c474999 je_smallocx_1897f185d2c06307fefc4d8f4512eeb13c474999
+#  define smallocx_54eaed1d8b56b1aa528be3bdd1877e59c56fa90c je_smallocx_54eaed1d8b56b1aa528be3bdd1877e59c56fa90c
 #  define nallocx je_nallocx
 #  define posix_memalign je_posix_memalign
 #  define rallocx je_rallocx
@@ -434,7 +426,6 @@ struct extent_hooks_s {
 #  define xallocx je_xallocx
 #  define memalign je_memalign
 #  define valloc je_valloc
-#  define pvalloc je_pvalloc
 #endif
 
 /*
@@ -459,7 +450,7 @@ struct extent_hooks_s {
 #  undef je_malloc_stats_print
 #  undef je_malloc_usable_size
 #  undef je_mallocx
-#  undef je_smallocx_1897f185d2c06307fefc4d8f4512eeb13c474999
+#  undef je_smallocx_54eaed1d8b56b1aa528be3bdd1877e59c56fa90c
 #  undef je_nallocx
 #  undef je_posix_memalign
 #  undef je_rallocx
@@ -469,7 +460,6 @@ struct extent_hooks_s {
 #  undef je_xallocx
 #  undef je_memalign
 #  undef je_valloc
-#  undef je_pvalloc
 #endif
 
 #ifdef __cplusplus

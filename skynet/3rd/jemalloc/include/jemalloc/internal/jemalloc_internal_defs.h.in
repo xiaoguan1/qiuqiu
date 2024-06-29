@@ -18,7 +18,6 @@
 #undef JEMALLOC_OVERRIDE___LIBC_MEMALIGN
 #undef JEMALLOC_OVERRIDE___LIBC_REALLOC
 #undef JEMALLOC_OVERRIDE___LIBC_VALLOC
-#undef JEMALLOC_OVERRIDE___LIBC_PVALLOC
 #undef JEMALLOC_OVERRIDE___POSIX_MEMALIGN
 
 /*
@@ -161,12 +160,6 @@
 
 /* Use gcc intrinsics for profile backtracing if defined. */
 #undef JEMALLOC_PROF_GCC
-
-/* JEMALLOC_PAGEID enabled page id */
-#undef JEMALLOC_PAGEID
-
-/* JEMALLOC_HAVE_PRCTL checks prctl */
-#undef JEMALLOC_HAVE_PRCTL
 
 /*
  * JEMALLOC_DSS enables use of sbrk(2) to allocate extents from the data storage
@@ -390,9 +383,6 @@
 
 /* GNU specific sched_setaffinity support */
 #undef JEMALLOC_HAVE_SCHED_SETAFFINITY
-
-/* pthread_setaffinity_np support */
-#undef JEMALLOC_HAVE_PTHREAD_SETAFFINITY_NP
 
 /*
  * If defined, all the features necessary for background threads are present.

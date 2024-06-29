@@ -30,7 +30,6 @@ opt_abort
 opt_abort_conf
 opt_cache_oblivious
 opt_confirm_conf
-opt_debug_double_free_max_scan
 opt_experimental_infallible_new
 opt_hpa
 opt_hpa_opts

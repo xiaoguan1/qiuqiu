@@ -15,7 +15,7 @@
 #define JEMALLOC_HAVE_ATTR_FORMAT_PRINTF 
 
 /* Defined if fallthrough attribute is supported. */
-/* #undef JEMALLOC_HAVE_ATTR_FALLTHROUGH */
+#define JEMALLOC_HAVE_ATTR_FALLTHROUGH 
 
 /* Defined if cold attribute is supported. */
 #define JEMALLOC_HAVE_ATTR_COLD 
@@ -26,7 +26,6 @@
  */
 #define JEMALLOC_OVERRIDE_MEMALIGN 
 #define JEMALLOC_OVERRIDE_VALLOC 
-#define JEMALLOC_OVERRIDE_PVALLOC 
 
 /*
  * At least Linux omits the "const" in:

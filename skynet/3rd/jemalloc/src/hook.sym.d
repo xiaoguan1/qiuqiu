@@ -22,8 +22,7 @@ src/hook.sym.o: src/hook.c include/jemalloc/internal/jemalloc_preamble.h \
  include/jemalloc/internal/rtree_tsd.h \
  include/jemalloc/internal/tcache_types.h \
  include/jemalloc/internal/tcache_structs.h \
- include/jemalloc/internal/cache_bin.h \
- include/jemalloc/internal/safety_check.h include/jemalloc/internal/sz.h \
+ include/jemalloc/internal/cache_bin.h include/jemalloc/internal/sz.h \
  include/jemalloc/internal/bit_util.h include/jemalloc/internal/pages.h \
  include/jemalloc/internal/ticker.h include/jemalloc/internal/prng.h \
  include/jemalloc/internal/witness.h include/jemalloc/internal/tsd_tls.h \

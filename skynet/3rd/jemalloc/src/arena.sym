@@ -32,8 +32,6 @@ arena_is_huge
 arena_malloc_hard
 arena_muzzy_decay_ms_default_get
 arena_muzzy_decay_ms_default_set
-arena_name_get
-arena_name_set
 arena_new
 arena_nthreads_dec
 arena_nthreads_get

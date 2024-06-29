@@ -9,7 +9,7 @@
   <refentryinfo>
     <title>User Manual</title>
     <productname>jemalloc</productname>
-    <releaseinfo role="version">5.3.0-28-g1897f185d2c06307fefc4d8f4512eeb13c474999</releaseinfo>
+    <releaseinfo role="version">5.3.0-0-g54eaed1d8b56b1aa528be3bdd1877e59c56fa90c</releaseinfo>
     <authorgroup>
       <author>
         <firstname>Jason</firstname>
@@ -50,7 +50,7 @@
   </refnamediv>
   <refsect1 id="library">
     <title>LIBRARY</title>
-    <para>This manual describes jemalloc 5.3.0-28-g1897f185d2c06307fefc4d8f4512eeb13c474999.  More information
+    <para>This manual describes jemalloc 5.3.0-0-g54eaed1d8b56b1aa528be3bdd1877e59c56fa90c.  More information
     can be found at the <ulink
     url="http://jemalloc.net/">jemalloc website</ulink>.</para>
   </refsect1>
@@ -1121,7 +1121,9 @@ mallctl("arena." STRINGIFY(MALLCTL_ARENAS_ALL) ".decay",
         linkend="arena.i.dirty_decay_ms"><mallctl>arena.&lt;i&gt;.dirty_decay_ms</mallctl></link>
         for related dynamic control options.  See <link
         linkend="opt.muzzy_decay_ms"><mallctl>opt.muzzy_decay_ms</mallctl></link>
-        for a description of muzzy pages.  Note that when the <link linkend="opt.oversize_threshold"><mallctl>oversize_threshold</mallctl></link>
+        for a description of muzzy pages.for a description of muzzy pages.  Note
+        that when the <link
+        linkend="opt.oversize_threshold"><mallctl>oversize_threshold</mallctl></link>
         feature is enabled, the arenas reserved for oversize requests may have
         its own default decay settings.</para></listitem>
       </varlistentry>

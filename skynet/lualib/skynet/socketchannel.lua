@@ -41,7 +41,17 @@ function socket_channel.channel(desc)
 		__nodelay = desc.nodelay,
 		__overload_notify = desc.overload,
 		__overload = false,
+		__socket_meta = channel_socket_meta,
 	}
+	if desc.socket_read or desc.socket_readline then
+		c.__socket_meta = {
+			__index = {
+				read = desc.socket_read or channel_socket.read,
+				readline = desc.socket_readline or channel_socket.readline,
+			},
+			__gc = channel_socket_meta.__gc
+		}
+	end
 
 	return setmetatable(c, channel_meta)
 end
@@ -50,6 +60,10 @@ local function close_channel_socket(self)
 	if self.__sock then
 		local so = self.__sock
 		self.__sock = false
+		if self.__wait_response then
+			skynet.wakeup(self.__wait_response)
+			self.__wait_response = nil
+		end
 		-- never raise error
 		pcall(socket.close,so[1])
 	end
@@ -123,7 +137,7 @@ local function dispatch_by_session(self)
 end
 
 local function pop_response(self)
-	while true do
+	while self.__sock do
 		local func,co = table.remove(self.__request, 1), table.remove(self.__thread, 1)
 		if func then
 			return func, co
@@ -324,7 +338,7 @@ local function connect_once(self)
 			skynet.yield()
 		end
 
-		self.__sock = setmetatable( {fd} , channel_socket_meta )
+		self.__sock = setmetatable( {fd} , self.__socket_meta )
 		self.__dispatch_thread = skynet.fork(function()
 			if self.__sock then
 				-- self.__sock can be false (socket closed) if error during connecting, See #1513

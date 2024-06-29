@@ -25,8 +25,7 @@ src/large.sym.o: src/large.c \
  include/jemalloc/internal/peak.h include/jemalloc/internal/ql.h \
  include/jemalloc/internal/qr.h include/jemalloc/internal/rtree_tsd.h \
  include/jemalloc/internal/tcache_structs.h \
- include/jemalloc/internal/cache_bin.h \
- include/jemalloc/internal/safety_check.h include/jemalloc/internal/sz.h \
+ include/jemalloc/internal/cache_bin.h include/jemalloc/internal/sz.h \
  include/jemalloc/internal/bit_util.h include/jemalloc/internal/pages.h \
  include/jemalloc/internal/ticker.h include/jemalloc/internal/prng.h \
  include/jemalloc/internal/witness.h include/jemalloc/internal/tsd_tls.h \
@@ -68,6 +67,7 @@ src/large.sym.o: src/large.c \
  include/jemalloc/internal/extent.h \
  include/jemalloc/internal/tcache_inlines.h \
  include/jemalloc/internal/arena_inlines_b.h \
+ include/jemalloc/internal/safety_check.h \
  include/jemalloc/internal/jemalloc_internal_inlines_c.h \
  include/jemalloc/internal/log.h include/jemalloc/internal/thread_event.h \
  include/jemalloc/internal/prof_inlines.h \

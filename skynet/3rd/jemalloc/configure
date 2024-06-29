@@ -817,7 +817,6 @@ enable_syscall
 enable_lazy_lock
 enable_zone_allocator
 enable_initial_exec_tls
-enable_pageid
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1478,7 +1477,6 @@ Optional Features:
                           Disable zone allocator for Darwin
   --disable-initial-exec-tls
                           Disable the initial-exec tls model
-  --enable-pageid         Enable named pages
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -7964,47 +7962,6 @@ _ACEOF
       else
         as_fn_error $? "cannot determine number of significant virtual address bits" "$LINENO" 5
       fi
-      { $as_echo "$as_me:${as_lineno-$LINENO}: checking rdtscp support" >&5
-$as_echo_n "checking rdtscp support... " >&6; }
-if ${je_cv_rdtscp+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test "$cross_compiling" = yes; then :
-  je_cv_rdtscp=no
-else
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-#include <stdint.h>
-
-int
-main ()
-{
-
-      unsigned int dx;
-      asm volatile("rdtscp" : "=d"(dx) ::);
-      return 0;
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_run "$LINENO"; then :
-  je_cv_rdtscp=yes
-else
-  je_cv_rdstcp=no
-fi
-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
-  conftest.$ac_objext conftest.beam conftest.$ac_ext
-fi
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $je_cv_rdtscp" >&5
-$as_echo "$je_cv_rdtscp" >&6; }
-      if test "x${je_cv_rdtscp}" = "xyes"; then
-        $as_echo "#define HAVE_RDTSCP 1" >>confdefs.h
-
-      fi
     fi
     ;;
   *)
@@ -8368,9 +8325,6 @@ case "${host}" in
 	SOREV="${rev}.${so}"
 	sbrk_deprecated="1"
 	SYM_PREFIX="_"
-	if test "${LG_SIZEOF_PTR}" = "3"; then
-	  default_retain="1"
-	fi
 	;;
   *-*-freebsd*)
 	T_APPEND_V=-D_BSD_SOURCE
@@ -10416,14 +10370,6 @@ $as_echo "#define JEMALLOC_OVERRIDE_VALLOC  " >>confdefs.h
 	       public_syms="${public_syms} valloc"
 fi
 
-ac_fn_c_check_func "$LINENO" "pvalloc" "ac_cv_func_pvalloc"
-if test "x$ac_cv_func_pvalloc" = xyes; then :
-
-$as_echo "#define JEMALLOC_OVERRIDE_PVALLOC  " >>confdefs.h
-
-	       public_syms="${public_syms} pvalloc"
-fi
-
 ac_fn_c_check_func "$LINENO" "malloc_size" "ac_cv_func_malloc_size"
 if test "x$ac_cv_func_malloc_size" = xyes; then :
 
@@ -10481,14 +10427,6 @@ if test "x$ac_cv_func___libc_valloc" = xyes; then :
 $as_echo "#define JEMALLOC_OVERRIDE___LIBC_VALLOC  " >>confdefs.h
 
 		 wrap_syms="${wrap_syms} __libc_valloc"
-fi
-
-  ac_fn_c_check_func "$LINENO" "__libc_pvalloc" "ac_cv_func___libc_pvalloc"
-if test "x$ac_cv_func___libc_pvalloc" = xyes; then :
-
-$as_echo "#define JEMALLOC_OVERRIDE___LIBC_PVALLOC  " >>confdefs.h
-
-		 wrap_syms="${wrap_syms} __libc_pvalloc"
 fi
 
   ac_fn_c_check_func "$LINENO" "__posix_memalign" "ac_cv_func___posix_memalign"
@@ -12952,20 +12890,6 @@ $as_echo "#define JEMALLOC_HAVE_SCHED_SETAFFINITY  " >>confdefs.h
 
 fi
 
-ac_fn_c_check_func "$LINENO" "pthread_setaffinity_np" "ac_cv_func_pthread_setaffinity_np"
-if test "x$ac_cv_func_pthread_setaffinity_np" = xyes; then :
-  have_pthread_setaffinity_np="1"
-else
-  have_pthread_setaffinity_np="0"
-
-fi
-
-if test "x$have_pthread_setaffinity_np" = "x1" ; then
-
-$as_echo "#define JEMALLOC_HAVE_PTHREAD_SETAFFINITY_NP  " >>confdefs.h
-
-fi
-
 ac_fn_c_check_func "$LINENO" "issetugid" "ac_cv_func_issetugid"
 if test "x$ac_cv_func_issetugid" = xyes; then :
   have_issetugid="1"
@@ -13021,19 +12945,6 @@ fi
 if test "x$have_memcntl" = "x1" ; then
 
 $as_echo "#define JEMALLOC_HAVE_MEMCNTL  " >>confdefs.h
-
-fi
-
-ac_fn_c_check_func "$LINENO" "prctl" "ac_cv_func_prctl"
-if test "x$ac_cv_func_prctl" = xyes; then :
-  have_prctl="1"
-else
-  have_prctl="0"
-fi
-
-if test "x$have_prctl" = "x1" ; then
-
-$as_echo "#define JEMALLOC_HAVE_PRCTL  " >>confdefs.h
 
 fi
 
@@ -13893,25 +13804,6 @@ $as_echo "#define JEMALLOC_TLS_MODEL __attribute__((tls_model(\"initial-exec\"))
 else
 
 $as_echo "#define JEMALLOC_TLS_MODEL  " >>confdefs.h
-
-fi
-
-# Check whether --enable-pageid was given.
-if test "${enable_pageid+set}" = set; then :
-  enableval=$enable_pageid; if test "x$enable_pageid" = "xno" ; then
-  enable_pageid="0"
-else
-  enable_pageid="1"
-fi
-
-else
-  enable_pageid="0"
-
-fi
-
-if test "x$enable_pageid" = "x1" ; then
-
-$as_echo "#define JEMALLOC_PAGEID  " >>confdefs.h
 
 fi
 
@@ -15922,8 +15814,6 @@ $as_echo "log                : ${enable_log}" >&6; }
 $as_echo "lazy_lock          : ${enable_lazy_lock}" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: cache-oblivious    : ${enable_cache_oblivious}" >&5
 $as_echo "cache-oblivious    : ${enable_cache_oblivious}" >&6; }
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: pageid             : ${enable_pageid}" >&5
-$as_echo "pageid             : ${enable_pageid}" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: cxx                : ${enable_cxx}" >&5
 $as_echo "cxx                : ${enable_cxx}" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: ===============================================================================" >&5

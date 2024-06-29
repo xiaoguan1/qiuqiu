@@ -314,7 +314,6 @@ TEST_BEGIN(test_mallctl_opt) {
 	TEST_MALLCTL_OPT(bool, prof, prof);
 	TEST_MALLCTL_OPT(const char *, prof_prefix, prof);
 	TEST_MALLCTL_OPT(bool, prof_active, prof);
-	TEST_MALLCTL_OPT(unsigned, prof_bt_max, prof);
 	TEST_MALLCTL_OPT(ssize_t, lg_prof_sample, prof);
 	TEST_MALLCTL_OPT(bool, prof_accum, prof);
 	TEST_MALLCTL_OPT(ssize_t, lg_prof_interval, prof);
@@ -326,7 +325,6 @@ TEST_BEGIN(test_mallctl_opt) {
 	TEST_MALLCTL_OPT(bool, prof_stats, prof);
 	TEST_MALLCTL_OPT(bool, prof_sys_thread_name, prof);
 	TEST_MALLCTL_OPT(ssize_t, lg_san_uaf_align, uaf_detection);
-	TEST_MALLCTL_OPT(unsigned, debug_double_free_max_scan, always);
 
 #undef TEST_MALLCTL_OPT
 }
@@ -708,48 +706,6 @@ TEST_BEGIN(test_arena_i_dss) {
 	    0), 0, "Unexpected mallctl() failure");
 	expect_str_ne(dss_prec_old, "primary",
 	    "Unexpected value for dss precedence");
-}
-TEST_END
-
-TEST_BEGIN(test_arena_i_name) {
-	unsigned arena_ind;
-	size_t ind_sz = sizeof(arena_ind);
-	size_t mib[3];
-	size_t miblen;
-	char name_old[ARENA_NAME_LEN];
-	char *name_oldp = name_old;
-	size_t sz = sizeof(name_oldp);
-	char default_name[ARENA_NAME_LEN];
-	const char *name_new = "test name";
-	const char *super_long_name = "A name longer than ARENA_NAME_LEN";
-	size_t super_long_name_len = strlen(super_long_name);
-	assert(super_long_name_len > ARENA_NAME_LEN);
-
-	miblen = sizeof(mib)/sizeof(size_t);
-	expect_d_eq(mallctlnametomib("arena.0.name", mib, &miblen), 0,
-	    "Unexpected mallctlnametomib() error");
-
-	expect_d_eq(mallctl("arenas.create", (void *)&arena_ind, &ind_sz, NULL,
-	    0), 0, "Unexpected mallctl() failure");
-	mib[1] = arena_ind;
-
-	malloc_snprintf(default_name, sizeof(default_name), "manual_%u",
-	    arena_ind);
-	expect_d_eq(mallctlbymib(mib, miblen, (void *)&name_oldp, &sz,
-	    (void *)&name_new, sizeof(name_new)), 0,
-	    "Unexpected mallctl() failure");
-	expect_str_eq(name_old, default_name,
-	    "Unexpected default value for arena name");
-
-	expect_d_eq(mallctlbymib(mib, miblen, (void *)&name_oldp, &sz,
-	    (void *)&super_long_name, sizeof(super_long_name)), 0,
-	    "Unexpected mallctl() failure");
-	expect_str_eq(name_old, name_new, "Unexpected value for arena name");
-
-	expect_d_eq(mallctlbymib(mib, miblen, (void *)&name_oldp, &sz,
-	    NULL, 0), 0, "Unexpected mallctl() failure");
-	int cmp = strncmp(name_old, super_long_name, ARENA_NAME_LEN - 1);
-	expect_true(cmp == 0, "Unexpected value for long arena name ");
 }
 TEST_END
 
@@ -1300,7 +1256,6 @@ main(void) {
 	    test_arena_i_purge,
 	    test_arena_i_decay,
 	    test_arena_i_dss,
-	    test_arena_i_name,
 	    test_arena_i_retain_grow_limit,
 	    test_arenas_dirty_decay_ms,
 	    test_arenas_muzzy_decay_ms,

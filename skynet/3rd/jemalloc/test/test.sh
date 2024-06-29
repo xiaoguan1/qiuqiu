@@ -45,11 +45,11 @@ for t in $@; do
     enable_prof=1 \
     . ${t}.sh && \
     export_malloc_conf && \
-    $JEMALLOC_TEST_PREFIX ${t} /home/game/qiuqiu/skynet/3rd/jemalloc/ /home/game/qiuqiu/skynet/3rd/jemalloc/
+    $JEMALLOC_TEST_PREFIX ${t} /home/game/ShareDemo/skynet/3rd/jemalloc/ /home/game/ShareDemo/skynet/3rd/jemalloc/
   else
     export MALLOC_CONF= && \
     export_malloc_conf && \
-    $JEMALLOC_TEST_PREFIX ${t} /home/game/qiuqiu/skynet/3rd/jemalloc/ /home/game/qiuqiu/skynet/3rd/jemalloc/
+    $JEMALLOC_TEST_PREFIX ${t} /home/game/ShareDemo/skynet/3rd/jemalloc/ /home/game/ShareDemo/skynet/3rd/jemalloc/
   fi
   result_code=$?
   case ${result_code} in

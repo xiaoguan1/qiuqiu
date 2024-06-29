@@ -42,17 +42,14 @@ const char *arena_mutex_names[mutex_prof_num_arena_mutexes] = {
 	assert(miblen_new == miblen + 1);				\
 } while (0)
 
-#define CTL_MIB_GET(n, i, v, t, ind) do {				\
+#define CTL_M2_GET(n, i, v, t) do {					\
 	size_t mib[CTL_MAX_DEPTH];					\
 	size_t miblen = sizeof(mib) / sizeof(size_t);			\
 	size_t sz = sizeof(t);						\
 	xmallctlnametomib(n, mib, &miblen);				\
-	mib[(ind)] = (i);							\
+	mib[2] = (i);							\
 	xmallctlbymib(mib, miblen, (void *)v, &sz, NULL, 0);		\
 } while (0)
-
-#define CTL_M1_GET(n, i, v, t) CTL_MIB_GET(n, i, v, t, 1)
-#define CTL_M2_GET(n, i, v, t) CTL_MIB_GET(n, i, v, t, 2)
 
 /******************************************************************************/
 /* Data. */
@@ -1045,8 +1042,6 @@ JEMALLOC_COLD
 static void
 stats_arena_print(emitter_t *emitter, unsigned i, bool bins, bool large,
     bool mutex, bool extents, bool hpa) {
-	char name[ARENA_NAME_LEN];
-	char *namep = name;
 	unsigned nthreads;
 	const char *dss;
 	ssize_t dirty_decay_ms, muzzy_decay_ms;
@@ -1064,10 +1059,6 @@ stats_arena_print(emitter_t *emitter, unsigned i, bool bins, bool large,
 	uint64_t uptime;
 
 	CTL_GET("arenas.page", &page, size_t);
-	if (i != MALLCTL_ARENAS_ALL && i != MALLCTL_ARENAS_DESTROYED) {
-		CTL_M1_GET("arena.0.name", i, (void *)&namep, const char *);
-		emitter_kv(emitter, "name", "name", emitter_type_string, &namep);
-	}
 
 	CTL_M2_GET("stats.arenas.0.nthreads", i, &nthreads, unsigned);
 	emitter_kv(emitter, "nthreads", "assigned threads",
@@ -1527,10 +1518,8 @@ stats_general_print(emitter_t *emitter) {
 	OPT_WRITE_SIZE_T("tcache_gc_delay_bytes")
 	OPT_WRITE_UNSIGNED("lg_tcache_flush_small_div")
 	OPT_WRITE_UNSIGNED("lg_tcache_flush_large_div")
-	OPT_WRITE_UNSIGNED("debug_double_free_max_scan")
 	OPT_WRITE_CHAR_P("thp")
 	OPT_WRITE_BOOL("prof")
-	OPT_WRITE_UNSIGNED("prof_bt_max")
 	OPT_WRITE_CHAR_P("prof_prefix")
 	OPT_WRITE_BOOL_MUTABLE("prof_active", "prof.active")
 	OPT_WRITE_BOOL_MUTABLE("prof_thread_active_init",

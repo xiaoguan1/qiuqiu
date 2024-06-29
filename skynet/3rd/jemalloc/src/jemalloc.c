@@ -154,9 +154,6 @@ fxp_t		opt_narenas_ratio = FXP_INIT_INT(4);
 
 unsigned	ncpus;
 
-unsigned opt_debug_double_free_max_scan =
-    SAFETY_CHECK_DOUBLE_FREE_MAX_SCAN_DEFAULT;
-
 /* Protects arenas initialization. */
 malloc_mutex_t arenas_lock;
 
@@ -1223,7 +1220,6 @@ malloc_conf_init_helper(sc_data_t *sc_data, unsigned bin_shard_sizes[SC_NBINS],
 
 			CONF_HANDLE_BOOL(opt_abort, "abort")
 			CONF_HANDLE_BOOL(opt_abort_conf, "abort_conf")
-			CONF_HANDLE_BOOL(opt_cache_oblivious, "cache_oblivious")
 			CONF_HANDLE_BOOL(opt_trust_madvise, "trust_madvise")
 			if (strncmp("metadata_thp", k, klen) == 0) {
 				int m;
@@ -1423,10 +1419,6 @@ malloc_conf_init_helper(sc_data_t *sc_data, unsigned bin_shard_sizes[SC_NBINS],
 			CONF_HANDLE_UNSIGNED(opt_lg_tcache_flush_large_div,
 			    "lg_tcache_flush_large_div", 1, 16,
 			    CONF_CHECK_MIN, CONF_CHECK_MAX, /* clip */ true)
-			CONF_HANDLE_UNSIGNED(opt_debug_double_free_max_scan,
-			    "debug_double_free_max_scan", 0, UINT_MAX,
-			    CONF_DONT_CHECK_MIN, CONF_DONT_CHECK_MAX,
-			    /* clip */ false)
 
 			/*
 			 * The runtime option of oversize_threshold remains
@@ -1585,9 +1577,6 @@ malloc_conf_init_helper(sc_data_t *sc_data, unsigned bin_shard_sizes[SC_NBINS],
 				    - 1, CONF_DONT_CHECK_MIN, CONF_CHECK_MAX,
 				    true)
 				CONF_HANDLE_BOOL(opt_prof_accum, "prof_accum")
-				CONF_HANDLE_UNSIGNED(opt_prof_bt_max, "prof_bt_max",
-				    1, PROF_BT_MAX_LIMIT, CONF_CHECK_MIN, CONF_CHECK_MAX,
-				    /* clip */ true)
 				CONF_HANDLE_SSIZE_T(opt_lg_prof_interval,
 				    "lg_prof_interval", -1,
 				    (sizeof(uint64_t) << 3) - 1)
@@ -1746,10 +1735,6 @@ malloc_conf_init_check_deps(void) {
 		malloc_printf("<jemalloc>: prof_leak_error is set w/o "
 		    "prof_final.\n");
 		return true;
-	}
-	/* To emphasize in the stats output that opt is disabled when !debug. */
-	if (!config_debug) {
-		opt_debug_double_free_max_scan = 0;
 	}
 
 	return false;
@@ -3265,49 +3250,6 @@ je_valloc(size_t size) {
 }
 #endif
 
-#ifdef JEMALLOC_OVERRIDE_PVALLOC
-JEMALLOC_EXPORT JEMALLOC_ALLOCATOR JEMALLOC_RESTRICT_RETURN
-void JEMALLOC_NOTHROW *
-JEMALLOC_ATTR(malloc)
-je_pvalloc(size_t size) {
-	void *ret;
-
-	static_opts_t sopts;
-	dynamic_opts_t dopts;
-
-	LOG("core.pvalloc.entry", "size: %zu\n", size);
-
-	static_opts_init(&sopts);
-	dynamic_opts_init(&dopts);
-
-	sopts.null_out_result_on_error = true;
-	sopts.min_alignment = PAGE;
-	sopts.oom_string =
-	    "<jemalloc>: Error allocating aligned memory: out of memory\n";
-	sopts.invalid_alignment_string =
-	    "<jemalloc>: Error allocating aligned memory: invalid alignment\n";
-
-	dopts.result = &ret;
-	dopts.num_items = 1;
-	/*
-	 * This is the only difference from je_valloc - size is rounded up to
-	 * a PAGE multiple.
-	 */
-	dopts.item_size = PAGE_CEILING(size);
-	dopts.alignment = PAGE;
-
-	imalloc(&sopts, &dopts);
-	if (sopts.slow) {
-		uintptr_t args[3] = {size};
-		hook_invoke_alloc(hook_alloc_pvalloc, ret, (uintptr_t)ret,
-		    args);
-	}
-
-	LOG("core.pvalloc.exit", "result: %p\n", ret);
-	return ret;
-}
-#endif
-
 #if defined(JEMALLOC_IS_MALLOC) && defined(JEMALLOC_GLIBC_MALLOC_HOOK)
 /*
  * glibc provides the RTLD_DEEPBIND flag for dlopen which can make it possible
@@ -3354,9 +3296,6 @@ void *__libc_realloc(void* ptr, size_t size) PREALIAS(je_realloc);
 #    endif
 #    ifdef JEMALLOC_OVERRIDE___LIBC_VALLOC
 void *__libc_valloc(size_t size) PREALIAS(je_valloc);
-#    endif
-#    ifdef JEMALLOC_OVERRIDE___LIBC_PVALLOC
-void *__libc_pvalloc(size_t size) PREALIAS(je_pvalloc);
 #    endif
 #    ifdef JEMALLOC_OVERRIDE___POSIX_MEMALIGN
 int __posix_memalign(void** r, size_t a, size_t s) PREALIAS(je_posix_memalign);

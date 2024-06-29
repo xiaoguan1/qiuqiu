@@ -12,7 +12,7 @@ malloc_message:je_malloc_message
 malloc_stats_print:je_malloc_stats_print
 malloc_usable_size:je_malloc_usable_size
 mallocx:je_mallocx
-smallocx_1897f185d2c06307fefc4d8f4512eeb13c474999:je_smallocx_1897f185d2c06307fefc4d8f4512eeb13c474999
+smallocx_54eaed1d8b56b1aa528be3bdd1877e59c56fa90c:je_smallocx_54eaed1d8b56b1aa528be3bdd1877e59c56fa90c
 nallocx:je_nallocx
 posix_memalign:je_posix_memalign
 rallocx:je_rallocx
@@ -22,4 +22,3 @@ sdallocx:je_sdallocx
 xallocx:je_xallocx
 memalign:je_memalign
 valloc:je_valloc
-pvalloc:je_pvalloc
