@@ -7,7 +7,10 @@ local DPCLUSTER_NODE = DPCLUSTER_NODE
 assert(DPCLUSTER_NODE and DPCLUSTER_NODE.self)
 local localhost = DPCLUSTER_NODE.self
 local string = string
-local clusterName = EVERY_NODE_SERVER and EVERY_NODE_SERVER.dpclusterd and EVERY_NODE_SERVER.dpclusterd.cluster_named
+local SERVICE_NAME = SERVICE_NAME
+local clusterName = EVERY_NODE_SERVER and
+					EVERY_NODE_SERVER.dpclusterd and
+					EVERY_NODE_SERVER.dpclusterd.cluster_named
 assert(clusterName)
 
 ALL_CLUSTER_ADDRESS = false		-- 集群的网络地址
@@ -129,7 +132,7 @@ skynet.start(function ()
 		if session == 0 then
 			f(...)
 		else
-			skynet.response(f(...))
+			skynet.ret(skynet.pack(f(...)))
 		end
 	end)
 
