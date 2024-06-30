@@ -134,9 +134,7 @@ function DelCacheUrs(urs)
 	skynet.trash(data_ptr, sz)
 end
 
-
-
-function GetAllChaceUid()
+function GetAllCacheUid()
 	local ret = {}
 	local dret = {}
 	local cnt = 0

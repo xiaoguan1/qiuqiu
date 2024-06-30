@@ -769,8 +769,8 @@ function CacheSaveTimer()
 
 	-- 记录当前需要存的数据
 	CacheSaveUrs, DelCacheSaveUrs, CACHE_FRAME_URS_SAVECNT = DBCACHE.GetAllCacheUrs()
-	CacheSaveUid, DelCacheSaveUid, CACHE_FRAME_UID_SAVECNT = DBCACHE.GetAllCaCheUid()
-	CacheSaveMod, DelCacheSaveMod, CACHE_FRAME_MOD_SAVECNT = DBCACHE.GetAllCaCheMod()
+	CacheSaveUid, DelCacheSaveUid, CACHE_FRAME_UID_SAVECNT = DBCACHE.GetAllCacheUid()
+	CacheSaveMod, DelCacheSaveMod, CACHE_FRAME_MOD_SAVECNT = DBCACHE.GetAllCacheMod()
 	local aUrsSaveCnt = CACHE_FRAME_URS_SAVECNT
 	local aUidSaveCnt = CACHE_FRAME_UID_SAVECNT
 	local aModSaveCnt = CACHE_FRAME_MOD_SAVECNT
