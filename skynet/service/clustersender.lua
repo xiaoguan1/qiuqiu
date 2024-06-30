@@ -6,10 +6,9 @@ local cluster = require "skynet.cluster.core"
 local channel
 local session = 1
 local node, nodename, init_host, init_port = ...
-local LOOP_TIME = 1000	-- 时间轮训的刻度为10秒
 local string = string
+local smatch = string.match
 local pack = skynet.pack
-local unpack = skynet.unpack
 
 local dpclusterd_cfg = EVERY_NODE_SERVER and EVERY_NODE_SERVER.dpclusterd
 assert(dpclusterd_cfg)
@@ -66,11 +65,17 @@ local function read_response(sock)
 end
 
 function command.changenode(host, port)
+	if host and not port then
+		host, port = smatch(host, "([^:]+):(.*)$")
+		port = tonumber(port)
+		assert(host and port)
+	end
+
 	if not host then
 		skynet.error(string.format("Close cluster sender %s:%d", channel.__host, channel.__port))
 		channel:close()
 	else
-		channel:changehost(host, tonumber(port))
+		channel:changehost(host, port)
 		if channel:connect(true) then
 			channel:service(skynet.self())
 		end
@@ -88,31 +93,6 @@ function command.interrupt()
 	end
 end
 
--- create by guanguowei
-function Loop()
-	while true do
-		skynet.sleep(LOOP_TIME)
-
-		if (channel.__interrupt and channel.__host and channel.__port)	-- 中途断线
-			or (channel.__service and channel.__host and channel.__port and not channel.__sock) -- 服务启动时就已经连接失败
-		then
-			if channel:connect(true) then
-				channel:service(skynet.self())
-				local isOk, msg = pcall(send_request, 0, pack(dpclusterd_cfg.cluster_named))
-				local named = skynet.localname(dpclusterd_cfg.named)
-				if isOk and named then
-					-- 重连成功且获取对面节点的dpclusterd服务地址才算成功.
-					skynet.send(named, "lua", "reconnection", node, unpack(msg))
-					channel.__interrupt = nil
-					skynet.error(string.format("Reconnection nodeName:%s success", node))
-				else
-					skynet.error(msg)
-				end
-			end
-		end
-	end
-end
-
 skynet.start(function()
 	channel = sc.channel {
 			host = init_host,
@@ -124,5 +104,4 @@ skynet.start(function()
 		local f = assert(command[cmd])
 		f(...)
 	end)
-	skynet.fork(Loop)
 end)

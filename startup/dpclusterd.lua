@@ -5,7 +5,6 @@ local DPCLUSTER_NODE = DPCLUSTER_NODE
 assert(DPCLUSTER_NODE and DPCLUSTER_NODE.self)
 local localhost = DPCLUSTER_NODE.self
 local string = string
-local SERVICE_NAME = SERVICE_NAME
 local clusterName = EVERY_NODE_SERVER and
 					EVERY_NODE_SERVER.dpclusterd and
 					EVERY_NODE_SERVER.dpclusterd.cluster_named
@@ -19,7 +18,15 @@ ALL_CLUSTER_ADDRESS = {}		-- 集群的网络地址
 RELOAD_CFG = {}				-- cluster加载配置
 
 CONNECTING = {}					-- 处于连接状态的数据
-CLUSTER_CACHE = {}				-- 已连接好的集群缓存
+
+CLUSTER_CACHE = {				-- 集群数据的缓存
+	-- [address] = {
+	-- 	server_id = ...,
+	-- 	agent = ...,			-- clusteragent
+	-- 	sender = ...,			-- clustersender
+	-- 	status = ...,			-- nil:正在连接中、false:网络中断、true:已连接可正常使用
+	-- },
+}
 
 ACTION = true					-- 服务本次心跳的行为
 
@@ -80,17 +87,36 @@ end
 if node_type == GAME_NODE_TYPE then		-- 游戏服
 
 	function CMD.accept(clusteragent, address, server_id)
-		local data = CONNECTING[address]
-		CONNECTING[address] = nil
+		local data = CLUSTER_CACHE[address]
+		if data then
+			-- 重连中
+			if data.status ~= false then
+				_ERROR_F("reconnect server_id:%s address:%s fail.", server_id, address)
+				return
+			end
 
-		data.agent = clusteragent
-		data.server_id = server_id
-		data.status = true
-		CLUSTER_CACHE[address] = data
+			data.agent = clusteragent
+			data.server_id = server_id
+			data.status = true
+			skynet.send(data.sender, "lua", "push", "@dpclusterd", skynet.pack("cluster_ok", localhost, host_id))
+			_INFO_F("reconnect server_id:%s address:%s success.", server_id, address)
+		else
+			local data = CONNECTING[address]
+			if not data then
+				_ERROR_F("connect error. because not find connect data! address:%s server_id:%s", server_id, address)
+				return
+			end
 
-		-- 借鉴三次握手。本次消息是跨服发来的，所以跨服的网络是正常的(但不确保拥堵等情况)
-		skynet.send(data.sender, "lua", "push", "@dpclusterd", skynet.pack("cluster_ok", localhost, host_id))
-		_INFO_F("accept server_id:%s address:%s success", server_id, address)
+			CONNECTING[address] = nil
+			CLUSTER_CACHE[address] = data
+			data.agent = clusteragent
+			data.server_id = server_id
+			data.status = true
+
+			-- 借鉴三次握手。本次消息是跨服发来的，所以跨服的网络是正常的(但不确保拥堵等情况)
+			skynet.send(data.sender, "lua", "push", "@dpclusterd", skynet.pack("cluster_ok", localhost, host_id))
+			_INFO_F("connect server_id:%s address:%s success.", server_id, address)
+		end
 	end
 
 	-- 游戏服的心跳
@@ -100,16 +126,14 @@ if node_type == GAME_NODE_TYPE then		-- 游戏服
 
 			if ACTION then
 				ACTION = false
-				-- 游戏服节点（主动连接普通跨服）
+				-- 主动连接普通跨服
 				for _, address in pairs(ALL_CLUSTER_ADDRESS) do
-					if not CLUSTER_CACHE[address] then
+					if not CLUSTER_CACHE[address] and not CONNECTING[address] then
 						local clustersender = cluster.get_sender(address)
-						if clustersender then
+						if clustersender and not CONNECTING[address] then
 							CONNECTING[address] = {
 								sender = clustersender,
 							}
-						else
-							_ERROR_F("accept address:%s fail", address)
 						end
 					end
 				end
@@ -119,27 +143,62 @@ if node_type == GAME_NODE_TYPE then		-- 游戏服
 					skynet.send(data.sender, "lua", "push", "@dpclusterd", skynet.pack("accept", localhost, host_id))
 					_INFO_F("connecting address:%s", address)
 				end
+
+				-- 网络中断,游戏服主动进行连接.
+				for address, data in pairs(CLUSTER_CACHE) do
+					if data.status == false then
+						if pcall(skynet.call, data.sender, "lua", "changenode", address) then
+							skynet.send(data.sender, "lua", "push", "@dpclusterd", skynet.pack("accept", localhost, host_id))
+						end
+					end
+				end
 			end
 		end
 	end
 
 elseif node_type == CROSS_NODE_TYPE then	-- 普通跨服
 
+	-- @param address:游戏服的网络地址
 	function CMD.accept(clusteragent, address, server_id)
 		if not RELOAD_CFG[address] then
 			RELOAD_CFG[address] = address
 			cluster.reload(RELOAD_CFG)
 		end
 
-		CONNECTING[address] = {
-			agent = clusteragent,
-			server_id = server_id,
-		}
-		_INFO_F("accept server_id:%s address:%s success", server_id, address)
+		local clusterData = CLUSTER_CACHE[address]
+		if clusterData then
+			-- 重连中
+			if clusterData.status == false then
+				if pcall(skynet.call, clusterData.sender, "lua", "changenode", address) then
+					if clusterData.status == false then
+						clusterData.status = nil
+						clusterData.agent = clusteragent
+						clusterData.server_id = server_id
+						_INFO_F("address:%s server_id:%s reconnecting!", address, server_id)
+					end
+				end
+			else
+				_ERROR_F("reconnecting fali! server_id:%s address:%s clusterData:%s", address, server_id, sys.dump(clusterData))
+			end
+		else
+			if CONNECTING[address] then
+				if CONNECTING[address].agent == clusteragent and CONNECTING[address].server_id == server_id then
+					_WARN_F("repeat accept address:%s server_id:%s", address, server_id)
+					return
+				end
+			end
+			CONNECTING[address] = {
+				agent = clusteragent,
+				server_id = server_id,
+				status = nil,
+			}
+			_INFO_F("accepting server_id:%s address:%s", server_id, address)
+		end
 	end
 
 	function CMD.cluster_ok(_, address, server_id)
 		CLUSTER_CACHE[address].status = true
+		_INFO_F("accept server_id:%s address:%s success.", server_id, address)
 	end
 
 	-- 普通跨服的心跳
@@ -147,18 +206,24 @@ elseif node_type == CROSS_NODE_TYPE then	-- 普通跨服
 		while true do
 			skynet.sleep(500)	-- 10秒
 
-			for address, data in pairs(CONNECTING) do
-				local clustersender = cluster.get_sender(address)
-				if clustersender then
-					CONNECTING[address] = nil
+			if ACTION then
+				ACTION = false
+				for address, data in pairs(CONNECTING) do
+					local clustersender = cluster.get_sender(address)
+					if clustersender then
+						CONNECTING[address] = nil
 
-					data.sender = clustersender
-					CLUSTER_CACHE[address] = data
+						data.sender = clustersender
+						CLUSTER_CACHE[address] = data
+					end
+				end
 
-					skynet.send(data.sender, "lua", "push", "@dpclusterd", skynet.pack("accept", localhost, host_id))
-					_INFO_F("connecting address:%s", address)
-				else
-					_ERROR_F("connecting server_id:%s address:%s fail", data.server_id, address)
+			else
+				ACTION = true
+				for _, data in pairs(CLUSTER_CACHE) do
+					if data.status == nil then
+						skynet.send(data.sender, "lua", "push", "@dpclusterd", skynet.pack("accept", localhost, host_id))
+					end
 				end
 			end
 		end
@@ -168,19 +233,13 @@ end
 
 -- 网络中断
 function CMD.interrupt(source, address)
-	CONNECTING[address] = nil
+	_WARN_F("address:%s network interrupt!", address)
+	local data = CLUSTER_CACHE[address]
+	if data then
+		data.status = false
+	end
 end
 
--- 网络重连成功
-function CMD.reconnection(source, ...)
-	local address, dp = ...
-	if not address or not dp then
-		_ERROR_F("%s CMD.reconnection address:%s dp:%s error!", SERVICE_NAME, address, dp)
-		return
-	end
-	CONNECTING[address] = dp
-	_INFO_F("%s CMD.reconnection address:%s dp:%s success!", SERVICE_NAME, address, dp)
-end
 -- 命令方法 --------------------
 
 skynet.register_protocol({
@@ -209,3 +268,6 @@ skynet.start(function ()
 
 	skynet.fork(LoopDeal)
 end)
+
+-- 一个小想法
+-- 如果能利用clusteragent和clustersender这两个服务检测到的socket状态(例如CMD.interrupt)，就不需要集群之间的心跳消息来保活！
