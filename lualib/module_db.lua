@@ -21,8 +21,8 @@ local MERGE_SVR = PROXYSVR.GetProxyByServiceName("merge")
 assert(MERGE_SVR)
 local SELF_ADDR = skynet.self()
 local SNODE_NAME = DPCLUSTER_NODE.self
-local DATABASE_COMMON = Import("global/database_common.lua")
-local LOG = Import("base/log.lua")
+local DATABASE_COMMON = Import("lualib/database_common.lua")
+local LOG = Import("lualib/base/log.lua")
 
 -- 注意：
 -- 1.服务关闭的需要调用一下来存储
