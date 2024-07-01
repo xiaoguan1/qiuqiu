@@ -329,6 +329,79 @@ function clsCmpRank:GetReadonlyData(unique)
 	return table.simple_readonly(nData)
 end
 
+-- 根据唯一表示获取当前排名
+-- @return : rank / 0 	0表示没有排名
+function clsCmpRank:GetRank(unique)
+	local nData = _GetSaveData(self, unique)
+	if not nData then
+		return 0
+	end
+	return SKIPLIST.GetRank(self._slData, nData)
+end
+
+-- 根据排名获取只读数据
+-- @params : rank 	排名
+-- @return : readonlyData / nil  只读table，防止被修改了里面的值导致排行榜混乱
+function clsCmpRank:GetReadonlyDataByRank(rank)
+	if rank <= 0 then
+		return
+	end
+	local nData = SKIPLIST.GetElementByRank(self._slData, rank)
+	if nData then
+		return table.simple_readonly(nData)
+	end
+end
+
+function clsCmpRank:GetDataVarByRank(rank, key)
+	if rank <= 0 then
+		return
+	end
+	local nData = SKIPLIST.GetElementByRank(self._slData, rank)
+	if nData then
+		return nData[key]
+	end
+end
+
+-- 获取某个排名范围的数据
+-- @params : rank 	开始的排名
+-- @params : length 获取的长度 [rank, rank + length)
+-- @return : {[1] = readonlyData, [2] = readonlyData, ...} / nil
+function clsCmpRank:GetReadonlyDataByRange(rank, length)
+	assert(rank > 0 and length > 0)
+	local list = SKIPLIST.GetElementList(self._slData, rank, length, table.simple_readonly)
+	if list then
+		if #list > 256 then	-- 每次获取大于256就打印下
+			local _print = _WARN or skynet.error
+			_print(string.format("clsCmpRank:GetReadonlyDataByRange rank:%s length:%s #list:%s", rank, length, #list, debug.traceback()))
+		end
+		return list
+	end
+end
+
+-- 轮询数据
+-- @params : func 	func(unique, readonlyData, ...), 注意：该函数内部不能有增加排行榜名单的，但可以删除名单，不然遍历有问题
+-- 			 func 	return true 结束轮询
+-- @params : ... 	func的额外参数
+function clsCmpRank:Foreach(func, ...)
+	if self.__SAVE_NAME then
+		for _, _aData in pairs(self._saveData) do
+			for _unique, _data in pairs(_aData._SaveData) do
+				local readonlyData = table.simple_readonly(_data)
+				if func(_unique, readonlyData, ...) then
+					return
+				end
+			end
+		end
+	else
+		for _unique, _data in pairs(self._saveData) do
+			local readonlyData = table.simple_readonly(_data)
+			if func(_unique, readonlyData, ...) then
+				return
+			end
+		end
+	end
+end
+
 -- 当前已经有的排序数量
 function clsCmpRank:GetLength()
 	return SKIPLIST.GetLength(self._slData)
@@ -396,6 +469,32 @@ function clsCmpRank:Delete(unique)
 	end
 end
 
+-- 清空排行榜
+function clsCmpRank:ClearRank()
+	if self.__SAVE_NAME then
+		for _, _aData in pairs(self._saveData) do
+			for _unique, _data in pairs(_aData._SaveData) do
+				self:Delete(_unique)
+			end
+		end
+	else
+		for _unique, _data in pairs(self._saveData) do
+			self:Delete(_unique)
+		end
+	end
+	if self:GetLength() ~= 0 then
+		_ERROR("clsRank:ClearRank but length ~= 0", debug.traceback())
+	end
+end
+
+-- 修改某个数据
+-- @params : unique 唯一表示
+-- @params : data = {
+-- 		key1 = value1,
+-- 		key2 = value2,
+-- 		...
+-- }
+-- @return : (true/nil), rank 第一个参数返回true表示修改成功，nil为失败。第二个参数如果是修改与排名有关的，则为修改后排名
 function clsCmpRank:ModifyValue(unique, data)
 	if _KickRole(self, unique) then
 		return
