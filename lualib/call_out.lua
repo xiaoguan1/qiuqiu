@@ -88,7 +88,7 @@ end)
 
 -- 内部方法 ------------------------------------
 
-local function _GetIndex()
+local function _GetIndex()		-- 特别注意，多服务中CallIndex不唯一。
 	CallIndex = CallIndex + 1
 	return CallIndex
 end

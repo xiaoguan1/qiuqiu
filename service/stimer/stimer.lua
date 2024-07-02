@@ -25,7 +25,13 @@ local ACCURATE_TYPE = 2		-- 精确的时间，例如每天什么时候开启某�
 
 local ONE_DAY_SEC = ONE_DAY_SEC	-- 一天的时间秒数
 
-local CallOutTbl = {}	-- 目前定时器服务不支持热更，设置局部变量即可。
+local CallOutTbl = {		-- 目前定时器服务不支持热更，设置局部变量即可。
+	-- [时间戳] = {
+	-- 	[发送服务的数字地址] = {
+	-- 		[index]
+	-- 	},
+	-- },
+}
 
 -- 间隔多久执行一次
 function ACCEPT.call_multi(source, nodeName, index, timeout)
@@ -40,7 +46,11 @@ function ACCEPT.call_multi(source, nodeName, index, timeout)
 		CallOutTbl[nextTime] = {}
 	end
 
-	CallOutTbl[nextTime][index] = {
+	if not CallOutTbl[nextTime][source] then
+		CallOutTbl[nextTime][source] = {}
+	end
+
+	CallOutTbl[nextTime][source][index] = {
 		source = source,
 		nodeName = nodeName,
 		refresh_time = timeout,
@@ -56,9 +66,15 @@ function ACCEPT.call_once(source, nodeName, index, timeout)
 
 	local nextTime = mfloor(ostime() + timeout)
 
-	if not CallOutTbl[nextTime] then CallOutTbl[nextTime] = {} end
+	if not CallOutTbl[nextTime] then
+		CallOutTbl[nextTime] = {}
+	end
 
-	CallOutTbl[nextTime][index] = {
+	if not CallOutTbl[nextTime][source] then
+		CallOutTbl[nextTime][source] = {}
+	end
+
+	CallOutTbl[nextTime][source][index] = {
 		source = source,
 		nodeName = nodeName,
 	}
@@ -89,9 +105,15 @@ function ACCEPT.call_daily(source, nodeName, index, hour, min, sec)
 	-- 时间点已经过了，设置成隔天。
 	if nowTime > nextTime then nextTime = nextTime + ONE_DAY_SEC end
 
-	if not CallOutTbl[nextTime] then CallOutTbl[nextTime] = {} end
+	if not CallOutTbl[nextTime] then
+		CallOutTbl[nextTime] = {}
+	end
 
-	CallOutTbl[nextTime][index] = {
+	if not CallOutTbl[nextTime][source] then
+		CallOutTbl[nextTime][source] = {}
+	end
+
+	CallOutTbl[nextTime][source][index] = {
 		source = source,
 		nodeName = nodeName,
 		refresh_time = ONE_DAY_SEC,		-- 循环时间间隔
@@ -104,31 +126,33 @@ end
 ------------------------------ 定时器类型 ------------------------------
 
 local function _DealWithOnce(nowTime, endTime)
-	local temTbl = CallOutTbl[nowTime]
-	if not temTbl then return end
+	local allTemTbl = CallOutTbl[nowTime]
+	if not allTemTbl then return end
 
-	for index, tbl in pairs(temTbl) do
-		skysend(tbl.source, "callout", index)
-		local refresh_time = tbl.refresh_time
-		local nextTime
-		if refresh_time then
-			if tbl.nextType == ACCURATE_TYPE then
-				nextTime = nowTime + refresh_time
-			else
-				nextTime = endTime + refresh_time
-			end
+	for source, temTbl in pairs(allTemTbl) do
+		for index, tbl in pairs(temTbl) do
+			skysend(tbl.source, "callout", index)
+			local refresh_time = tbl.refresh_time
+			local nextTime
+			if refresh_time then
+				if tbl.nextType == ACCURATE_TYPE then
+					nextTime = nowTime + refresh_time
+				else
+					nextTime = endTime + refresh_time
+				end
 
-			-- 更新定时器数据内容
-			if not CallOutTbl[nextTime] then
-				CallOutTbl[nextTime] = {}
+				-- 更新定时器数据内容
+				if not CallOutTbl[nextTime] then
+					CallOutTbl[nextTime] = {}
+				end
+				if not CallOutTbl[nextTime][source] then
+					CallOutTbl[nextTime][source] = {}
+				end
+				CallOutTbl[nextTime][source][index] = tbl
 			end
-			if not CallOutTbl[nextTime][index] then
-				CallOutTbl[nextTime][index] = {}
-			end
-			CallOutTbl[nextTime][index] = tbl
 		end
+		CallOutTbl[nowTime] = nil	-- 清空，否则数据缓存会越来越大！
 	end
-	CallOutTbl[nowTime] = nil	-- 清空，否则数据缓存会越来越大！
 end
 
 local START_TIME = ostime()
