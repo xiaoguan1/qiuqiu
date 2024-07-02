@@ -11,13 +11,13 @@ local debug = debug
 local assert = assert
 
 local traceback = debug.traceback
-local dpclusterData = assert(load("return " .. skynet.getenv("dpcluster"))())
-local node_ipport = dpclusterData["node_ipport"]
+-- local dpclusterData = assert(load("return " .. skynet.getenv("dpcluster"))())
+-- local node_ipport = dpclusterData["node_ipport"]
 -- local DATABASE_NODE = NAMED_SERVER_NODE.dbserver.node
 -- local IS_DATA_SELFNODE = dpclusterData[DATABASE_NODE] == node_ipport
 local DB_CNT = tonumber(skynet.getenv("database_num")) or 10
 
-local PROXYSVR = Import("base/proxysvr.lua")
+local PROXYSVR = Import("lualib/base/proxysvr.lua")
 local DATABASE_SVR = PROXYSVR.GetProxyByServiceName("dbserver")
 
 function Send_ModCreateNexist(modName)
