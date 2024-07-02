@@ -92,7 +92,7 @@ function TryCall(func, ...)
 end
 
 if tis_has_value(NODE_SERVER_INFO, SERVICE_NAME, "service") or
-	tis_has_value(EVERY_NODE_SERVER, SERVICE_NAME, "service") or
+	NODE_ONLYSERVER_MIRROR[SERVICE_NAME] or
 	SERVICE_NAME == "databasecell"
 then
 	DPCLUSTER_NODE = skynet.getenv("DPCLUSTER_NODE")

@@ -5,7 +5,7 @@ local string = string
 local sys = sys
 
 -- 任何节点都必须启动的服务
-EVERY_NODE_SERVER = {
+NODE_ONLYSERVER = {
 	{service = "stimer", named = ".STIMER"},		-- 定时器服务
 	{service = "loadxls", named = ".LOADXLS"},		-- 公共配置表服务
 	{service = "database", named = ".DATABASE"},	-- 数据库服务
@@ -75,17 +75,22 @@ CROSS_NAMED_SERVER_NODE = {
 	-- ...
 }
 
--- 检查 EVERY_NODE_SERVER 配置
-for index, serverInfo in ipairs(EVERY_NODE_SERVER) do
+-- 检查 NODE_ONLYSERVER 配置 并生成镜像
+NODE_ONLYSERVER_MIRROR = {}
+for index, serverInfo in ipairs(NODE_ONLYSERVER) do
 	if not serverInfo.service or not serverInfo.named then
-		error(string.format("EVERY_NODE_SERVER _index:%s service:%s named:%s config error",
+		error(string.format("NODE_ONLYSERVER _index:%s service:%s named:%s config error",
 			index, serverInfo.service, serverInfo.named))
 	end
-	EVERY_NODE_SERVER[serverInfo.service] = {index = index, named = serverInfo.named, cluster_named = serverInfo.cluster_named}
+
+	local data = table.copy(serverInfo)
+	data.index = index
+	NODE_ONLYSERVER_MIRROR[serverInfo.service] = data
 end
 
--- 检查 NODE_SERVER_INFO 配置
-for _, svrInfo in pairs(NODE_SERVER_INFO) do
+-- 检查 NODE_SERVER_INFO 配置 并生成镜像
+NODE_SERVER_INFO_MIRROR = {}
+for index, svrInfo in pairs(NODE_SERVER_INFO) do
 	local condition1 = type(svrInfo.named) == "string" and #svrInfo.named > 0
 	local condition2 = type(svrInfo.node) == "table" or type(svrInfo.node) == "string"
 	local condition3 = (not svrInfo.son_num) or (type(svrInfo.son_num) == "number" and svrInfo.son_num > 0)
@@ -94,6 +99,10 @@ for _, svrInfo in pairs(NODE_SERVER_INFO) do
 		error(string.format("namedsvr service config error! condition1:%s condition2:%s condition3:%s  svrname:%s  nodedata:%s",
 			condition1, condition2, condition3, svrInfo.service, sys.dump(svrInfo)))
 	end
+
+	local data = table.copy(svrInfo)
+	data.index = index
+	NODE_SERVER_INFO_MIRROR[svrInfo.service] = data
 end
 
 -- 记录服务的子服务的名称

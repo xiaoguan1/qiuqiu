@@ -241,43 +241,68 @@ function GetProxy(addr, node_name, clustertype, prototype)
 	end
 end
 
-function GetProxyByServiceName(serviceName, prototype, serverId)
-	-- if NAMEDSVR_PFCROSS_NODES[serviceName] then
-	-- 	if not serverId then
-	-- 		error(string.format("GetProxyByServiceName serviceName:%s not has serverId", serviceName))
-	-- 	end
-	-- 	local namedData = CROSS_NAMED_SERVER_NODE[serviceName]
-	-- 	return pfwrapper(namedData.named, serviceName, serverId, namedData.clustertype, prototype)
-	-- elseif NAMEDSVR_MULTPFCROSS_NODES[serviceName] and not is_crossserver then	-- 调用自己节点的其他服务可以不用serverid
-	-- 	if not serverId then
-	-- 		error(string.format("GetProxyByServiceName serviceName:%s not has serverId", serviceName))
-	-- 	end
-	-- 	local namedData = CROSS_NAMED_SERVER_NODE[serviceName]
-	-- 	return multpfwrapper(namedData.named, serviceName, serverId, namedData.clustertype, prototype)
-	-- else
-	-- 	local namedData = NAMED_SERVER_NODE[serviceName]
-	-- 	if namedData then
-	-- 		assert(namedData.named)
-	-- 		local node_name = nil
-	-- 		if namedData.node then
-	-- 			node_name = DPCLUSTER_NODE[namedData.node]
-	-- 			if type(node_name) == "table" then
-	-- 				if not serverId then
-	-- 					error("servercross, has not 3th param")
-	-- 				end
-	-- 				node_name = node_name[serverId]
-	-- 			end
-	-- 			assert(node_name, namedData.node)
-	-- 		end
-	-- 		return GetProxy(namedData.named, node_name, namedData.clustertype, prototype)
-	-- 	end
+-- function GetProxyByServiceName(serviceName, prototype, serverId)
+-- 	if NAMEDSVR_PFCROSS_NODES[serviceName] then
+-- 		if not serverId then
+-- 			error(string.format("GetProxyByServiceName serviceName:%s not has serverId", serviceName))
+-- 		end
+-- 		local namedData = CROSS_NAMED_SERVER_NODE[serviceName]
+-- 		return pfwrapper(namedData.named, serviceName, serverId, namedData.clustertype, prototype)
+-- 	elseif NAMEDSVR_MULTPFCROSS_NODES[serviceName] and not is_crossserver then	-- 调用自己节点的其他服务可以不用serverid
+-- 		if not serverId then
+-- 			error(string.format("GetProxyByServiceName serviceName:%s not has serverId", serviceName))
+-- 		end
+-- 		local namedData = CROSS_NAMED_SERVER_NODE[serviceName]
+-- 		return multpfwrapper(namedData.named, serviceName, serverId, namedData.clustertype, prototype)
+-- 	else
+-- 		local namedData = NAMED_SERVER_NODE[serviceName]
+-- 		if namedData then
+-- 			assert(namedData.named)
+-- 			local node_name = nil
+-- 			if namedData.node then
+-- 				node_name = DPCLUSTER_NODE[namedData.node]
+-- 				if type(node_name) == "table" then
+-- 					if not serverId then
+-- 						error("servercross, has not 3th param")
+-- 					end
+-- 					node_name = node_name[serverId]
+-- 				end
+-- 				assert(node_name, namedData.node)
+-- 			end
+-- 			return GetProxy(namedData.named, node_name, namedData.clustertype, prototype)
+-- 		end
 
-	-- 	local snamedData = NAME_SERVER_EVERY[serviceName]
-	-- 	if snamedData then
-	-- 		assert(snamedData.named)
-	-- 		return GetProxy(snamedData.named, selfnode_name, snamedData.clustertype, prototype)
-	-- 	end
-	-- 	error("not proxy:" .. serviceName)
-	-- end
-	
+-- 		local snamedData = NAME_SERVER_EVERY[serviceName]
+-- 		if snamedData then
+-- 			assert(snamedData.named)
+-- 			return GetProxy(snamedData.named, selfnode_name, snamedData.clustertype, prototype)
+-- 		end
+-- 		error("not proxy:" .. serviceName)
+-- 	end
+-- end
+
+function GetProxyByServiceName(serviceName, prototype, serverId)
+	local namedData = NODE_ONLYSERVER_MIRROR[serviceName]
+	if namedData then
+		assert(namedData.named)
+		return GetProxy(namedData.named, selfnode_name, namedData.clustertype, prototype)
+	end
+
+	namedData = NODE_SERVER_INFO_MIRROR[serviceName]
+	if namedData then
+		assert(namedData.named)
+		local node_name = nil
+		if namedData.node then
+			node_name = DPCLUSTER_NODE[namedData.node]
+			if type(node_name) == "table" then
+				if not serverId then
+					error("servercross, has not 3th param")
+				end
+				node_name = node_name[serverId]
+			end
+			assert(node_name, namedData.node)
+		end
+		return GetProxy(namedData.named, node_name, namedData.clustertype, prototype)
+	end
+	error("not proxy:" .. serviceName)
 end

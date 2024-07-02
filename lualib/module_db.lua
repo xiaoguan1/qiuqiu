@@ -16,7 +16,7 @@ local type = type
 
 assert(CALLOUT)
 local PROXYSVR = Import("lualib/base/proxysvr.lua")
-local SHUTDOWN_SVR = PROXYSVR.GetProxyByServiceName("shutdown")
+-- local SHUTDOWN_SVR = PROXYSVR.GetProxyByServiceName("shutdown")
 -- local MERGE_SVR = PROXYSVR.GetProxyByServiceName("merge")
 -- assert(MERGE_SVR)
 local SELF_ADDR = skynet.self()

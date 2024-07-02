@@ -3,6 +3,7 @@
 ------------------------------
 
 local skynet = require "skynet"
+local cskynet = require "skynet.core"
 require "skynet.manager"
 local pairs = pairs
 local ipairs = ipairs
@@ -85,7 +86,7 @@ function CMD.assign(session, source, command, assigndata, msg, sz)
 	if type(assigndata) ~= "string" then
 		if command ~= "battlerecord_deletelist" and command ~= "resultrecord_getdatamap" and command ~= "resultrecord_deletelist" then
 			-- 特殊处理
-			skynet.trash(msg, sz)
+			cskynet.trash(msg, sz)
 			local msg = string.format("assigndata not string:%s, session:%s, source:%s, command:%s", assigndata, session, source, command)
 			error(msg)
 		end
@@ -98,16 +99,16 @@ function CMD.assign(session, source, command, assigndata, msg, sz)
 			break
 		end
 		if not dbno then
-			skynet.trash(msg, sz)
+			cskynet.trash(msg, sz)
 			local msg = string.format("assigndata not dbno, data:%s, session:%s, source:%s, command:%s", assigndata, session, source, command)
 			error(msg)
 		end
 	else
-		dbno = string.hash(_fId, DB_CNT)
+		dbno = string.hash(assigndata, DB_CNT)
 	end
 	local addr = address[dbno] and address[dbno].addr
 	if not addr then
-		skynet.trash(msg, sz)
+		cskynet.trash(msg, sz)
 		error(string.format("not dbno:%s, assigndata:%s, source:%s, command:%s", dbno, assigndata or "", source, command))
 	end
 	skynet.redirect(addr, source, "lua", session, msg, sz)

@@ -27,7 +27,7 @@ if not PROXYSVR then
 	PROXYSVR = Import("lualib/base/proxysvr.lua")
 end
 
-local stimerld = EVERY_NODE_SERVER and EVERY_NODE_SERVER.stimer and EVERY_NODE_SERVER.stimer.named
+local stimerld = NODE_ONLYSERVER_MIRROR and NODE_ONLYSERVER_MIRROR.stimer and NODE_ONLYSERVER_MIRROR.stimer.named
 if not stimerld then
 	error("stimer service not localname")
 end

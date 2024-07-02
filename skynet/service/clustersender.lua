@@ -10,7 +10,7 @@ local string = string
 local smatch = string.match
 local pack = skynet.pack
 
-local dpclusterd_cfg = EVERY_NODE_SERVER and EVERY_NODE_SERVER.dpclusterd
+local dpclusterd_cfg = NODE_ONLYSERVER_MIRROR and NODE_ONLYSERVER_MIRROR.dpclusterd
 assert(dpclusterd_cfg)
 local pcall = pcall
 

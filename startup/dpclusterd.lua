@@ -5,9 +5,9 @@ local DPCLUSTER_NODE = DPCLUSTER_NODE
 assert(DPCLUSTER_NODE and DPCLUSTER_NODE.self)
 local localhost = DPCLUSTER_NODE.self
 local string = string
-local clusterName = EVERY_NODE_SERVER and
-					EVERY_NODE_SERVER.dpclusterd and
-					EVERY_NODE_SERVER.dpclusterd.cluster_named
+local clusterName = NODE_ONLYSERVER_MIRROR and
+					NODE_ONLYSERVER_MIRROR.dpclusterd and
+					NODE_ONLYSERVER_MIRROR.dpclusterd.cluster_named
 assert(clusterName)
 
 local node_type = assert(skynet.getenv("node_type"))

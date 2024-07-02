@@ -18,7 +18,7 @@ local traceback = debug.traceback
 local DB_CNT = tonumber(skynet.getenv("database_num")) or 10
 
 local PROXYSVR = Import("lualib/base/proxysvr.lua")
-local DATABASE_SVR = PROXYSVR.GetProxyByServiceName("dbserver")
+local DATABASE_SVR = PROXYSVR.GetProxyByServiceName("database")
 
 function Send_ModCreateNexist(modName)
    DATABASE_SVR.send.mod_createnexist(modName)

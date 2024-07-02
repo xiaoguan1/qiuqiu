@@ -6,10 +6,10 @@
 
 local skynet = require "skynet"
 require "skynet.manager"
-local EVERY_NODE_SERVER = EVERY_NODE_SERVER
+local NODE_ONLYSERVER = NODE_ONLYSERVER
 
 function EveryNodeServer()
-	for _, uniservice in ipairs(EVERY_NODE_SERVER) do
+	for _, uniservice in ipairs(NODE_ONLYSERVER) do
 		local sid = skynet.uniqueservice(uniservice.service)
 		skynet.name(uniservice.named, sid)
 	end
