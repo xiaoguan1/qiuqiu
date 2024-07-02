@@ -35,7 +35,8 @@ function _SOURCE_G.Import(filepath)
 
 	local filebody, err = loadfile(rltFilepath, "bt", _fileG)
 	if not filebody then
-		error(sformat("service_name:%s Import filepath:%s error:%s", SERVICE_NAME, filepath, err))
+		_ERROR(err)
+		error(debug.traceback())
 	end
 
 	local isOk, err = pcall(filebody)
