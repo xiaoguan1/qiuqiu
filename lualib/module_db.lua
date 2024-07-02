@@ -15,10 +15,10 @@ local xpcall = xpcall
 local type = type
 
 assert(CALLOUT)
-local PROXYSVR = Import("base/proxysvr.lua")
+local PROXYSVR = Import("lualib/base/proxysvr.lua")
 local SHUTDOWN_SVR = PROXYSVR.GetProxyByServiceName("shutdown")
-local MERGE_SVR = PROXYSVR.GetProxyByServiceName("merge")
-assert(MERGE_SVR)
+-- local MERGE_SVR = PROXYSVR.GetProxyByServiceName("merge")
+-- assert(MERGE_SVR)
 local SELF_ADDR = skynet.self()
 local SNODE_NAME = DPCLUSTER_NODE.self
 local DATABASE_COMMON = Import("lualib/database_common.lua")
@@ -31,15 +31,15 @@ local LOG = Import("lualib/base/log.lua")
 -- 		(1).设置__SAVE_NAME = "xxx/xxx"，例如 __SAVE_NAME = "login/login"下
 --		(2).在__init__函数中MOUDLE_DB.Register("需要保存的table或者全局变量","需要保存的table或者全局变量", 等等)
 
-local RESPONSE = RESPONSE or CMD
-assert(RESPONSE)
-if not RESPONSE.shutdown_savemodule then
-	function RESPONSE.shutdown_savemodule()
-		Shutdown_SaveModule()
-	end
-else
-	LOG._WARN("has RESPONSE.shutdown_savemodule")
-end
+-- local RESPONSE = RESPONSE or CMD
+-- assert(RESPONSE)
+-- if not RESPONSE.shutdown_savemodule then
+-- 	function RESPONSE.shutdown_savemodule()
+-- 		Shutdown_SaveModule()
+-- 	end
+-- else
+-- 	LOG._WARN("has RESPONSE.shutdown_savemodule")
+-- end
 
 local SAVE_TIME = 8 * 60							-- 8分钟一次数据存盘
 local SAVE_TIME_F = math.abs(skynet.self() + 5) 	-- 第一次存盘的时间，因为每个service时间不一样，这样就能防止扎堆
@@ -250,5 +250,5 @@ end
 
 function __init__()
 	CALLOUT.CallOut("FirstSaveAll", SAVE_TIME_F)
-	CALLOUT.CallOut("SaveModuleOnFrame", SAVE_MODULETIME)
+	CALLOUT.CallFre("SaveModuleOnFrame", SAVE_MODULETIME)
 end
