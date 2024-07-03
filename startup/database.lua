@@ -118,7 +118,10 @@ skynet.register_protocol {
 	name = "trans",
 	id = skynet.PTYPE_TRANS,
 	pack = skynet.pack,
-	unpack = skynet.unpack,
+	unpack = function (msg, sz)
+		local command, assigndata = skynet.unpack(msg, sz)
+		return command, assigndata, msg, sz
+	end,
 }
 
 if is_filedb then

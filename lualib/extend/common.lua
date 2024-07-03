@@ -12,7 +12,7 @@ local function tableToString(tbl)
 				isArray = false
 			end
 
-			if type(value) ~= "table" then
+			if type(value) == "table" then
 				isSimple = false
 			end
 
@@ -27,7 +27,7 @@ local function tableToString(tbl)
 	end
 
 	local function indent(list, n)
-		for i = 1, n do table.insert(list, "  ") end
+		for i = 1, n do table.insert(list, '  ') end
 	end
 
     local function impl(t, list, level)
@@ -35,12 +35,12 @@ local function tableToString(tbl)
 
 		if type(t) == "table" then
 			local info = parseTable(t)
-			local simpleArray = info.isArray and info.isSimple
 			local singleLine = info.isSimple and info.count <= 20
+			local simpleArray = info.isArray and info.isSimple
 
-			table.insert(list, "{")
+			table.insert(list, '{')
 
-			if not singleLine then table.insert(list, "\n") end
+			if not singleLine then table.insert(list, '\n') end
 
 			local xpairs = info.isArray and ipairs or pairs
 
@@ -50,18 +50,18 @@ local function tableToString(tbl)
 					indent(list, level + 1)
 				end
 
-				if type(key) == "string" then
+				if type(key) == 'string' then
 					table.insert(list, key)
 				else
 					if not simpleArray then
-						table.insert(list, "[")
+						table.insert(list, '[')
 						table.insert(list, key)
-						table.insert(list, "]")
+						table.insert(list, ']')
 					end
 				end
 
 				if not simpleArray then
-					table.insert(list, " = ")
+					table.insert(list, ' = ')
 				end
 
 				impl(v, list, level + 1)
@@ -71,7 +71,7 @@ local function tableToString(tbl)
 				end
 
 				if not singleLine then
-					table.insert(list, "\n")
+					table.insert(list, '\n')
 				end
 
 				index = index + 1
@@ -80,9 +80,9 @@ local function tableToString(tbl)
 			if not singleLine then indent(list, level) end
 
 			if level == 0 then
-				table.insert(list, "}\n")
+				table.insert(list, '}\n')
 			else
-				table.insert(list, "}")
+				table.insert(list, '}')
 			end
 		elseif type(t) == "string" then
 			table.insert(list, '"')

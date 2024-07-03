@@ -97,7 +97,7 @@ end
 
 -- 注册关闭服务事件
 local function _RegisterShutdownEvent(saveName)
-	SHUTDOWN_SVR.send.register_moudle_sdevent(saveName, SELF_ADDR, SNODE_NAME)	-- 使用call比较容易出错，send在写代码如果有重复应该就知道了
+	-- SHUTDOWN_SVR.send.register_moudle_sdevent(saveName, SELF_ADDR, SNODE_NAME)	-- 使用call比较容易出错，send在写代码如果有重复应该就知道了
 end
 
 -- 注册module的变量名以供存储

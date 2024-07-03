@@ -268,7 +268,7 @@ end
 local function _cs_mod_createnexist(modname)
 	local quote_modname = mysql.quote_sql_str(modname)
 	local reqstr = string.format(
-		"insert into module(mod_name, data) select %s, '%s' from dual where not exists(select * format module where mod_name = %s)",
+		"insert into module(mod_name, data) select %s, '%s' from dual where not exists(select * from module where mod_name = %s)",
 		quote_modname, EMPTY_TABLE_PACK, quote_modname
 	)
 	return DBObj:query(reqstr)
@@ -284,7 +284,6 @@ function ACCEPT.mod_createnexist(modname)
 	ReqTbl[nowIndex] = true
 	local isOk, res = pcall(cs, _cs_mod_createnexist, modname)
 	ReqTbl[nowIndex] = nil
-
 	if not isOk then
 		local msg = string.format("mod_createnexist error, modname:%s, res:%s", modname, res or "nothing")
 		LOG.LOG_EVENT(DATABASE_ERRFILE, msg)
@@ -393,7 +392,7 @@ local function _cs_mod_getdata(modname)
 end
 
 function RESPONSE.mod_getdata(modname)
-	if _GetDbInvalid then
+	if _GetDbInvalid() then
 		return
 	end
 	local cs = _GetQueueByMod(modname)
@@ -406,8 +405,8 @@ function RESPONSE.mod_getdata(modname)
 		return true, data
 	else
 		local msg = string.format("mod_getdata error, modname:%s errmsg:%s", modname, data)
-		LOG.LOG_EVENT(DATABASE_ERRFILE, msg)
-		LOG._ERROR_A_ALARM(msg)
+		-- LOG.LOG_EVENT(DATABASE_ERRFILE, msg)
+		-- LOG._ERROR_A_ALARM(msg)
 	end
 	return false
 end
