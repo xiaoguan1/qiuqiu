@@ -1,6 +1,6 @@
 
-0
-test/float.proto"
-real	
-f (	
-d (
+6
+test/float.proto""
+real
+f (Rf
+d (Rd

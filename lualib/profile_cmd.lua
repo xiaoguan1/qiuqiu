@@ -30,7 +30,7 @@ end
 
 function Profile_InfoString()
 	local info = string.format("start time:\t%s\nend time:\t%s\n", PROFILE_DATA.sTime, PROFILE_DATA.eTime)
-	info = info .. sys.dumptree(PROFILE_DATA.reportData)
+	info = info .. tool.dumptree(PROFILE_DATA.reportData)
 	return info
 end
 
@@ -41,12 +41,12 @@ end
 function CmdCal_S()
 	if IsRecord then
 		profile.start()
+		return true
 	end
 end
 
 function CmdCal_E(cmd)
 	if not IsRecord then return end
-
 	local time = profile.stop()
 	local p = PROFILE_DATA.reportData[cmd]
 	if p == nil then
@@ -64,12 +64,10 @@ function CmdCal_E(cmd)
 	end
 	if p.min_ti then
 		if time < p.min_ti then
-			if time < p.min_ti then
-				p.min_ti = time
-			end
-		else
 			p.min_ti = time
 		end
+	else
+		p.min_ti = time
 	end
 end
 

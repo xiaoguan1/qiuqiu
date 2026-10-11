@@ -7,44 +7,57 @@ local table = table
 local Import = Import
 
 local nodeType = skynet.getenv("node_type")
-
+local m = require "skiplist"
 skynet.start(function ()
-
-	skynet.setenv("preload", set_preload)
-	dofile(set_preload)
-
-	assert(nodeType == GAME_NODE_TYPE and not is_cross)
-
-	local NODEINFO = Import("lualib/base/nodeinfo.lua")
-	local isOk, DPCLUSTER_NODE = NODEINFO.GetGameNodeInfoByDatabase()
-	if not isOk then
-		error(DPCLUSTER_NODE)
-	end
-	skynet.setenv("DPCLUSTER_NODE", sys.dumptree(DPCLUSTER_NODE))
-
-	_INFO("----- begin start main -----")
-	local COMMON_START = Import("startup/common_start.lua")
-	COMMON_START.EveryNodeServer()
-
-	for _, svrInfo in pairs(NODE_SERVER_INFO) do
-		local isSelfNode = false
-		if type(svrInfo.node) == "string" and svrInfo.node == nodeType then
-			isSelfNode = true
-		elseif type(svrInfo.node) == "table" and table.is_has_value(svrInfo.node, nodeType) then
-			isSelfNode = true
+	local function slsort(at, bt)
+		if at.value < bt.value then
+			return 0
 		end
-
-		if isSelfNode then
-			local svraddr
-			if svrInfo.son_num then -- 这个子服务的方式 后续可以考虑去掉 可以参考database服务
-				svraddr = skynet.uniqueservice(svrInfo.service)
-			else
-				svraddr = skynet.newservice(svrInfo.service)
-			end
-			skynet.name(svrInfo.named, svraddr)
-		end
+		return 1
 	end
 
-	_INFO("----- end start main -----")
-	skynet.exit()
+
+	local sl = m.Create(slsort, function () end)
+	print(sys.dumptree(sl))
+	m.Insert(sl, {value = 1})
+	m.Insert(sl, {value = 2})
+	print("-----------------------------------")
+	print(sys.dumptree(sl))
+	-- skynet.setenv("preload", set_preload)
+	-- dofile(set_preload)
+
+	-- assert(nodeType == GAME_NODE_TYPE and not is_cross)
+
+	-- local NODEINFO = Import("lualib/base/nodeinfo.lua")
+	-- local isOk, DPCLUSTER_NODE = NODEINFO.GetGameNodeInfoByDatabase()
+	-- if not isOk then
+	-- 	error(DPCLUSTER_NODE)
+	-- end
+	-- skynet.setenv("DPCLUSTER_NODE", sys.dumptree(DPCLUSTER_NODE))
+
+	-- _INFO("----- begin start main -----")
+	-- local COMMON_START = Import("startup/common_start.lua")
+	-- COMMON_START.EveryNodeServer()
+
+	-- for _, svrInfo in pairs(NODE_SERVER_INFO) do
+	-- 	local isSelfNode = false
+	-- 	if type(svrInfo.node) == "string" and svrInfo.node == nodeType then
+	-- 		isSelfNode = true
+	-- 	elseif type(svrInfo.node) == "table" and table.is_has_value(svrInfo.node, nodeType) then
+	-- 		isSelfNode = true
+	-- 	end
+
+	-- 	if isSelfNode then
+	-- 		local svraddr
+	-- 		if svrInfo.son_num then -- 这个子服务的方式 后续可以考虑去掉 可以参考database服务
+	-- 			svraddr = skynet.uniqueservice(svrInfo.service)
+	-- 		else
+	-- 			svraddr = skynet.newservice(svrInfo.service)
+	-- 		end
+	-- 		skynet.name(svrInfo.named, svraddr)
+	-- 	end
+	-- end
+
+	-- _INFO("----- end start main -----")
+	-- skynet.exit()
 end)

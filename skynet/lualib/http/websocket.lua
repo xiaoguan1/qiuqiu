@@ -482,7 +482,7 @@ function M.connect(url, header, timeout)
     local socket_id = sockethelper.connect(host_addr, host_port, timeout)
     local ws_obj = _new_client_ws(socket_id, protocol, hostname)
     ws_obj.addr = host
-    
+
     local is_ok,err = pcall(write_handshake, ws_obj, host_addr, uri, header)
     if not is_ok then
         _close_websocket(ws_obj)

@@ -31,7 +31,7 @@ skynet.start(function ()
 		end
 		DBSAVE.CheckEnd()
 		if isRecord then
-			PROFILE_CMD.CmdCal_S(command)
+			PROFILE_CMD.CmdCal_E(command)
 		end
 	end)
 	DBSAVE.StartDb()

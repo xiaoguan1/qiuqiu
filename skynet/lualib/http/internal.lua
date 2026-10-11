@@ -190,6 +190,7 @@ function M.request(interface, method, host, url, recvheader, header, content)
 		write(content)
 	else
 		local request_header = string.format("%s %s HTTP/1.1\r\n%sContent-length:0\r\n\r\n", method, url, header_content)
+		print(string.format("%q", request_header))
 		write(request_header)
 	end
 

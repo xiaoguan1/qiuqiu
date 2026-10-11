@@ -55,8 +55,11 @@ else
     local function simple_echo_client_service(protocol)
         local skynet = require "skynet"
         local websocket = require "http.websocket"
-        local url = string.format("%s://127.0.0.1:9948/test_websocket", protocol)
+        -- local url = string.format("%s://127.0.0.1:9948/test_websocket", protocol)
+        local url = string.format("%s://127.0.0.1:30001/test_websocket", protocol)
         local ws_id = websocket.connect(url)
+
+        local i = 0
         while true do
             local msg = "hello world!"
             websocket.write(ws_id, msg)
@@ -69,27 +72,33 @@ else
             end
             websocket.ping(ws_id)
             skynet.sleep(100)
+            i = i + 1
+            if i % 5 == 0 then
+                break
+            end
         end
     end
 
     skynet.start(function ()
-        local agent = {}
-        for i= 1, 20 do
-            agent[i] = skynet.newservice(SERVICE_NAME, "agent")
-        end
-        local balance = 1
+        -- local agent = {}
+        -- for i= 1, 20 do
+        --     agent[i] = skynet.newservice(SERVICE_NAME, "agent")
+        -- end
+        -- local balance = 1
         local protocol = "ws"
-        local id = socket.listen("0.0.0.0", 9948)
-        skynet.error(string.format("Listen websocket port 9948 protocol:%s", protocol))
-        socket.start(id, function(id, addr)
-            print(string.format("accept client socket_id: %s addr:%s", id, addr))
-            skynet.send(agent[balance], "lua", id, protocol, addr)
-            balance = balance + 1
-            if balance > #agent then
-                balance = 1
-            end
+        -- local id = socket.listen("0.0.0.0", 9948)
+        -- skynet.error(string.format("Listen websocket port 9948 protocol:%s", protocol))
+        -- socket.start(id, function(id, addr)
+        --     print(string.format("accept client socket_id: %s addr:%s", id, addr))
+        --     skynet.send(agent[balance], "lua", id, protocol, addr)
+        --     balance = balance + 1
+        --     if balance > #agent then
+        --         balance = 1
+        --     end
+        -- end)
+        -- -- test echo client
+        skynet.fork(function ()
+            service.new("websocket_echo_client", simple_echo_client_service, protocol)
         end)
-        -- test echo client
-        service.new("websocket_echo_client", simple_echo_client_service, protocol)
     end)
 end
